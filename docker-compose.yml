@@ -1,0 +1,164 @@
+name: kalitegoz
+
+# =====================================================================
+# NATIVE AI KURULUMU (Docker DISI yapay zeka)
+# ---------------------------------------------------------------------
+# Ollama (LLM + embedding + vision) ve Whisper STT ARTIK DOCKER'DA DEGIL,
+# PC'DE (host) NATIVE calisir — makineyi yoran CPU/RAM yuku Docker VM'inden
+# cikar, GPU'nuz varsa dogrudan kullanilir. Docker yalnizca durum + kuyruk +
+# web katmanini tasir: postgres, redis, api, worker-fast (chat/rescore/bakim),
+# beat, watcher, frontend.
+#
+#   • Ollama'yi Windows'a kurun + modelleri cekin  → bkz. NATIVE-AI-KURULUM.md
+#   • Sesli cagri (STT) worker'i host'ta calisir    → scripts/run-host-worker.ps1
+#
+# Docker container'lari host Ollama'ya http://host.docker.internal:11434 ile
+# erisir (.env: OLLAMA_BASE_URL). Host worker ise 127.0.0.1:11434 kullanir
+# (run-host-worker.ps1 env override eder). Postgres/Redis portlari host'a acilir
+# ki native worker onlara localhost uzerinden baglanabilsin.
+# =====================================================================
+
+services:
+  postgres:
+    # pgvector'lu Postgres: RAG/bilgi bankasi icin `vector` eklentisi hazir gelir
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kalitegoz}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kalitegoz}
+      POSTGRES_DB: ${POSTGRES_DB:-kalitegoz}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      # Docker DISI (native) STT worker localhost:5432 ile baglanabilsin diye.
+      # Host'ta zaten 5432'de calisan bir Postgres varsa sol tarafi degistirin
+      # (orn. "5433:5432") ve run-host-worker.ps1'deki DATABASE_URL'i guncelleyin.
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kalitegoz}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      # Native STT worker Celery broker'ina (localhost:6379) baglanabilsin diye.
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+      - models:/models
+    extra_hosts:
+      # PC'de (host) native calisan Ollama'ya erisim (LLM/embedding/vision).
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1g
+
+  # Hizli kuyruk: chat puanlama, yeniden puanlama, bakim isleri (STT YOK).
+  # LLM icin host Ollama'ya host.docker.internal ile erisir.
+  # >>> Sesli cagri STT worker'i BURADA DEGIL — host'ta calisir:
+  #     scripts/run-host-worker.ps1  (Celery -Q voice, native Whisper)
+  worker-fast:
+    build: ./backend
+    restart: unless-stopped
+    command: celery -A app.tasks.celery_app worker -Q fast --loglevel=INFO --concurrency=1 -n fast@%h
+    env_file: .env
+    volumes:
+      - ./data:/data
+      - models:/models
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1g
+
+  # Zamanlanmis gorevler (KVKK retention 03:15, anomali 07:00, rozet Pzt 08:00...)
+  beat:
+    build: ./backend
+    restart: unless-stopped
+    command: celery -A app.tasks.celery_app beat --loglevel=INFO
+    env_file: .env
+    volumes:
+      - ./data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
+
+  watcher:
+    build: ./backend
+    restart: unless-stopped
+    command: python -m app.watcher
+    env_file: .env
+    volumes:
+      - ./data:/data
+    depends_on:
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Tarayicinin eristigi API adresi (host makineden bakildiginda)
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512m
+
+volumes:
+  pgdata:
+  models:

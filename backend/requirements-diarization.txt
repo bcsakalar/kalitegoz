@@ -1,0 +1,6 @@
+# Opsiyonel: mono kayitlar icin pyannote diarization.
+# Stereo kayitlarda gerek yok (kanal ayrimi bedava diarization saglar).
+# Kurulum: pip install -r requirements-diarization.txt  (imaj boyutunu ciddi buyutur)
+torch>=2.2
+torchaudio>=2.2
+pyannote.audio>=3.3,<4.0

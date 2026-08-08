@@ -1,0 +1,105 @@
+# KaliteGoz — kurulum ve demo komutlari
+# Kullanim: make demo   (tek komutla dolu, satisa hazir platform)
+
+SHELL := /bin/sh
+API   := http://localhost:8000
+MODEL := $(shell grep -E '^OLLAMA_MODEL=' .env 2>/dev/null | cut -d= -f2)
+MODEL := $(if $(MODEL),$(MODEL),qwen2.5:7b)
+EMBED := $(shell grep -E '^EMBED_MODEL=' .env 2>/dev/null | cut -d= -f2)
+EMBED := $(if $(EMBED),$(EMBED),nomic-embed-text)
+
+.PHONY: help demo up down clean logs test test-scripts seed-history pull-model wait-api demo-data rebuild
+
+help:
+	@echo "KaliteGoz komutlari:"
+	@echo "  make demo      - Her seyi ayaga kaldirir, modeli indirir, demo veriyi uretir"
+	@echo "  make up        - Servisleri baslatir"
+	@echo "  make down      - Servisleri durdurur (veri kalir)"
+	@echo "  make clean     - Servisleri durdurur ve TUM veriyi siler"
+	@echo "  make test      - Backend testlerini calistirir (pytest, Docker icinde)"
+	@echo "  make test-scripts - Demo/TTS betik testlerini calistirir (host'ta)"
+	@echo "  make logs      - Worker loglarini izler"
+	@echo "  make demo-data - Sadece demo veriyi uretir (stack ayakta olmali)"
+
+.env:
+	@cp .env.example .env
+	@echo ".env olusturuldu (.env.example kopyalandi)"
+
+up: .env
+	docker compose up -d --build
+
+down:
+	docker compose down
+
+clean:
+	docker compose down -v
+	@rm -rf data/storage data/inbox
+
+rebuild: .env
+	docker compose build --no-cache
+
+wait-api:
+	@echo "API hazir bekleniyor..."
+	@i=0; while [ $$i -lt 60 ]; do \
+		if curl -sf $(API)/api/health >/dev/null 2>&1; then echo "API hazir."; exit 0; fi; \
+		i=$$((i+1)); sleep 3; \
+	done; echo "API 3 dk icinde hazir olmadi"; exit 1
+
+# Ollama artik PC'de (host) NATIVE calisir; modeller HOST Ollama'ya cekilir.
+# On kosul: Ollama for Windows kurulu ve calisir durumda (ollama serve / uygulama).
+pull-model:
+	@echo "LLM modeli indiriliyor ($(MODEL)) — host Ollama'ya, ilk seferde ~4.7 GB..."
+	@ollama pull $(MODEL) || curl -s http://localhost:11434/api/pull -d '{"name":"$(MODEL)"}' >/dev/null
+	@echo "Embedding modeli indiriliyor ($(EMBED), ~270 MB) — RAG bilgi bankasi icin..."
+	@ollama pull $(EMBED) || curl -s http://localhost:11434/api/pull -d '{"name":"$(EMBED)"}' >/dev/null
+	@echo "Modeller hazir (host Ollama)."
+
+demo-data:
+	@echo "Demo verisi uretiliyor (TTS + chat + 8 haftalik gecmis)..."
+	python scripts/generate_demo.py --upload $(API) || python3 scripts/generate_demo.py --upload $(API)
+
+# Tek komutla: stack + model + demo verisi
+demo: up wait-api pull-model demo-data
+	@echo ""
+	@echo "============================================================"
+	@echo " KaliteGoz demo hazir!"
+	@echo " Dashboard : http://localhost:3000  (rol secip tek tikla giris)"
+	@echo " API/Swagger: $(API)/docs"
+	@echo ""
+	@echo " Demo hesaplari (parola: demo1234)"
+	@echo "   admin@demo.local        - Yonetici"
+	@echo "   sef.satis@demo.local    - Supervizor"
+	@echo "   kalite@demo.local       - Kalite Uzmani"
+	@echo "   ayse.yilmaz@demo.local  - Temsilci"
+	@echo ""
+	@echo " NATIVE AI: Ollama + Whisper STT PC'de calisir (Docker degil)."
+	@echo "   1) Ollama for Windows kurulu + calisir olmali (modeller: make pull-model)"
+	@echo "   2) Sesli cagri STT worker'ini host'ta baslatin:"
+	@echo "      powershell -ExecutionPolicy Bypass -File scripts/run-host-worker.ps1"
+	@echo "   3) Yonetim > Isleme > 'Islemeyi baslat' (demo tenant duraklatilmis gelir)"
+	@echo "   Ayrinti: NATIVE-AI-KURULUM.md"
+	@echo "============================================================"
+
+# Sesli cagri worker'i artik host'ta; Docker'da chat/bakim worker'i (fast) var.
+logs:
+	docker compose logs -f worker-fast
+
+test:
+	docker compose run --rm --no-deps -e JWT_SECRET=test-secret-key-32-bytes-long-xx \
+		-v "$(PWD)/backend:/srv" api sh -c "pip install -q pytest && cd /srv && python -m pytest -q"
+
+# Betikler Docker imajinda degil (demo ureteci host'ta calisir), bu yuzden
+# ayri hedef. Ag erisimi gerektirmez — edge-tts cagrilmaz.
+test-scripts:
+	python -m pytest scripts/tests -q
+
+# Uctan uca duman testi: sistem ayakta mi, sayfalar/endpointler/RBAC calisiyor mu
+smoke:
+	python scripts/smoke_test.py
+
+seed-history:
+	@curl -s -X POST $(API)/api/v1/auth/demo-login -H 'Content-Type: application/json' \
+		-d '{"role":"admin"}' | \
+		python -c "import sys,json;print(json.load(sys.stdin)['access_token'])" > /tmp/kg_token
+	@curl -s -X POST $(API)/api/v1/admin/seed-demo-history \
+		-H "Authorization: Bearer $$(cat /tmp/kg_token)"

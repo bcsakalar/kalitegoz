@@ -1,0 +1,2 @@
+# Test bagimliliklari (SQLite ile calisir; harici servis gerekmez)
+pytest>=8.2,<9.0

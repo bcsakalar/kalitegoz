@@ -1,0 +1,3 @@
+# Alembic revizyonlari buraya uretilir:
+#   docker compose exec api alembic revision --autogenerate -m "aciklama"
+#   docker compose exec api alembic upgrade head

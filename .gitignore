@@ -1,0 +1,17 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+node_modules/
+.next/
+next-env.d.ts
+
+data/
+!data/README.md
+
+*.wav
+*.mp3
+*.onnx
+*.onnx.json

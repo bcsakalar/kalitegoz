@@ -1,0 +1,242 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================================================================
+   Renk sistemi — roller (ham hex hicbir bilesende kullanilmaz)
+   Tema: sistem tercihi VARSAYILAN; kullanici toggle'i data-theme ile EZER.
+   ===================================================================== */
+:root {
+  --page: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f1f3f6;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #8a8a86;
+  --grid: #e6e8ec;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --series-1: #2a78d6;
+  --series-1-soft: rgba(42, 120, 214, 0.12);
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+  --good-text: #006300;
+  --shadow: 0 1px 2px rgba(11, 11, 11, 0.06), 0 4px 12px rgba(11, 11, 11, 0.04);
+  --sidebar-w: 248px;
+  --sidebar-w-collapsed: 68px;
+}
+
+/* Sistem koyu tercihi (kullanici secim yapmadiysa) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #0d0d0f;
+    --surface: #17181c;
+    --surface-2: #1f2126;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #8a8a86;
+    --grid: #2a2c32;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --series-1: #3987e5;
+    --series-1-soft: rgba(57, 135, 229, 0.18);
+    --good-text: #0ca30c;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Kullanici secimi — sistem tercihini HER IKI yonde de ezer */
+:root[data-theme="light"] {
+  --page: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f1f3f6;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #8a8a86;
+  --grid: #e6e8ec;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --series-1: #2a78d6;
+  --series-1-soft: rgba(42, 120, 214, 0.12);
+  --good-text: #006300;
+  --shadow: 0 1px 2px rgba(11, 11, 11, 0.06), 0 4px 12px rgba(11, 11, 11, 0.04);
+}
+
+:root[data-theme="dark"] {
+  --page: #0d0d0f;
+  --surface: #17181c;
+  --surface-2: #1f2126;
+  --ink: #ffffff;
+  --ink-2: #c3c2b7;
+  --muted: #8a8a86;
+  --grid: #2a2c32;
+  --baseline: #383835;
+  --border: rgba(255, 255, 255, 0.10);
+  --series-1: #3987e5;
+  --series-1-soft: rgba(57, 135, 229, 0.18);
+  --good-text: #0ca30c;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tema gecisi — renk degisimi ani degil yumusak olsun */
+body,
+.card,
+.sidebar {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* =====================================================================
+   Bilesenler
+   ===================================================================== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+}
+
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+/* Durum rozetleri: renk + HER ZAMAN gorunur metin (renk tek basina anlam tasimaz) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.badge .dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+.badge-good { background: rgba(12, 163, 12, 0.14); }
+.badge-good .dot { background: var(--status-good); }
+.badge-warning { background: rgba(250, 178, 25, 0.18); }
+.badge-warning .dot { background: var(--status-warning); }
+.badge-critical { background: rgba(208, 59, 59, 0.14); }
+.badge-critical .dot { background: var(--status-critical); }
+.badge-neutral { background: var(--grid); }
+.badge-neutral .dot { background: var(--muted); }
+.badge-info { background: var(--series-1-soft); }
+.badge-info .dot { background: var(--series-1); }
+
+.input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+.input:focus {
+  outline: 2px solid var(--series-1);
+  outline-offset: 1px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface-2); }
+.btn-primary {
+  background: var(--series-1);
+  border-color: transparent;
+  color: #ffffff;
+}
+.btn-primary:hover { background: var(--series-1); opacity: 0.9; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Sidebar nav ogesi */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  position: relative;
+}
+.nav-item:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.nav-item[data-active="true"] {
+  background: var(--series-1-soft);
+  color: var(--series-1);
+  font-weight: 600;
+}
+.nav-item[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  left: -0.5rem;
+  top: 20%;
+  height: 60%;
+  width: 3px;
+  border-radius: 9999px;
+  background: var(--series-1);
+}
+.nav-icon {
+  width: 1.25rem;
+  text-align: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.chart-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
+  box-shadow: var(--shadow);
+  z-index: 20;
+  white-space: nowrap;
+}
+
+/* Ince kaydirma cubugu (dashboard hissi) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--baseline) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--baseline);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-track { background: transparent; }

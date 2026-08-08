@@ -1,0 +1,567 @@
+import type {
+  Alert,
+  Appeal,
+  AgentScorecard,
+  AgentSummary,
+  BannedWord,
+  CalibrationReport,
+  CalibrationRow,
+  CalibrationSession,
+  CallDetail,
+  CallList,
+  CallListItem,
+  Campaign,
+  CoachingTask,
+  Criterion,
+  KnowledgeDoc,
+  KnowledgeHit,
+  KnowledgeStats,
+  LeaderboardRow,
+  Me,
+  Overview,
+  ProcessingStatus,
+  SupervisorCockpit,
+  Team,
+  TopicsResult,
+  TranscriptSearchResult,
+  UserRow,
+  TimeseriesPoint,
+  VocTrend,
+  CohortRow,
+  ReviewStats,
+  ReviewAssignment,
+  CoachingEffectiveness,
+  Gamification,
+  SelfAssessment,
+  Challenge,
+  CompliancePack,
+  AssistSuggestion,
+  VisionStatus,
+  VisionResult,
+  AuditPage,
+  SecurityPosture,
+  ScorecardDraft,
+  DraftCriterion,
+  RoiInputs,
+  RoiResult,
+  Branding,
+  AuthConfig,
+  InviteInfo,
+  InviteResult,
+  AgentAdmin,
+  TenantSettings,
+  SystemInfo,
+  OnboardingStatus,
+  AIConfig,
+  AICatalog,
+  OllamaModel,
+  AITestResult,
+  PullStatus,
+  EmergingTopic,
+  SimulateCriterion,
+  SimulateResult,
+  CoachingPlan,
+  CorrelationInsight,
+  ExecSummary,
+  Target,
+  TargetIn,
+  TargetProgress,
+  AiUsageSummary,
+  ChurnSummary,
+  AppealAnalytics,
+  RubricVersion,
+  BulkResult,
+  SimilarCall,
+  NotificationFeed,
+} from "./types";
+
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const V1 = `${API_BASE}/api/v1`;
+
+const TOKEN_KEY = "kg_token";
+const REFRESH_KEY = "kg_refresh";
+
+export const tokenStore = {
+  get: () => (typeof window === "undefined" ? null : localStorage.getItem(TOKEN_KEY)),
+  getRefresh: () => (typeof window === "undefined" ? null : localStorage.getItem(REFRESH_KEY)),
+  set: (access: string, refresh: string) => {
+    localStorage.setItem(TOKEN_KEY, access);
+    localStorage.setItem(REFRESH_KEY, refresh);
+  },
+  clear: () => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
+  },
+};
+
+/**
+ * WebSocket URL'i uretir (http->ws, https->wss).
+ *
+ * Token query string'e konur: tarayicinin WebSocket API'si ozel HTTP basligi
+ * gondermeye izin vermez, bu yuzden Authorization header kullanilamaz.
+ * Token yoksa null doner — cagiran baglanmayi atlar.
+ */
+export function wsUrl(path: string): string | null {
+  const token = tokenStore.get();
+  if (!token) return null;
+  const base = V1.replace(/^http/, "ws");
+  return `${base}${path}?token=${encodeURIComponent(token)}`;
+}
+
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+async function request<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
+  const token = tokenStore.get();
+  const headers = new Headers(init.headers);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const res = await fetch(`${V1}${path}`, { cache: "no-store", ...init, headers });
+
+  if (res.status === 401 && retry) {
+    // Access token süresi dolmuş olabilir; refresh dene
+    const refreshed = await tryRefresh();
+    if (refreshed) return request<T>(path, init, false);
+  }
+  if (res.status === 401) {
+    tokenStore.clear();
+    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+      window.location.href = "/login";
+    }
+    throw new ApiError(401, "Oturum gerekli");
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, body.detail ?? `API ${res.status}`);
+  }
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
+async function tryRefresh(): Promise<boolean> {
+  const refresh = tokenStore.getRefresh();
+  if (!refresh) return false;
+  const res = await fetch(`${V1}/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: refresh }),
+  });
+  if (!res.ok) return false;
+  const data = await res.json();
+  tokenStore.set(data.access_token, data.refresh_token);
+  return true;
+}
+
+const json = (body: unknown): RequestInit => ({
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body),
+});
+
+export const api = {
+  // --- Auth ---
+  login: async (email: string, password: string, tenantSlug = "demo") => {
+    const data = await request<{ access_token: string; refresh_token: string }>(
+      "/auth/login",
+      json({ email, password, tenant_slug: tenantSlug }),
+      false,
+    );
+    tokenStore.set(data.access_token, data.refresh_token);
+  },
+  demoLogin: async (role: string) => {
+    const res = await fetch(`${V1}/auth/demo-login`, json({ role }));
+    if (!res.ok) throw new ApiError(res.status, "Demo giriş başarısız");
+    const data = await res.json();
+    tokenStore.set(data.access_token, data.refresh_token);
+  },
+  me: () => request<Me>("/auth/me"),
+
+  // --- Kurumsal onboarding / auth ---
+  authConfig: async (): Promise<AuthConfig | null> => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/auth/config`);
+      return res.ok ? await res.json() : null;
+    } catch { return null; }
+  },
+  registerOrg: async (body: { org_name: string; admin_name: string; admin_email: string; password: string }) => {
+    const res = await fetch(`${V1}/auth/register-org`, json(body));
+    if (!res.ok) throw new ApiError(res.status, ((await res.json().catch(() => ({}))) as { detail?: string }).detail ?? "Kurum oluşturulamadı");
+    const data = await res.json();
+    tokenStore.set(data.access_token, data.refresh_token);
+  },
+  inviteInfo: async (token: string): Promise<InviteInfo> => {
+    const res = await fetch(`${V1}/auth/invite/${encodeURIComponent(token)}`);
+    return res.ok ? await res.json() : { valid: false, email: "", name: "", org_name: "" };
+  },
+  acceptInvite: async (token: string, password: string) => {
+    const res = await fetch(`${V1}/auth/accept-invite`, json({ token, password }));
+    if (!res.ok) throw new ApiError(res.status, ((await res.json().catch(() => ({}))) as { detail?: string }).detail ?? "Davet kabul edilemedi");
+    const data = await res.json();
+    tokenStore.set(data.access_token, data.refresh_token);
+  },
+  forgotPassword: (email: string, org_slug?: string): Promise<{ message: string }> =>
+    fetch(`${V1}/auth/forgot-password`, json({ email, org_slug })).then((r) => r.json()),
+  resetPassword: async (token: string, password: string) => {
+    const res = await fetch(`${V1}/auth/reset-password`, json({ token, password }));
+    if (!res.ok) throw new ApiError(res.status, ((await res.json().catch(() => ({}))) as { detail?: string }).detail ?? "Parola sıfırlanamadı");
+    const data = await res.json();
+    tokenStore.set(data.access_token, data.refresh_token);
+  },
+  changePassword: (old_password: string, new_password: string) =>
+    request<{ ok: boolean }>("/auth/change-password", json({ old_password, new_password })),
+
+  // --- Calls ---
+  listCalls: (params: Record<string, string>) =>
+    request<CallList>(`/calls?${new URLSearchParams(params)}`),
+  getCall: (id: number | string, reveal = false) =>
+    request<CallDetail>(`/calls/${id}${reveal ? "?reveal=true" : ""}`),
+  rescoreCall: (id: number, full = false) =>
+    request<CallListItem>(`/calls/${id}/rescore?full=${full}`, { method: "POST" }),
+  deleteCall: (id: number) => request<void>(`/calls/${id}`, { method: "DELETE" }),
+  toggleGolden: (id: number) => request<CallListItem>(`/calls/${id}/golden`, { method: "POST" }),
+  setCallTags: (id: number, tags: string[]) =>
+    request<CallListItem>(`/calls/${id}/tags`, { ...json({ tags }), method: "PUT" }),
+  uploadCall: (file: File, agentName: string, campaignId?: number) => {
+    const form = new FormData();
+    form.append("file", file);
+    if (agentName) form.append("agent_name", agentName);
+    if (campaignId) form.append("campaign_id", String(campaignId));
+    return request<CallListItem>("/calls/upload", { method: "POST", body: form });
+  },
+
+  // --- Transkript arama ---
+  searchTranscripts: (params: Record<string, string>) =>
+    request<TranscriptSearchResult>(`/calls/search?${new URLSearchParams(params)}`),
+
+  // --- Stats ---
+  overview: () => request<Overview>("/stats/overview"),
+
+  // --- Agents ---
+  listAgents: () => request<AgentSummary[]>("/agents"),
+  getAgent: (id: number | string) => request<AgentScorecard>(`/agents/${id}`),
+  coachingPlan: (agentId: number | string, days = 30) =>
+    request<CoachingPlan>(`/agents/${agentId}/coaching-plan?days=${days}`),
+
+  // --- Criteria ---
+  listCriteria: () => request<Criterion[]>("/criteria"),
+  createCriterion: (body: Partial<Criterion>) =>
+    request<Criterion>("/criteria", json(body)),
+  updateCriterion: (id: number, body: Partial<Criterion>) =>
+    request<Criterion>(`/criteria/${id}`, { ...json(body), method: "PATCH" }),
+  deleteCriterion: (id: number) => request<void>(`/criteria/${id}`, { method: "DELETE" }),
+  simulateRubric: (criteria: SimulateCriterion[], days = 30, limit = 200) =>
+    request<SimulateResult>("/criteria/simulate", json({ criteria, days, limit })),
+
+  // --- Admin ---
+  listCampaigns: () => request<Campaign[]>("/admin/campaigns"),
+  createCampaign: (body: { name: string; channel: string; description: string }) =>
+    request<Campaign>("/admin/campaigns", json(body)),
+  deleteCampaign: (id: number) => request<void>(`/admin/campaigns/${id}`, { method: "DELETE" }),
+  listBannedWords: () => request<BannedWord[]>("/admin/banned-words"),
+  createBannedWord: (body: Partial<BannedWord>) =>
+    request<BannedWord>("/admin/banned-words", json(body)),
+  updateBannedWord: (id: number, body: Partial<BannedWord>) =>
+    request<BannedWord>(`/admin/banned-words/${id}`, { ...json(body), method: "PATCH" }),
+  deleteBannedWord: (id: number) =>
+    request<void>(`/admin/banned-words/${id}`, { method: "DELETE" }),
+  listTeams: () => request<Team[]>("/admin/teams"),
+  listUsers: () => request<UserRow[]>("/admin/users"),
+  inviteUser: (body: { email: string; name: string; role: string; team_id?: number | null; agent_id?: number | null }) =>
+    request<InviteResult>("/admin/users/invite", json(body)),
+  regenerateLink: (userId: number) =>
+    request<InviteResult>(`/admin/users/${userId}/invite-link`, { method: "POST" }),
+  deleteUser: (userId: number) => request<void>(`/admin/users/${userId}`, { method: "DELETE" }),
+  createTeam: (body: { name: string; supervisor_id?: number | null }) =>
+    request<Team>("/admin/teams", json(body)),
+  deleteTeam: (id: number) => request<void>(`/admin/teams/${id}`, { method: "DELETE" }),
+  listAgentsAdmin: () => request<AgentAdmin[]>("/admin/agents"),
+  createAgentAdmin: (body: { name: string; team_id?: number | null }) =>
+    request<AgentAdmin>("/admin/agents", json(body)),
+  updateAgentAdmin: (id: number, body: { name: string; team_id?: number | null }) =>
+    request<AgentAdmin>(`/admin/agents/${id}`, { ...json(body), method: "PATCH" }),
+  deleteAgentAdmin: (id: number) => request<void>(`/admin/agents/${id}`, { method: "DELETE" }),
+  seedHistory: () => request<{ created: number; message: string }>("/admin/seed-demo-history", { method: "POST" }),
+  getSettings: () => request<TenantSettings>("/admin/settings"),
+  updateSettings: (body: Partial<{ retention_days: number; auto_process: boolean; notify_events: string[] }>) =>
+    request<TenantSettings>("/admin/settings", { ...json(body), method: "PUT" }),
+  systemInfo: () => request<SystemInfo>("/admin/system-info"),
+  onboardingStatus: () => request<OnboardingStatus>("/admin/onboarding-status"),
+  // --- Coklu AI saglayici ---
+  getAiConfig: () => request<AIConfig>("/admin/ai/config"),
+  putAiConfig: (body: Record<string, unknown>) =>
+    request<AIConfig>("/admin/ai/config", { ...json(body), method: "PUT" }),
+  aiCatalog: () => request<AICatalog>("/admin/ai/catalog"),
+  aiTest: (provider?: string) => request<AITestResult>("/admin/ai/test", json({ provider })),
+  ollamaModels: () => request<{ models: OllamaModel[]; error?: string }>("/admin/ai/ollama/models"),
+  ollamaPull: (model: string) => request<{ started: boolean }>("/admin/ai/ollama/pull", json({ model })),
+  ollamaPullStatus: () => request<Record<string, PullStatus>>("/admin/ai/ollama/pull-status"),
+
+  // --- Workflow ---
+  listAlerts: (onlyUnread = false) =>
+    request<Alert[]>(`/alerts?only_unread=${onlyUnread}`),
+  readAlert: (id: number) => request<void>(`/alerts/${id}/read`, { method: "POST" }),
+  overrideScore: (scoreId: number, body: { override_score: number; override_reason: string }) =>
+    request<void>(`/scores/${scoreId}/override`, json(body)),
+  listAppeals: (status?: string) =>
+    request<Appeal[]>(`/appeals${status ? `?status=${status}` : ""}`),
+  createAppeal: (body: { call_id: number; reason: string }) =>
+    request<Appeal>("/appeals", json(body)),
+  resolveAppeal: (id: number, body: { decision: string; resolution_note: string }) =>
+    request<Appeal>(`/appeals/${id}/resolve`, json(body)),
+  listCoaching: (status?: string) =>
+    request<CoachingTask[]>(`/coaching${status ? `?status=${status}` : ""}`),
+  createCoaching: (body: { call_id: number; assignee_agent_id: number; note: string }) =>
+    request<CoachingTask>("/coaching", json(body)),
+  completeCoaching: (id: number, body: { agent_comment: string }) =>
+    request<CoachingTask>(`/coaching/${id}/complete`, json(body)),
+  calibration: () => request<CalibrationRow[]>("/calibration"),
+
+  // --- Isleme kontrolu (agir STT/LLM isini elle baslatma) ---
+  processingStatus: () => request<ProcessingStatus>("/admin/processing"),
+  pauseProcessing: () => request<ProcessingStatus>("/admin/processing/pause", { method: "POST" }),
+  resumeProcessing: () => request<ProcessingStatus>("/admin/processing/resume", { method: "POST" }),
+  startProcessing: () => request<ProcessingStatus>("/admin/processing/start", { method: "POST" }),
+
+  // --- Kalibrasyon oturumlari (insan<->insan uyum) ---
+  listCalibrationSessions: (status?: string) =>
+    request<CalibrationSession[]>(`/calibration-sessions${status ? `?status=${status}` : ""}`),
+  createCalibrationSession: (body: { call_id: number; title?: string; scheduled_at?: string | null }) =>
+    request<CalibrationSession>("/calibration-sessions", json(body)),
+  submitEvaluation: (sessionId: number, body: {
+    call_id: number; scores: { criterion_id: number; score: number; note?: string }[]; notes?: string;
+  }) => request<unknown>(`/calibration-sessions/${sessionId}/evaluate`, json(body)),
+  closeCalibrationSession: (sessionId: number) =>
+    request<CalibrationReport>(`/calibration-sessions/${sessionId}/close`, { method: "POST" }),
+  calibrationReport: (sessionId: number) =>
+    request<CalibrationReport>(`/calibration-sessions/${sessionId}/report`),
+
+  // --- CSV metadata esleştirme ---
+  importMetadata: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<{ matched: number; updated: number; not_found_count: number; message: string }>(
+      "/admin/import-metadata", { method: "POST", body: form },
+    );
+  },
+
+  // --- Bilgi bankasi (RAG) ---
+  listKnowledgeDocs: () => request<KnowledgeDoc[]>("/knowledge/docs"),
+  uploadKnowledgeDoc: (file: File, title: string) => {
+    const form = new FormData();
+    form.append("file", file);
+    if (title) form.append("title", title);
+    return request<KnowledgeDoc>("/knowledge/docs", { method: "POST", body: form });
+  },
+  deleteKnowledgeDoc: (id: number) =>
+    request<void>(`/knowledge/docs/${id}`, { method: "DELETE" }),
+  searchKnowledge: (q: string) =>
+    request<KnowledgeHit[]>(`/knowledge/search?q=${encodeURIComponent(q)}`),
+  knowledgeStats: () => request<KnowledgeStats>("/knowledge/stats"),
+  seedKnowledge: () => request<KnowledgeDoc>("/knowledge/seed-demo", { method: "POST" }),
+
+  // --- Toplu yeniden puanlama ---
+  rescoreBulk: (callIds?: number[]) =>
+    request<{ queued: boolean; message: string }>("/calls/rescore-bulk", json({ call_ids: callIds ?? null })),
+
+  // --- Supervisor / gamification ---
+  leaderboard: (period: string, teamId?: number) =>
+    request<LeaderboardRow[]>(`/leaderboard?period=${period}${teamId ? `&team_id=${teamId}` : ""}`),
+  cockpit: (teamId?: number) =>
+    request<SupervisorCockpit>(`/supervisor/cockpit${teamId ? `?team_id=${teamId}` : ""}`),
+  topics: (days = 30, refresh = false) =>
+    request<TopicsResult>(`/supervisor/topics?days=${days}&refresh=${refresh}`),
+
+  // --- Chat ---
+  ingestChat: (body: unknown) => request<CallListItem>("/chats", json(body)),
+
+  // --- Analitik (Dalga 3a VoC + 3b dashboard) ---
+  analyticsTimeseries: (metric = "score", days = 30, bucket = "day") =>
+    request<TimeseriesPoint[]>(`/analytics/timeseries?metric=${metric}&days=${days}&bucket=${bucket}`),
+  analyticsVoc: (days = 14) => request<VocTrend[]>(`/analytics/voc?days=${days}`),
+  analyticsEmotions: (days = 30) =>
+    request<{ emotions: Record<string, number>; churn: Record<string, number> }>(`/analytics/emotions?days=${days}`),
+  analyticsCohort: (dimension = "team", days = 30) =>
+    request<CohortRow[]>(`/analytics/cohort?dimension=${dimension}&days=${days}`),
+  emergingTopics: (days = 7) => request<EmergingTopic[]>(`/analytics/emerging?days=${days}`),
+  correlations: (days = 90) => request<CorrelationInsight[]>(`/analytics/correlations?days=${days}`),
+  execSummary: (days = 30) => request<ExecSummary>(`/analytics/exec-summary?days=${days}`),
+  listTargets: () => request<Target[]>("/targets"),
+  createTarget: (body: TargetIn) => request<Target>("/targets", json(body)),
+  deleteTarget: (id: number) => request<void>(`/targets/${id}`, { method: "DELETE" }),
+  targetProgress: (days = 30) => request<TargetProgress[]>(`/targets/progress?days=${days}`),
+  aiUsage: (days = 30) => request<AiUsageSummary>(`/admin/ai/usage?days=${days}`),
+  churn: (days = 30) => request<ChurnSummary>(`/analytics/churn?days=${days}`),
+  appealAnalytics: (days = 90) => request<AppealAnalytics>(`/analytics/appeals?days=${days}`),
+  listRubricVersions: () => request<RubricVersion[]>("/criteria/versions"),
+  saveRubricVersion: (note: string) => request<RubricVersion>("/criteria/versions", json({ note })),
+  restoreRubricVersion: (id: number) => request<Criterion[]>(`/criteria/versions/${id}/restore`, { method: "POST" }),
+  bulkCallAction: (ids: number[], action: string, tag?: string) =>
+    request<BulkResult>("/calls/bulk", json({ ids, action, tag })),
+  similarCalls: (id: number | string, limit = 8) => request<SimilarCall[]>(`/calls/${id}/similar?limit=${limit}`),
+  notifications: () => request<NotificationFeed>("/notifications"),
+  notificationsReadAll: () => request<void>("/notifications/read-all", { method: "POST" }),
+
+  // --- QA inceleme & ornekleme (Dalga 2b) ---
+  reviewStats: () => request<ReviewStats>("/review/stats"),
+  myReviews: (onlyOpen = false) =>
+    request<ReviewAssignment[]>(`/review/mine?only_open=${onlyOpen}`),
+  createSample: (body: { reviewer_id: number; reason: string; count: number }) =>
+    request<ReviewAssignment[]>("/review/sample", json(body)),
+  completeReview: (id: number, evaluationId?: number) =>
+    request<ReviewAssignment>(`/review/${id}/complete${evaluationId ? `?evaluation_id=${evaluationId}` : ""}`, { method: "POST" }),
+  coachingEffectiveness: () => request<CoachingEffectiveness>("/review/coaching-effectiveness"),
+
+  // --- Self-servis + gamification (Dalga 3c + 3d) ---
+  myGamification: () => request<Gamification>("/me/gamification"),
+  createSelfAssessment: (body: { call_id: number; self_score: number; note?: string }) =>
+    request<SelfAssessment>("/me/self-assessment", json(body)),
+  getSelfAssessment: (callId: number) =>
+    request<SelfAssessment | null>(`/calls/${callId}/self-assessment`),
+  listChallenges: () => request<Challenge[]>("/challenges"),
+  createChallenge: (body: Partial<Challenge> & { title: string }) =>
+    request<Challenge>("/challenges", json(body)),
+
+  // --- Uyum paketleri (Dalga 4a) ---
+  compliancePacks: () => request<CompliancePack[]>("/compliance-packs"),
+
+  // --- Agent assist + vision (Dalga 5 + 6) ---
+  assistSuggest: (partialText: string, packs?: string[]) =>
+    request<AssistSuggestion[]>("/assist/suggest", json({ partial_text: partialText, packs: packs ?? null })),
+  visionStatus: () => request<VisionStatus>("/vision/status"),
+  visionAnalyze: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<VisionResult>("/vision/analyze", { method: "POST", body: form });
+  },
+
+  // --- Kurumsal: denetim gunlugu, guvenlik durusu, AI puan karti, ROI, marka ---
+  auditLog: (params: Record<string, string>) =>
+    request<AuditPage>(`/admin/audit?${new URLSearchParams(params)}`),
+  securityPosture: () => request<SecurityPosture>("/enterprise/security-posture"),
+  buildScorecard: (body: { prompt: string; channel: string; max_criteria: number }) =>
+    request<ScorecardDraft>("/enterprise/scorecard/build", json(body)),
+  saveScorecard: (body: { criteria: DraftCriterion[]; campaign_id?: number | null; replace_existing: boolean }) =>
+    request<{ created: number; message: string }>("/enterprise/scorecard/save", json(body)),
+  computeRoi: (body: RoiInputs) => request<RoiResult>("/enterprise/roi", json(body)),
+  demoReset: () =>
+    request<{ deleted: number; created: number; message: string }>("/enterprise/demo/reset", { method: "POST" }),
+  getBranding: () => request<Branding>("/admin/branding"),
+  updateBranding: (body: Partial<Branding>) =>
+    request<Branding>("/admin/branding", { ...json(body), method: "PUT" }),
+};
+
+/** Giris ekrani icin auth'suz marka (public). */
+export async function fetchPublicBranding(tenant = "demo"): Promise<Branding | null> {
+  try {
+    const res = await fetch(`${V1}/auth/branding?tenant=${encodeURIComponent(tenant)}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return (await res.json()) as Branding;
+  } catch {
+    return null;
+  }
+}
+
+/** SSO baslat: tarayiciyi backend'in OIDC yonlendirmesine gonderir. */
+export const ssoLoginUrl = () => `${V1}/auth/sso/login`;
+
+// Ses <audio> Authorization header gonderemez; blob olarak cekip object URL veririz
+export async function fetchAudioObjectUrl(id: number | string): Promise<string> {
+  const token = tokenStore.get();
+  const res = await fetch(`${V1}/calls/${id}/audio`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new ApiError(res.status, "Ses yüklenemedi");
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}
+
+export const exportCsvUrl = (params: Record<string, string>) =>
+  `${V1}/calls/export.csv?${new URLSearchParams(params)}`;
+
+export const reportUrls = {
+  teamXlsx: (teamId?: number) => `${V1}/reports/team.xlsx${teamId ? `?team_id=${teamId}` : ""}`,
+  agentPdf: (agentId: number) => `${V1}/reports/agent/${agentId}.pdf`,
+};
+
+// Yetkilendirilmis indirme (Authorization header ile) — dosyayi blob olarak indirir
+export async function authedDownload(url: string, filename: string) {
+  const token = tokenStore.get();
+  const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  if (!res.ok) throw new ApiError(res.status, "İndirme başarısız");
+  const blob = await res.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ---- Sunum yardımcıları ----
+
+export const CATEGORY_LABELS: Record<string, string> = {
+  fatura: "Fatura", iptal: "İptal", ariza: "Arıza",
+  sikayet: "Şikayet", bilgi: "Bilgi", diger: "Diğer",
+};
+
+export const STATUS_LABELS: Record<string, string> = {
+  pending: "Kuyrukta", transcribing: "Çözümleniyor", scoring: "Puanlanıyor",
+  done: "Tamamlandı", failed: "Hata",
+};
+
+export const ROLE_LABELS: Record<string, string> = {
+  admin: "Yönetici", supervisor: "Süpervizör", quality: "Kalite Uzmanı", agent: "Temsilci",
+};
+
+/** i18n anahtarlari — cevrilmis rol adi icin t(ROLE_LABEL_KEYS[role]) */
+export const ROLE_LABEL_KEYS: Record<string, string> = {
+  admin: "role.admin", supervisor: "role.supervisor",
+  quality: "role.quality", agent: "role.agent",
+};
+
+export const CHANNEL_LABELS: Record<string, string> = { voice: "Sesli", chat: "Chat" };
+
+export const SENTIMENT_LABELS: Record<string, { label: string; cls: string }> = {
+  olumlu: { label: "Olumlu", cls: "badge-good" },
+  notr: { label: "Nötr", cls: "badge-neutral" },
+  olumsuz: { label: "Olumsuz", cls: "badge-critical" },
+};
+
+export const VIOLATION_LABELS: Record<string, string> = {
+  hakaret: "Hakaret", kucumseme: "Küçümseme", rakip: "Rakip önerme",
+  yasak_vaat: "Yasak vaat", mevzuat: "Mevzuat", eskalasyon: "Eskalasyon",
+  kvkk: "KVKK uyum", pci: "PCI uyum", kayit_ifsa: "Kayıt bildirimi", hitap: "Hitap",
+};
+
+export function fmtTs(sec: number): string {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+export function fmtDuration(sec: number | null): string {
+  return sec == null ? "—" : fmtTs(sec);
+}
+
+export function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleString("tr-TR", {
+    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+  });
+}
+
+export type ScoreStatus = "good" | "warning" | "critical";
+
+export function scoreStatus(score: number): ScoreStatus {
+  if (score >= 80) return "good";
+  if (score >= 60) return "warning";
+  return "critical";
+}
+
+export function scoreStatus10(score: number): ScoreStatus {
+  if (score >= 8) return "good";
+  if (score >= 6) return "warning";
+  return "critical";
+}

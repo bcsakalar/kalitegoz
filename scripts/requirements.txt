@@ -1,0 +1,10 @@
+# Demo veri ureteci bagimliliklari (host makinede calisir, Docker gerekmez)
+numpy>=1.26
+
+# Varsayilan seslendirme motoru: gercek TR kadin (Emel) / erkek (Ahmet) sesi.
+# API anahtari gerektirmez, model indirmez; internet ve ffmpeg ister.
+edge-tts>=6.1
+
+# Cevrimdisi fallback (--tts-engine piper). Tek TR model (dfki) + pitch ile
+# erkek ses uretir; cinsiyet ayrimi zayiftir. Bkz. scripts/tts_engines.py
+piper-tts>=1.2
