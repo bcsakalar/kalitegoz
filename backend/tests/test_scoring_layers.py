@@ -211,3 +211,34 @@ def test_katman_a_yetersiz_kanit_ortalamaya_katilmaz():
     d = sl.from_finding(4, f)
     assert d.counts_toward_total is False
     assert d.needs_human is True
+
+
+# =========================================================================
+# Karar <-> puan tutarliligi (bant kelepcesi)
+# =========================================================================
+
+def test_karar_met_ise_puan_karsilandi_bandinda_kalir():
+    """Model 'karsilandi' deyip 5 puan veremez."""
+    assert sl.clamp_to_band("met", 5) == 8
+    assert sl.clamp_to_band("met", 9) == 9
+    assert sl.clamp_to_band("met", 11) == 10
+
+
+def test_karar_not_met_ise_puan_yukari_cikamaz():
+    assert sl.clamp_to_band("not_met", 9) == 4
+    assert sl.clamp_to_band("not_met", 1) == 1
+
+
+def test_karar_partially_met_bandi():
+    assert sl.clamp_to_band("partially_met", 10) == 7
+    assert sl.clamp_to_band("partially_met", 2) == 5
+
+
+def test_yetersiz_kanit_kelepcelenmez():
+    assert sl.clamp_to_band("insufficient_evidence", None) is None
+    assert sl.clamp_to_band("not_applicable", 7) == 7
+
+
+def test_verify_karari_banda_kelepceler():
+    d = sl.verify(karar(1, decision="met", puan=4, quote="ben Mehmet"), TRANSCRIPT)
+    assert d.score == 8, "met karari 'kismen' bandinda puan aldi"

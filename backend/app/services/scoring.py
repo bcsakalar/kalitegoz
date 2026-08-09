@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 from ..config import settings
 from ..models import AlertType, BannedWord, Call, Channel, Criterion, Score, Segment, Tenant, Violation
 from ..schemas import LLMCagriAnalizi
-from . import acoustics, ai_config, compliance, deterministic, etiquette, knowledge
+from . import acoustics, ai_config, calibration_scale, compliance, deterministic, etiquette, knowledge
 from . import alerts as alerts_svc
 from . import scoring_layers
 from .llm import generate_json
@@ -95,11 +95,25 @@ def _metrics_hint(metrics: dict | None) -> str:
         lines.append("\n### Akustik (NASIL soyledi):")
         lines.extend(ac)
 
+    # Somut esikler ver: "soz kesme puani dusurur" gibi mugak bir yonerge,
+    # modelin sayilari gormesine ragmen comert puanlamasina yol aciyordu
+    # (altin sette Aktif Dinleme ortalama sapma +1.73).
+    kes = metrics.get("temsilci_kesinti")
+    if kes is not None:
+        lines.append(
+            "\n### Bu olcumleri NASIL kullanacaksin (Aktif Dinleme):"
+            "\n- Temsilcinin soz kesme sayisi 0     -> bu yonden tam puan engeli YOK"
+            "\n- 1-2 kesme                          -> en fazla 7"
+            "\n- 3-4 kesme                          -> en fazla 4"
+            "\n- 5 ve uzeri                         -> en fazla 2"
+            f"\n  (bu cagrida temsilci {kes} kez kesti)"
+            "\n- MUSTERININ kesmesi temsilcinin puanini ETKILEMEZ."
+            f" (musteri {metrics.get('musteri_kesinti', 0)} kez kesti — bu bir ceza sebebi DEGILDIR)"
+        )
     lines.append(
-        "\nBu olcumleri kullan: soz kesme/sessizlik -> 'Aktif Dinleme'; temsilcinin "
-        "bagirmasi -> 'Yasakli Kelime / Uslup' ve varsa 'Kriz Yonetimi' (sakin kalmali); "
-        "monotonluk -> 'Iletisim Kalitesi'. Musterinin bagirmasi temsilciyi CEZALANDIRMAZ, "
-        "ancak temsilcinin buna nasil tepki verdigini degerlendir.\n"
+        "\nTemsilcinin bagirmasi -> 'Yasakli Kelime / Uslup'; monotonluk -> iletisim "
+        "kalitesi. Musterinin bagirmasi temsilciyi CEZALANDIRMAZ, ancak temsilcinin "
+        "buna nasil tepki verdigini degerlendir.\n"
     )
     return "\n".join(lines)
 
@@ -348,6 +362,23 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
     # ---------------- KATMAN B + C — kanit zorunlu LLM -------------------
     if llm_criteria:
         decisions.extend(_evaluate_llm_criteria(llm_criteria, segments, hint))
+
+    # ---------------- KATMAN C (devam) — skala kalibrasyonu --------------
+    # LLM ile puanlanan kriterlerde olculmus, tek yonlu bir sapma var (altin
+    # sette Aktif Dinleme +1.73, Cozum +1.24, Ihtiyac +1.16). Bu, gurultu degil
+    # olcek hizasizligidir; kriter bazinda ogrenilmis kaydirmayla duzeltilir.
+    # Deterministik (Katman A) kararlar kalibre EDILMEZ — sapmalari sifir.
+    # Kaydirma BANT ICINDE kalir: modelin "karsilandi" dedigi bir kriter
+    # kalibrasyon yuzunden "kismen" bandina DUSEMEZ. Aksi halde kalibrasyon,
+    # modelin dogru kararlarini bozarak yeni hata uretir (olculdu).
+    _names = {c.id: c.name for c in criteria}
+    for d in decisions:
+        d.score = scoring_layers.clamp_to_band(
+            d.decision,
+            calibration_scale.apply(
+                _names.get(d.criterion_id, ""), d.score, source_layer=d.source_layer
+            ),
+        )
 
     # ---------------- Puan ve sifirlama — hepsi KODDA --------------------
     base_total = scoring_layers.compute_total(decisions, criteria)

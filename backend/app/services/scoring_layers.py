@@ -56,6 +56,29 @@ SYSTEM_PROMPT = (
 )
 
 
+# Karar ile puanin TUTARLI olmasi zorunlu. Model "kriter karsilandi" deyip 5
+# puan veremez; "karsilanmadi" deyip 8 veremez. Prompt'ta bu kural yaziliydi ama
+# hicbir yerde ZORLANMIYORDU — ve tek yonlu bir kalibrasyon kaydirmasi, modelin
+# dogru "met" kararlarini "kismen" bandina itip yeni hata uretiyordu (olculdu:
+# must_not_penalize ihlali 0 -> 8). Bant kelepcesi ikisini birden cozer.
+DECISION_BANDS: dict[str, tuple[int, int]] = {
+    "met": (8, 10),
+    "partially_met": (5, 7),
+    "not_met": (0, 4),
+}
+
+
+def clamp_to_band(decision: str, score: int | None) -> int | None:
+    """Puani, kararin ima ettigi banda kelepcele."""
+    if score is None:
+        return None
+    band = DECISION_BANDS.get(decision)
+    if band is None:
+        return score
+    lo, hi = band
+    return max(lo, min(hi, score))
+
+
 @dataclass
 class CriterionDecision:
     """Katman C'den gecmis nihai kriter karari."""
@@ -152,7 +175,8 @@ SADECE su semada gecerli JSON dondur:
       "karar": "met",
       "puan": 9,
       "kanitlar": [
-        {{"speaker": "temsilci", "start_sec": 12.5, "quote": "birebir alinti"}}
+        {{"speaker": "temsilci", "start_sec": 12.5,
+          "quote": "<<BURAYA transkriptten kelimesi kelimesine kopyalanmis gercek cumle>>"}}
       ],
       "gerekce": "...",
       "guven": 0.9
@@ -260,7 +284,8 @@ def verify(karar: LLMKriterKarari, transcript_blob: str) -> CriterionDecision:
         )
 
     return CriterionDecision(
-        criterion_id=karar.kriter_id, decision=karar.karar, score=karar.puan,
+        criterion_id=karar.kriter_id, decision=karar.karar,
+        score=clamp_to_band(karar.karar, karar.puan),
         rationale=karar.gerekce, evidence_quote=verified.quote,
         evidence_ts=verified.start_sec, evidence_speaker=verified.speaker,
         confidence=karar.guven, evidence_verified=True, source_layer="B",
@@ -330,6 +355,10 @@ def decide_zeroing(decisions: list[CriterionDecision], criteria: list) -> Zeroin
         if d.score is None:  # yetersiz kanit -> sifirlama YOK
             continue
         if d.score < c.critical_threshold:
+            # Kanit: ya transkriptten alinti, ya da Katman A'nin "yokluk kaniti"
+            # (bir seyin OLMADIGINI gostermenin kaniti aramanin kendisidir).
+            # Katman B'den gelen bir karar kanitsiz sifirlama YAPAMAZ — Katman C
+            # zaten kanitsizi insufficient_evidence'a dusuruyor.
             return ZeroingResult(
                 zeroed=True,
                 reason=f"{c.name}: {d.rationale}",

@@ -105,6 +105,22 @@ def _blob_with_offsets(segments: list) -> tuple[str, list[tuple[int, object]]]:
     return " ".join(parts), offsets
 
 
+def _absence_proof(agent_segments: list, aranan: str) -> str:
+    """"Yokluk" kanıtı — bir şeyin OLMADIĞINI göstermenin kanıtı.
+
+    Sıfırlama kanıtsız yapılamaz (B5), ama "kimlik hiç doğrulanmadı" gibi bir
+    tespitte gösterilecek bir alıntı YOKTUR — kanıt, aramanın kendisidir.
+    Bu yüzden ne arandığı ve nerede arandığı kayda geçer; kaliteci ekranında
+    "şu 12 replikte şu ifade aranmış, bulunamamış" olarak gösterilebilir.
+    """
+    n = len(agent_segments)
+    ilk = agent_segments[0].text.strip()[:60] if agent_segments else ""
+    return (
+        f"Temsilcinin {n} repliğinin tamamı tarandı, {aranan} bulunamadı. "
+        f"İlk replik: \"{ilk}…\""
+    )
+
+
 def _no_speaker_finding(check_key: str, name: str) -> Finding:
     return Finding(
         check_key=check_key, decision="insufficient_evidence", score=None,
@@ -237,13 +253,12 @@ def check_kvkk(segments: list, *, window_sec: float = OPENING_WINDOW_SEC) -> Fin
             details={"kayit_bildirimi": None, "aydinlatma": aydin.quote},
         )
 
-    seg0 = opening[0]
     return Finding(
         "kvkk_anons", "not_met", 0,
         "Zorunlu KVKK aydınlatması yapılmadı: ne kayıt bildirimi ne de "
         "kişisel veri işleme bilgisi verildi.",
-        evidence_quote=seg0.text.strip(), evidence_ts=seg0.start_sec,
-        evidence_speaker=seg0.speaker,
+        evidence_quote=_absence_proof(opening, "kayıt bildirimi veya KVKK aydınlatması"),
+        evidence_ts=opening[0].start_sec, evidence_speaker="temsilci",
         details={"kayit_bildirimi": None, "aydinlatma": None},
     )
 
@@ -258,6 +273,11 @@ KIMLIK_TALEP = (
     "hizmet numaranızı alabilir", "adınızı alabilir", "ad soyadınızı alabilir",
     "kimlik numaranızı alabilir", "müşteri numaranızı öğrenebilir",
     "adınızı öğrenebilir", "sizi doğrulayabilmem",
+    "müşteri numaranızı söyler", "adınızı söyler",
+    # Kisa/emir kipli sorma bicimleri — cagri merkezinde yaygin.
+    # "Adiniz?" tek basina zayif bir dogrulamadir ama YAPILMAMIS sayilamaz;
+    # aksi halde cagri haksiz yere sifirlanir.
+    "adınız", "müşteri numaranız", "hizmet numaranız",
 )
 
 
@@ -277,6 +297,7 @@ def check_kimlik(segments: list) -> Finding:
         return Finding(
             "kimlik_dogrulama", "not_met", 0,
             "Temsilci müşteri kimliğini/müşteri numarasını hiç doğrulamadı.",
+            evidence_quote=_absence_proof(agent, "kimlik doğrulama talebi"),
         )
 
     quote, ts, spk = _locate(agent, hit, offsets)
@@ -303,6 +324,7 @@ def check_kimlik(segments: list) -> Finding:
 EK_YARDIM = (
     "başka yardımcı olabileceğim", "başka bir konuda yardımcı",
     "başka bir sorunuz", "başka bir talebiniz", "yardımcı olabileceğim başka",
+    "başka bir şey var", "başka bir isteğiniz", "başka bir husus",
 )
 VEDA = (
     "iyi günler", "iyi akşamlar", "iyi çalışmalar", "sağlıcakla kalın",
@@ -424,18 +446,66 @@ def check_uslup(segments: list, banned: list) -> Finding:
 # Kayıt: check_key -> fonksiyon
 # ---------------------------------------------------------------------------
 
+def check_script(findings: dict[str, Finding]) -> Finding:
+    """Zorunlu akış adımlarının tamamı uygulandı mı?
+
+    "Script Uyumu" önceden LLM'e soruluyordu ve muğlaktı: 50 senaryonun 15'inde
+    model kanıt bulamayıp `insufficient_evidence` döndü (ölçüldü). Muğlaklığın
+    sebebi kriterin kendisiydi — "script" tanımı hiçbir yerde yazılı değildi.
+
+    Burada somut bir tanım verilir: zorunlu akış = açılış + KVKK anonsu +
+    kimlik doğrulama + kapanış. Dördü de zaten deterministik olarak ölçülüyor;
+    bu kriter onların bileşimidir. Böylece hem muğlaklık biter hem de aynı
+    olgu iki kez LLM'e sorulmaz.
+    """
+    parts = ("acilis", "kvkk_anons", "kimlik_dogrulama", "kapanis")
+    available = [findings[k] for k in parts if k in findings]
+    conclusive = [f for f in available if f.is_conclusive and f.score is not None]
+    if not conclusive:
+        return Finding(
+            "script_uyumu", "insufficient_evidence", None,
+            "Zorunlu akış adımları değerlendirilemedi (konuşmacı ayrımı yok).",
+            confidence=0.0,
+        )
+
+    tamam = [f for f in conclusive if f.decision == "met"]
+    eksik = [f for f in conclusive if f.decision == "not_met"]
+    score = round(sum(f.score for f in conclusive) / len(conclusive))
+
+    if not eksik and len(tamam) == len(conclusive):
+        return Finding(
+            "script_uyumu", "met", score,
+            f"Zorunlu akışın {len(conclusive)} adımının tamamı uygulandı.",
+            evidence_quote=conclusive[0].evidence_quote,
+            evidence_ts=conclusive[0].evidence_ts, evidence_speaker="temsilci",
+            details={"tamamlanan": len(tamam), "toplam": len(conclusive)},
+        )
+    worst = min(conclusive, key=lambda f: f.score)
+    decision = "not_met" if len(eksik) >= 2 else "partially_met"
+    return Finding(
+        "script_uyumu", decision, score,
+        f"Zorunlu akışın {len(conclusive)} adımından {len(eksik)} tanesi atlandı.",
+        evidence_quote=worst.evidence_quote, evidence_ts=worst.evidence_ts,
+        evidence_speaker="temsilci",
+        details={"eksik": [f.check_key for f in eksik], "toplam": len(conclusive)},
+    )
+
+
 def run_all(segments: list, *, brand_names: tuple[str, ...], banned: list) -> dict[str, Finding]:
     """Tüm deterministik kontrolleri koştur → {check_key: Finding}."""
-    return {
+    out = {
         "acilis": check_acilis(segments, brand_names=brand_names),
         "kvkk_anons": check_kvkk(segments),
         "kimlik_dogrulama": check_kimlik(segments),
         "kapanis": check_kapanis(segments),
         "yasakli_kelime": check_uslup(segments, banned),
     }
+    out["script_uyumu"] = check_script(out)  # digerlerinin bileşimi
+    return out
 
 
-CHECK_KEYS = ("acilis", "kvkk_anons", "kimlik_dogrulama", "kapanis", "yasakli_kelime")
+CHECK_KEYS = ("acilis", "kvkk_anons", "kimlik_dogrulama", "kapanis",
+              "yasakli_kelime", "script_uyumu")
 
 # Rubrikteki kriter adı -> deterministik kontrol. Kriter tablosuna `check_key`
 # kolonu eklenene kadar (ve eski kiracılar için) ad bazlı eşleme yedeği.
@@ -449,6 +519,7 @@ NAME_TO_CHECK = {
     "kapanış": "kapanis",
     "yasakli kelime / uslup": "yasakli_kelime",
     "yasaklı kelime / üslup": "yasakli_kelime",
+    "script uyumu": "script_uyumu",
 }
 
 

@@ -31,6 +31,7 @@ from app.models import (  # noqa: E402
 )
 from app.services import scoring  # noqa: E402
 from app.services.compliance import _normalize  # noqa: E402
+from app.services.text_tr import contains_verbatim  # noqa: E402
 
 GOLDEN_TENANT = "__golden__"
 GOLDEN_DIR = Path("/data/golden")
@@ -88,15 +89,23 @@ def ensure_golden_tenant(db) -> tuple[Tenant, Agent]:
     if src is None:
         raise RuntimeError("Kaynak kiraci yok — once seed calistirin")
 
+    # Senaryolardaki kurum adi. Katman A acilis kontrolu bunu arar; kiraci
+    # ayarinda yoksa "kurum adi soylenmedi" der ve TUM senaryolarda Acilis
+    # haksiz yere dusuk cikar (ilk FAZ 2 kosumunda bizzat yasandi: MAE 4.8).
+    golden_settings = dict(src.settings or {})
+    golden_settings["brand_names"] = ["Netik İletişim", "Netik"]
+
     if t is None:
-        t = Tenant(name=GOLDEN_TENANT, slug="golden", settings=dict(src.settings or {}))
+        t = Tenant(name=GOLDEN_TENANT, slug="golden", brand_name="Netik İletişim",
+                   settings=golden_settings)
         db.add(t)
         db.flush()
     else:
         # Kaynak rubrik degistiyse ayni kalsin diye her kosumda yenilenir
         db.query(Criterion).filter(Criterion.tenant_id == t.id).delete()
         db.query(BannedWord).filter(BannedWord.tenant_id == t.id).delete()
-        t.settings = dict(src.settings or {})
+        t.settings = golden_settings
+        t.brand_name = "Netik İletişim"
         db.flush()
 
     for c in db.query(Criterion).filter(Criterion.tenant_id == src.id).order_by(Criterion.id):
@@ -105,6 +114,11 @@ def ensure_golden_tenant(db) -> tuple[Tenant, Agent]:
             weight=c.weight, is_critical=c.is_critical,
             critical_threshold=c.critical_threshold, is_active=c.is_active,
             channel_scope=c.channel_scope, campaign_id=None,
+            # FAZ 2 alanlari da kopyalanmali; aksi halde altin set kiracisinda
+            # capalar kaybolur ve Katman B prompt'u kaynak kiracidakinden
+            # FARKLI olur — olctugumuz sey uretimdeki sistem olmaz.
+            evaluation_mode=c.evaluation_mode, check_key=c.check_key,
+            anchor_10=c.anchor_10, anchor_0=c.anchor_0,
         ))
     for b in db.query(BannedWord).filter(BannedWord.tenant_id == src.id):
         db.add(BannedWord(
@@ -167,7 +181,9 @@ def score_scenario(db, tenant: Tenant, agent: Agent, tr: dict) -> dict:
     return {
         "call_id": call.id,
         "scores": [{"name": r.criterion_name, "score": r.score,
-                    "evidence": r.evidence or "", "rationale": r.rationale or ""} for r in rows],
+                    "evidence": r.evidence or "", "rationale": r.rationale or "",
+                    "decision": r.decision, "source_layer": r.source_layer,
+                    "confidence": r.confidence} for r in rows],
         "total": call.total_score,
         "zeroed": bool(call.zeroed),
         "is_crisis": bool(call.is_crisis),
@@ -177,28 +193,21 @@ def score_scenario(db, tenant: Tenant, agent: Agent, tr: dict) -> dict:
     }
 
 
-def evidence_found(evidence: str, transcript_blob: str) -> bool:
-    """Kanit, normalize edilmis transkriptte GERCEKTEN geciyor mu?"""
+def evidence_found(evidence: str, transcript_text: str) -> bool:
+    """Kanit, transkriptte GERCEKTEN geciyor mu?
+
+    URETIMDEKI dogrulayicinin ta kendisi kullanilir (`text_tr.contains_verbatim`).
+    Ayri bir kopyasini yazmak, motoru degil "iki dogrulayici arasindaki farki"
+    olcmek olurdu — nitekim ilk surumde tam bu oldu: Katman C'nin kabul ettigi
+    alintilarin %29.5'ini degerlendiricinin kendi kopyasi reddediyordu.
+    """
     ev = (evidence or "").strip()
     if not ev:
         return False
     # Sistem kanitin basina "[00:01 | 1sn] TEMSILCI: " on eki koyabiliyor
     if "]" in ev and ":" in ev.split("]", 1)[1][:20]:
         ev = ev.split(":", 2)[-1]
-    ev_n = _normalize(ev).strip(" .,!?\"'")
-    if len(ev_n) < 8:
-        return False
-    if ev_n in transcript_blob:
-        return True
-    # Kismi tolerans: kanitin en uzun 8 kelimelik penceresi geciyorsa kabul
-    words = ev_n.split()
-    for size in (10, 8, 6):
-        if len(words) < size:
-            continue
-        for i in range(len(words) - size + 1):
-            if " ".join(words[i:i + size]) in transcript_blob:
-                return True
-    return False
+    return contains_verbatim(transcript_text, ev)
 
 
 def evaluate(limit: int | None, repeat_n: int) -> dict:
@@ -215,6 +224,13 @@ def evaluate(limit: int | None, repeat_n: int) -> dict:
 
     per_criterion: dict[str, list[tuple[int, float]]] = {}
     evidence_total = evidence_ok = 0
+    # FAZ 2: 'insufficient_evidence' birinci sinif bir sonuc. Yanlis puan DEGIL —
+    # sistemin "bilmiyorum, insana soralim" demesi. Ayri olculur; cok yuksek olmasi
+    # da bir sorundur (kapsam duser), ama yanlis puandan iyidir.
+    insufficient_total = 0
+    insufficient_by_crit: dict[str, int] = {}
+    scored_total = 0
+    evidence_fabricated: list[dict] = []
     zero_fp: list[str] = []
     zero_fn: list[str] = []
     penalize_violations: list[dict] = []
@@ -225,7 +241,7 @@ def evaluate(limit: int | None, repeat_n: int) -> dict:
 
     for i, item in enumerate(scenarios, 1):
         tr, exp = item["transcript"], item["expected"]
-        blob = _normalize(" ".join(s["text"] for s in tr["segments"]))
+        blob = " ".join(s["text"] for s in tr["segments"])
         try:
             got = score_scenario(db, tenant, agent, tr)
         except Exception as exc:  # noqa: BLE001
@@ -237,18 +253,42 @@ def evaluate(limit: int | None, repeat_n: int) -> dict:
 
         by_name = {s["name"]: s for s in got["scores"]}
         for crit, want in exp["scores"].items():
-            if crit in by_name:
-                per_criterion.setdefault(crit, []).append((want, by_name[crit]["score"]))
+            s = by_name.get(crit)
+            if s is None:
+                continue
+            # FAZ 2: puan None ise kriter 'yetersiz kanit' — ne dogru ne yanlis,
+            # insan kuyruguna dusmus demektir. MAE/kappa'ya KATILMAZ; ayri olculur.
+            if s["score"] is None:
+                insufficient_total += 1
+                insufficient_by_crit[crit] = insufficient_by_crit.get(crit, 0) + 1
+                continue
+            per_criterion.setdefault(crit, []).append((want, s["score"]))
 
+        # Kanit dogrulanabilirligi, "sistem transkriptten alinti diye ne
+        # gosteriyorsa gercekten orada mi?" sorusudur. Yalnizca Katman B
+        # (LLM'in iddia ettigi alinti) olculur:
+        #   * Katman A'nin kaniti kodun kendisi urettigi icin yapisi geregi
+        #     dogrudur; "yokluk kaniti" ise bir alinti DEGILDIR
+        #     ("12 replik tarandi, bulunamadi") ve transkriptte aranamaz.
+        #   * Puanlanmamis (yetersiz kanit) kriterlerde ortada iddia yoktur.
         for s in got["scores"]:
+            if s["score"] is None or s.get("source_layer") != "B":
+                continue
             evidence_total += 1
             if evidence_found(s["evidence"], blob):
                 evidence_ok += 1
+            else:
+                evidence_fabricated.append({
+                    "id": tr["id"], "kriter": s["name"],
+                    "karar": s.get("decision"), "alinti": (s["evidence"] or "")[:90],
+                })
 
         if got["zeroed"] and not exp["zeroed"]:
             zero_fp.append(tr["id"])
         if exp["zeroed"] and not got["zeroed"]:
             zero_fn.append(tr["id"])
+
+        scored_total += sum(1 for s in got["scores"] if s["score"] is not None)
 
         for crit in exp.get("must_not_penalize", []):
             actual = by_name.get(crit, {}).get("score")
@@ -256,7 +296,7 @@ def evaluate(limit: int | None, repeat_n: int) -> dict:
                 penalize_violations.append({"id": tr["id"], "kriter": crit, "puan": actual})
 
         for crit, frag in (exp.get("evidence_must_contain") or {}).items():
-            ev = by_name.get(crit, {}).get("evidence", "")
+            ev = by_name.get(crit, {}).get("evidence") or ""
             if _normalize(frag) not in _normalize(ev):
                 evidence_content_fail.append({"id": tr["id"], "kriter": crit,
                                               "beklenen": frag, "gelen": ev[:70]})
@@ -332,6 +372,12 @@ def evaluate(limit: int | None, repeat_n: int) -> dict:
         "kanit_dogrulanabilirlik": round(evidence_ok / evidence_total, 4) if evidence_total else 0.0,
         "tekrarlanabilirlik_std": round(max(stds), 2) if stds else None,
         "must_not_penalize_ihlali": len(penalize_violations),
+        # Kapsam: kriterlerin ne kadari AI tarafindan puanlandi (gerisi insana gitti)
+        "yetersiz_kanit_orani": round(
+            insufficient_total / (insufficient_total + scored_total), 4
+        ) if (insufficient_total + scored_total) else 0.0,
+        "puanlanan_kriter": scored_total,
+        "yetersiz_kanitli_kriter": insufficient_total,
     }
 
     return {
@@ -339,10 +385,12 @@ def evaluate(limit: int | None, repeat_n: int) -> dict:
         "senaryo_sayisi": len(scenarios),
         "ozet": summary,
         "kriter_bazli": crit_metrics,
+        "yetersiz_kanit_kriter_bazli": insufficient_by_crit,
         "sifirlayici_yanlis_pozitif": zero_fp,
         "sifirlayici_yanlis_negatif": zero_fn,
         "kanitsiz_ceza_ihlalleri": penalize_violations,
         "kanit_icerigi_tutmayan": evidence_content_fail,
+        "dogrulanamayan_alintilar": evidence_fabricated,
         "kacirilan_kriz": crisis_miss,
         "tekrarlanan_kriter_ureten_cagrilar": duplicate_calls,
         "tekrarlanabilirlik": repeat_res,

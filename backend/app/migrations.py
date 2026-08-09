@@ -79,11 +79,23 @@ _STATEMENTS: list[tuple[str, str]] = [
      "  WHEN lower(name) LIKE 'kimlik%' THEN 'kimlik_dogrulama' "
      "  WHEN lower(name) LIKE 'kapanis%' OR lower(name) LIKE 'kapanış%' THEN 'kapanis' "
      "  WHEN lower(name) LIKE 'yasakli kelime%' OR lower(name) LIKE 'yasaklı kelime%' "
-     "       THEN 'yasakli_kelime' END "
+     "       THEN 'yasakli_kelime' "
+     "  WHEN lower(name) LIKE 'script%' THEN 'script_uyumu' END "
      "WHERE check_key IS NULL AND ("
      "  lower(name) LIKE 'acilis%' OR lower(name) LIKE 'açılış%' OR lower(name) LIKE 'kvkk%' "
      "  OR lower(name) LIKE 'kimlik%' OR lower(name) LIKE 'kapanis%' OR lower(name) LIKE 'kapanış%' "
-     "  OR lower(name) LIKE 'yasakli kelime%' OR lower(name) LIKE 'yasaklı kelime%')"),
+     "  OR lower(name) LIKE 'yasakli kelime%' OR lower(name) LIKE 'yasaklı kelime%' "
+     "  OR lower(name) LIKE 'script%')"),
+    # Kesin sonuc vaadi agir uyum ihlalidir (tutulamayan vaat = itiraz/sikayet
+    # kaynagi); onceden 'orta' idi ve sifirlamayi tetiklemiyordu.
+    ("banned_words -> yasak vaat yuksek",
+     "UPDATE banned_words SET severity='yuksek' "
+     "WHERE category='yasak_vaat' AND severity='orta'"),
+    # Agir uslup ihlali cagriyi sifirlamali. Onceki surumde bu, kriterden bagimsiz
+    # ayri bir kod daliydi; sifirlama mantigi TEK YERDE olsun diye kriter kritik yapildi.
+    ("criteria -> uslup kritik",
+     "UPDATE criteria SET is_critical = TRUE, critical_threshold = 3 "
+     "WHERE check_key = 'yasakli_kelime' AND is_critical = FALSE"),
     # 4C cercevesi: onceden 7 grup vardi ve 4'u tek kriterlikti (gruplama fiilen yoktu)
     ("criteria -> 4C gruplama",
      "UPDATE criteria SET \"group\" = CASE "

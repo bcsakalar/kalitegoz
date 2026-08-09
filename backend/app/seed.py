@@ -77,12 +77,15 @@ DEFAULT_CRITERIA: list[dict] = [
         "name": "Script Uyumu",
         "group": "Uyum",
         "description": (
-            "Kurumun zorunlu akisi izlendi mi: bilgilendirme, dogrulama, islem "
-            "ozeti, teyit. Eksik her zorunlu adim puan dusurur."
+            "Zorunlu akisin tamami uygulandi mi? Akis SOMUT olarak dort adimdir: "
+            "acilis (kurum + isim), KVKK anonsu, kimlik dogrulama, kapanis. "
+            "Bu kriter o dordunun bilesimidir; ayrica LLM'e sorulmaz."
         ),
-        "anchor_10": "Zorunlu adimlarin tamami sirasiyla uygulandi.",
+        "anchor_10": "Zorunlu adimlarin tamami uygulandi.",
         "anchor_0": "Akis tamamen atlandi.",
         "weight": 1.0,
+        "evaluation_mode": "deterministic",
+        "check_key": "script_uyumu",
     },
     # --- ILETISIM (Communication) ------------------------------------------
     {
@@ -108,6 +111,11 @@ DEFAULT_CRITERIA: list[dict] = [
         "anchor_10": "Cagri boyunca profesyonel ve nazik uslup.",
         "anchor_0": "Temsilci hakaret etti veya agir yasak vaat verdi.",
         "weight": 1.5,
+        # Agir uslup ihlali cagriyi sifirlar. Onceki surumde bu, kriterden
+        # BAGIMSIZ ayri bir "severe banned word" dali olarak kodlanmisti;
+        # sifirlama mantigi TEK YERDE olsun diye kriter kritik yapildi.
+        "is_critical": True,
+        "critical_threshold": 3,
         "evaluation_mode": "deterministic",
         "check_key": "yasakli_kelime",
     },
@@ -219,8 +227,8 @@ DEFAULT_BANNED_WORDS: list[dict] = [
     {"term": "salak", "category": "hakaret", "severity": "yuksek", "match_type": "fuzzy"},
     {"term": "anlamıyorsun", "category": "kucumseme", "severity": "orta", "match_type": "fuzzy"},
     {"term": "işim gücüm var", "category": "kucumseme", "severity": "orta", "match_type": "fuzzy"},
-    {"term": "kesin çözülür", "category": "yasak_vaat", "severity": "orta", "match_type": "fuzzy"},
-    {"term": "garanti ederim", "category": "yasak_vaat", "severity": "orta", "match_type": "fuzzy"},
+    {"term": "kesin çözülür", "category": "yasak_vaat", "severity": "yuksek", "match_type": "fuzzy"},
+    {"term": "garanti ederim", "category": "yasak_vaat", "severity": "yuksek", "match_type": "fuzzy"},
     {"term": "yüzde yüz", "category": "yasak_vaat", "severity": "dusuk", "match_type": "fuzzy"},
 ]
 
