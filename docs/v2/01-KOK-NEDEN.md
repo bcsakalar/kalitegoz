@@ -191,7 +191,27 @@ Segment zamanları (birebir DB'den):
 
 **Üç kelimelik replik 20.6 saniye sürüyor** ve karşı tarafın dört repliğini kapsıyor.
 
-### Kök neden — `diarization.py:33-41` (`_stereo`)
+### Kaynak sesin kendisi TEMİZ — kusur STT segment katmanında
+
+Önce sesin suçlu olup olmadığı ölçüldü. `scripts/generate_demo.py::build_stereo_call`
+(satır 444-467) replikleri **ardışık** yerleştiriyor:
+```python
+cursor = int(0.6 * TARGET_SR)
+for turn in turns:
+    start = max(0, cursor + int(gap * TARGET_SR))   # gap 0.35-0.9 sn
+    placed.append((start, audio, turn["k"]))
+    cursor = start + len(audio)                      # imlec repligin SONUNA gider
+...
+target = right if key == "t" else left               # SAG=temsilci, SOL=musteri
+```
+Yani üretilen WAV'da **hiçbir bindirme yok** ve kanallar gerçekten ayrık.
+Gerçek konuşma süresi, üretilen ses uzunluğu kadardır.
+
+**Sonuç:** Şişik zaman damgaları sesten gelmiyor. Kusur tamamen
+`stt.transcribe()` → `diarization._stereo()` hattında. Bu, düzeltmenin nereye
+yazılacağını belirler: ses üretecine değil, **STT segment sınırlarına**.
+
+### Kök neden — `stt.py:47-60` + `diarization.py:33-41` (`_stereo`)
 
 ```python
 for wav, speaker in ((left, MUSTERI), (right, TEMSILCI)):
@@ -201,11 +221,36 @@ for wav, speaker in ((left, MUSTERI), (right, TEMSILCI)):
 segments.sort(key=lambda s: (s["start"], s["end"]))
 ```
 
-Sol ve sağ kanal ayrı ayrı Whisper'a veriliyor. Whisper bir kanalı işlerken karşı taraf
-konuşurken oluşan **sessizliği kendi segmentinin içine katıyor** — çünkü o kanalda konuşma
-bitmemiştir, sadece duraklamıştır. Sonuç: her repliğin `end` zamanı, o konuşmacının bir
-sonraki repliğine kadar uzuyor. Segmentler birleştirilip başlangıca göre sıralanınca
-**yapay ve devasa bir bindirme** ortaya çıkıyor.
+Sol ve sağ kanal ayrı ayrı Whisper'a veriliyor. Her kanalda, karşı taraf konuşurken
+**uzun ve gerçek dijital sessizlik** var (üstteki üretim koduna göre). Whisper bir
+segmentin `end` zamanını 30 sn'lik pencere içindeki token zamanı tahmininden türetir
+ve arkasında sessizlik olan son segmenti pencere sınırına doğru uzatmakla bilinir.
+`transcribe()` yalnızca **segment düzeyi** zaman alıyor:
+
+```python
+segments, _info = model.transcribe(..., vad_filter=True, condition_on_previous_text=False)
+for seg in segments:
+    out.append({"start": round(seg.start, 2), "end": round(seg.end, 2), ...})
+    #                                          ^^^^^^^^^^^^^^^^^^^^^^^ sisen alan
+```
+
+`word_timestamps` kapalı olduğu için repliğin **gerçek bitişi hiç ölçülmüyor.**
+Segmentler birleştirilip başlangıca göre sıralanınca **yapay ve devasa bir bindirme**
+ortaya çıkıyor.
+
+**Fizik dışı belirti (doğrulanabilir):**
+`"Tamam, not aldım."` = 3 kelime / 20.6 sn = **0.15 kelime/sn**.
+Türkçe doğal konuşma ~2.5 kelime/sn → segment süresi gerçeğin **~17 katı**.
+
+### FAZ 2 düzeltme planı (ölçülebilir)
+1. `stt.transcribe()`: `word_timestamps=True`; segment `start` = ilk kelimenin
+   başlangıcı, `end` = **son kelimenin bitişi**. Şişme kaynağında kesilir.
+2. Emniyet süzgeci: kelime/sn oranı 0.7'nin altına düşen segment şüpheli sayılır,
+   kelime hızına göre kırpılır (kelime zamanı dönmeyen model/dil durumları için).
+3. `metrics.compute_metrics()`: söz kesme için bindirme ≥ 0.2 sn **ve** kesilen
+   repliğin en az 1 sn'dir sürüyor olması aranır (sınır artefaktı elenir).
+4. Kanıt: aynı çağrı yeniden işlenir; `temsilci_kesinti` / `musteri_kesinti`
+   önce-sonra ve kelime/sn dağılımı FAZ 2 raporuna yazılır.
 
 ### Zincirleme sonuçlar — hepsi ölçülmüş
 
