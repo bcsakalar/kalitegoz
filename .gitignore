@@ -10,6 +10,9 @@ next-env.d.ts
 
 data/
 !data/README.md
+# Altin set (regresyon referansi) SURUM KONTROLUNDE tutulur
+!data/golden/
+!data/golden/**
 
 *.wav
 *.mp3

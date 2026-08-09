@@ -8,10 +8,11 @@ MODEL := $(if $(MODEL),$(MODEL),qwen2.5:7b)
 EMBED := $(shell grep -E '^EMBED_MODEL=' .env 2>/dev/null | cut -d= -f2)
 EMBED := $(if $(EMBED),$(EMBED),nomic-embed-text)
 
-.PHONY: help demo up down clean logs test test-scripts seed-history pull-model wait-api demo-data rebuild
+.PHONY: help demo up down clean logs test test-scripts seed-history pull-model wait-api demo-data rebuild eval eval-build eval-baseline
 
 help:
 	@echo "KaliteGoz komutlari:"
+	@echo "  make eval      - Altin set regresyon kosumu (puanlama dogrulugu)"
 	@echo "  make demo      - Her seyi ayaga kaldirir, modeli indirir, demo veriyi uretir"
 	@echo "  make up        - Servisleri baslatir"
 	@echo "  make down      - Servisleri durdurur (veri kalir)"
@@ -37,6 +38,24 @@ clean:
 
 rebuild: .env
 	docker compose build --no-cache
+
+# --- Altin set / regresyon -------------------------------------------------
+# eval-build : senaryolari data/golden/ altina yazar (tutarlilik denetimi dahil)
+# eval       : gercek puanlama motorunu altin sette kosar, metrikleri raporlar
+#              ve esikler saglanmazsa 1 doner (CI build'i kirar)
+# eval-baseline : ayni kosum ama esik kapisi kapali (FAZ 1 taban cizgisi icin)
+
+eval-build:
+	python -m scripts.golden.build
+
+eval: eval-build
+	@docker compose cp scripts/golden/evaluate.py api:/tmp/evaluate.py
+	@docker compose exec -T api python /tmp/evaluate.py $(EVAL_ARGS)
+	@mkdir -p docs/v2/eval && cp -f data/eval/*.json docs/v2/eval/ 2>/dev/null || true
+	@echo "Rapor: docs/v2/eval/"
+
+eval-baseline:
+	@$(MAKE) eval EVAL_ARGS="--no-gate"
 
 wait-api:
 	@echo "API hazir bekleniyor..."
