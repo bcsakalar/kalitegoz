@@ -43,11 +43,36 @@ OUT_DIR = Path("/data/eval")
 #   0-4  karsilanmadi | 5-7 kismen karsilandi | 8-10 karsilandi
 BANDS = [(0, 4, "karsilanmadi"), (5, 7, "kismen"), (8, 10, "karsilandi")]
 
+# S10: metrikler NESNEL ve OZNEL kriterler icin AYRI raporlanir.
+#
+# Ikisini tek ortalamada birlestirmek, urunun en guclu yanini (nesnel
+# kriterlerde kappa 0.94-1.00) en zayif yaniyla (oznel kriterlerde 0.08-0.20)
+# ortalayip ikisini de yanlis gosteriyordu. "%100 kapsam" iddiasi da yalnizca
+# nesnel kriterler icin kurulabilir.
+NESNEL_KRITERLER = {
+    "Açılış", "KVKK / Aydınlatma", "Kimlik Doğrulama", "Kapanış",
+    "Yasaklı Kelime / Üslup", "Script Uyumu",
+}
+OZNEL_KRITERLER = {
+    "Aktif Dinleme", "İhtiyaç Analizi", "Çözüm / Yönlendirme", "Bilgi Doğruluğu",
+}
+
+
+def kriter_turu(ad: str) -> str:
+    if ad in NESNEL_KRITERLER:
+        return "nesnel"
+    if ad in OZNEL_KRITERLER:
+        return "oznel"
+    return "diger"
+
 # Kabul esikleri (FAZ 2 DoD). FAZ 1'de taban cizgisi olculur, kapi KAPALI olabilir.
 GATES = {
     "sifirlayici_yanlis_pozitif_orani": 0.0,   # <= (en kritik metrik)
     "kriter_mae": 1.0,                          # <=
-    "kappa_ortalama": 0.75,                     # >=
+    # S2b: oznel kriterlerde SABIT kappa hedefi KOYULMAZ — hedef insan-insan
+    # uyumuna baglanir (bkz. scripts/golden/human_ref.py). Kapi yalnizca
+    # NESNEL kriterleri denetler; oznel kriterler raporlanir ama kapi degil.
+    "nesnel_kappa": 0.90,                       # >=
     "kanit_dogrulanabilirlik": 0.95,            # >=
     "tekrarlanabilirlik_std": 1.5,              # <=
     "must_not_penalize_ihlali": 0,              # <=
@@ -82,6 +107,9 @@ def cohens_kappa(pairs: list[tuple[str, str]]) -> float | None:
 # Izole kiraci kurulumu
 # --------------------------------------------------------------------------
 
+_SUBJECTIVE_MODEL: str | None = None
+
+
 def ensure_golden_tenant(db) -> tuple[Tenant, Agent]:
     """Altin set kiracisini kur; rubrigi kaynak kiracidan birebir kopyala."""
     t = db.query(Tenant).filter(Tenant.name == GOLDEN_TENANT).first()
@@ -94,6 +122,13 @@ def ensure_golden_tenant(db) -> tuple[Tenant, Agent]:
     # haksiz yere dusuk cikar (ilk FAZ 2 kosumunda bizzat yasandi: MAE 4.8).
     golden_settings = dict(src.settings or {})
     golden_settings["brand_names"] = ["Netik İletişim", "Netik"]
+
+    # S2c: oznel kriterler icin model yonlendirmesi. Kaynak kiracinin ayari her
+    # kosumda kopyalandigi icin buraya yazilir; deney bayraktan kontrol edilir.
+    if _SUBJECTIVE_MODEL:
+        ai = dict(golden_settings.get("ai") or {})
+        ai["subjective_model"] = _SUBJECTIVE_MODEL
+        golden_settings["ai"] = ai
 
     if t is None:
         t = Tenant(name=GOLDEN_TENANT, slug="golden", brand_name="Netik İletişim",
@@ -218,6 +253,21 @@ def evidence_found(evidence: str, transcript_text: str) -> bool:
     if "]" in ev and ":" in ev.split("]", 1)[1][:20]:
         ev = ev.split(":", 2)[-1]
     return contains_verbatim(transcript_text, ev)
+
+
+def _tur_ozeti(crit_metrics: dict, tur: str) -> dict:
+    """Bir kriter turunun (nesnel/oznel) ortalama metrikleri."""
+    secili = [m for m in crit_metrics.values() if m.get("tur") == tur]
+    if not secili:
+        return {"kriter_sayisi": 0, "kappa": None, "mae": None, "bant_isabet": None}
+    kappas = [m["kappa"] for m in secili if m["kappa"] is not None]
+    return {
+        "kriter_sayisi": len(secili),
+        "kappa": round(statistics.fmean(kappas), 4) if kappas else None,
+        "mae": round(statistics.fmean(m["mae"] for m in secili), 3),
+        "bant_isabet": round(statistics.fmean(m["band_isabet"] for m in secili), 3),
+        "tam_isabet": round(statistics.fmean(m["tam_isabet"] for m in secili), 3),
+    }
 
 
 def evaluate(limit: int | None, repeat_n: int) -> dict:
@@ -361,6 +411,7 @@ def evaluate(limit: int | None, repeat_n: int) -> dict:
         banded = [(band(w), band(g)) for w, g in pairs]
         all_pairs.extend(banded)
         crit_metrics[crit] = {
+            "tur": kriter_turu(crit),
             "n": len(pairs), "mae": mae, "tam_isabet": exact,
             "band_isabet": round(sum(1 for a, b in banded if a == b) / len(banded), 3),
             "kappa": cohens_kappa(banded),
@@ -382,6 +433,9 @@ def evaluate(limit: int | None, repeat_n: int) -> dict:
         "kanit_dogrulanabilirlik": round(evidence_ok / evidence_total, 4) if evidence_total else 0.0,
         "tekrarlanabilirlik_std": round(max(stds), 2) if stds else None,
         "must_not_penalize_ihlali": len(penalize_violations),
+        # S10: nesnel/oznel kirilimi — tek ortalama iki farkli gercegi gizliyordu
+        "nesnel": _tur_ozeti(crit_metrics, "nesnel"),
+        "oznel": _tur_ozeti(crit_metrics, "oznel"),
         # Kapsam: kriterlerin ne kadari AI tarafindan puanlandi (gerisi insana gitti)
         "yetersiz_kanit_orani": round(
             insufficient_total / (insufficient_total + scored_total), 4
@@ -410,11 +464,13 @@ def evaluate(limit: int | None, repeat_n: int) -> dict:
 
 def check_gates(summary: dict) -> list[str]:
     fails = []
+    duz = dict(summary)
+    duz["nesnel_kappa"] = (summary.get("nesnel") or {}).get("kappa")
     for key, limit in GATES.items():
-        val = summary.get(key)
+        val = duz.get(key)
         if val is None:
             continue
-        higher_is_better = key in ("kappa_ortalama", "kanit_dogrulanabilirlik")
+        higher_is_better = key in ("nesnel_kappa", "kanit_dogrulanabilirlik")
         if higher_is_better and val < limit:
             fails.append(f"{key}: {val} < hedef {limit}")
         elif not higher_is_better and val > limit:
@@ -430,7 +486,16 @@ def main() -> int:
                     help="Esikleri kontrol etme (FAZ 1 taban cizgisi icin)")
     ap.add_argument("--only", default=None,
                     help="Yalniz bu dosyadaki senaryolari kosur (sinav altkumesi)")
+    ap.add_argument("--subjective-model", default=None,
+                    help="S2c: oznel kriterleri bu modelle kosur (or. qwen2.5:14b-instruct)")
+    ap.add_argument("--etiket", default=None,
+                    help="Rapor dosya adina eklenecek etiket (kosumlari ayirmak icin)")
     args = ap.parse_args()
+
+    if args.subjective_model:
+        global _SUBJECTIVE_MODEL
+        _SUBJECTIVE_MODEL = args.subjective_model
+        print(f"Oznel kriter modeli: {args.subjective_model}")
 
     if args.only:
         import json as _json
@@ -441,7 +506,13 @@ def main() -> int:
     report = evaluate(args.limit, args.repeat_n)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    path = OUT_DIR / f"{date.today().isoformat()}.json"
+    report["kosum"] = {
+        "tarih": date.today().isoformat(),
+        "oznel_model": _SUBJECTIVE_MODEL or "(varsayilan)",
+        "etiket": args.etiket or "",
+    }
+    ad = date.today().isoformat() + (f"-{args.etiket}" if args.etiket else "")
+    path = OUT_DIR / f"{ad}.json"
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
 
     s = report["ozet"]
@@ -450,6 +521,12 @@ def main() -> int:
     print("=" * 62)
     for k, v in s.items():
         print(f"  {k:<38} {v}")
+    print("-" * 62)
+    for tur in ("nesnel", "oznel"):
+        t = s.get(tur) or {}
+        print(f"  {tur.upper():<8} ({t.get('kriter_sayisi', 0)} kriter)  "
+              f"kappa={t.get('kappa')}  MAE={t.get('mae')}  "
+              f"bant={t.get('bant_isabet')}")
     print("-" * 62)
     print(f"  sifirlayici yanlis pozitif : {report['sifirlayici_yanlis_pozitif']}")
     print(f"  sifirlayici yanlis negatif : {report['sifirlayici_yanlis_negatif']}")

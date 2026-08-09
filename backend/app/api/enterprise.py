@@ -3,6 +3,8 @@
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
+from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -154,3 +156,88 @@ def demo_reset(request: Request, db: Session = Depends(get_db),
               ip=request.client.host if request.client else "")
     return {"deleted": deleted, "created": created,
             "message": f"{deleted} cagri silindi, {created} sentetik cagri yuklendi"}
+
+
+# =====================================================================
+# S12 — SSO (OIDC) yonetim ekranindan yapilandirilabilir
+#
+# Onceden yalnizca ortam degiskeniyle ayarlanabiliyordu; bu, kurulumdan sonra
+# SSO acmak icin konteyner yeniden baslatmayi gerektiriyordu. Artik yonetici
+# panelden girer, ANINDA dogrulanir (saglayiciya gidilir) ve kaydedilir.
+#
+# Istemci sirri (client_secret) yanitlarda ASLA doner degil — yalnizca
+# "girilmis mi" bilgisi doner.
+# =====================================================================
+
+class SSOConfigIn(BaseModel):
+    issuer: str = ""
+    client_id: str = ""
+    client_secret: str = ""
+    redirect_uri: str = ""
+
+
+def _sso_yukle(db: Session, tenant_id: int) -> None:
+    """Kiraci ayarindaki OIDC yapilandirmasini sso modulune yukle."""
+    t = db.get(Tenant, tenant_id)
+    sso.set_db_config(((t.settings or {}).get("sso") or {}) if t else {})
+
+
+@router.get("/sso/config")
+def sso_config_get(db: Session = Depends(get_db),
+                   user: CurrentUser = Depends(require_admin)):
+    _sso_yukle(db, user.tenant_id)
+    c = sso.config()
+    durum, mesaj, detay = sso.check(force=True)
+    return {
+        "issuer": c["issuer"],
+        "client_id": c["client_id"],
+        "redirect_uri": c["redirect_uri"],
+        "client_secret_girildi": bool(c["client_secret"]),
+        "kaynak": sso.kaynak(),
+        "durum": durum,
+        "mesaj": mesaj,
+        "detay": detay,
+    }
+
+
+@router.put("/sso/config")
+def sso_config_put(body: SSOConfigIn, request: Request,
+                   db: Session = Depends(get_db),
+                   user: CurrentUser = Depends(require_admin)):
+    """OIDC ayarlarini kaydet ve SAGLAYICIYA GIDEREK dogrula.
+
+    Kaydetmeden once discovery denenir; sağlayıcı erişilemiyorsa ayar yine
+    kaydedilir ama yanıt "uyari" döner — kullanıcı yanlış yazdığını hemen
+    görür, günler sonra giriş denemesinde değil.
+    """
+    t = db.get(Tenant, user.tenant_id)
+    if t is None:
+        raise HTTPException(404, "Kurum bulunamadi")
+
+    mevcut = ((t.settings or {}).get("sso") or {})
+    yeni = {
+        "issuer": body.issuer.strip(),
+        "client_id": body.client_id.strip(),
+        # Bos birakilirsa MEVCUT sir korunur — panelde her kayitta yeniden
+        # yazdirmak, sirri ekranda tutmayi gerektirirdi.
+        "client_secret": body.client_secret.strip() or mevcut.get("client_secret", ""),
+        "redirect_uri": body.redirect_uri.strip(),
+    }
+    ayarlar = dict(t.settings or {})
+    ayarlar["sso"] = yeni
+    t.settings = ayarlar
+    flag_modified(t, "settings")
+    db.commit()
+
+    sso.set_db_config(yeni)
+    durum, mesaj, detay = sso.check(force=True)
+    audit.log(db, action="sso_config_update", tenant_id=user.tenant_id, user_id=user.id,
+              detail={"issuer": yeni["issuer"], "durum": durum},
+              ip=request.client.host if request.client else "")
+    return {"durum": durum, "mesaj": mesaj, "detay": detay, "kaynak": sso.kaynak()}
+
+
+@router.get("/encryption/status")
+def encryption_status(user: CurrentUser = Depends(require_admin)):
+    """Diskte sifreleme durumu + anahtar kaynagi + rotasyon bilgisi (S12)."""
+    return crypto.key_status()

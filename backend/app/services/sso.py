@@ -35,13 +35,39 @@ _CACHE_TTL = 300  # sn — guvenlik sayfasi her acilista saglayiciya gitmesin
 _cache: dict = {"t": 0.0, "sonuc": None}
 
 
+# Yonetim ekranindan girilen ayarlar burada tutulur (S12). Ortam degiskeni
+# YEDEK olarak kalir: konteyner tabanli kurulumlar env ile de yapilandirabilir.
+# Oncelik: veritabani ayari > ortam degiskeni.
+_db_config: dict = {}
+
+
+def set_db_config(cfg: dict | None) -> None:
+    """Kiraci ayarindan gelen OIDC yapilandirmasini yukle (yonetim ekrani)."""
+    global _db_config
+    _db_config = {k: str(v or "").strip() for k, v in (cfg or {}).items()}
+    _cache.update(t=0.0, sonuc=None)  # yeniden kontrol edilsin
+
+
 def config() -> dict:
+    """Etkin OIDC yapilandirmasi. Veritabani ayari ortam degiskenini EZER."""
+    def _al(anahtar: str, env: str) -> str:
+        return _db_config.get(anahtar) or os.environ.get(env, "").strip()
+
     return {
-        "issuer": os.environ.get("OIDC_ISSUER", "").strip(),
-        "client_id": os.environ.get("OIDC_CLIENT_ID", "").strip(),
-        "client_secret": os.environ.get("OIDC_CLIENT_SECRET", "").strip(),
-        "redirect_uri": os.environ.get("OIDC_REDIRECT_URI", "").strip(),
+        "issuer": _al("issuer", "OIDC_ISSUER"),
+        "client_id": _al("client_id", "OIDC_CLIENT_ID"),
+        "client_secret": _al("client_secret", "OIDC_CLIENT_SECRET"),
+        "redirect_uri": _al("redirect_uri", "OIDC_REDIRECT_URI"),
     }
+
+
+def kaynak() -> str:
+    """Ayar nereden geliyor? Guvenlik sayfasi bunu gosterir."""
+    if _db_config.get("issuer"):
+        return "yonetim_ekrani"
+    if os.environ.get("OIDC_ISSUER"):
+        return "ortam_degiskeni"
+    return "yok"
 
 
 def is_configured() -> bool:

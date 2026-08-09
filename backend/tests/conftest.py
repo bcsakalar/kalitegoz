@@ -25,6 +25,7 @@ from app.models import (  # noqa: E402
     CallStatus,
     Channel,
     Criterion,
+    QAState,
     Role,
     Team,
     Tenant,
@@ -96,13 +97,19 @@ def seeded():
                           severity="yuksek", match_type="fuzzy"))
 
         # Tenant A'da iki cagri (farkli takimlar), Tenant B'de bir cagri
+        # qa_state=final: risk kurali tetiklemeyen cagri puanlandigi anda
+        # kesinlesir (qa_workflow.route_after_scoring). Varsayilan `ai_scored`
+        # birakmak fixture'i gercek disi yapardi.
         call_a = Call(tenant_id=ta.id, filename="a.wav", audio_path="", channel=Channel.voice,
-                      agent_id=agent_a.id, status=CallStatus.done, total_score=80.0)
+                      agent_id=agent_a.id, status=CallStatus.done, total_score=80.0,
+                      qa_state=QAState.final)
         call_other_team = Call(tenant_id=ta.id, filename="other.wav", audio_path="",
                                channel=Channel.voice, agent_id=agent_other_team.id,
-                               status=CallStatus.done, total_score=75.0)
+                               status=CallStatus.done, total_score=75.0,
+                               qa_state=QAState.final)
         call_b = Call(tenant_id=tb.id, filename="b.wav", audio_path="", channel=Channel.voice,
-                      agent_id=agent_b.id, status=CallStatus.done, total_score=70.0)
+                      agent_id=agent_b.id, status=CallStatus.done, total_score=70.0,
+                      qa_state=QAState.final)
         db.add_all([call_a, call_other_team, call_b])
         db.flush()
         ids["call_a"], ids["call_b"] = call_a.id, call_b.id

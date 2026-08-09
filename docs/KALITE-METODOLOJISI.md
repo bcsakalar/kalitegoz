@@ -58,10 +58,73 @@ Bulunamazsa kanıt reddedilir, kriter "yetersiz kanıt" olur ve **puan almaz**.
 
 ## 4. Ölçülen doğruluk
 
-50 senaryoluk altın set (uzman referanslı), yerel `qwen2.5:7b-instruct` modeli.
-Ölçüm yöntemi ve ham çıktılar: `docs/v2/eval/`.
+### 4.0 Referans setinin kaynağı — önce bunu okuyun
 
-### Genel metrikler — v1 tabanı → v2
+Aşağıdaki metrikler **50 senaryoluk sentetik bir referans sete** karşı ölçüldü.
+Bu setin nasıl üretildiği, sayıların ne anlama geldiğini belirler:
+
+| | Kim üretti | Ne anlama gelir |
+|---|---|---|
+| **Sentetik referans** (mevcut) | Sistemi geliştiren yapay zekâ asistanı, çağrı merkezi QA pratiğine göre transkriptleri ve beklenen puanları birlikte yazdı | **Bağımsız değil.** Motor, kendi tasarımcısının yazdığı cevap anahtarına karşı ölçülüyor |
+| **İnsan referansı** (devam ediyor) | Kurumun kalite uzmanı, 20 senaryoyu bağımsız puanlıyor | Bağımsız doğrulama |
+
+**"Uzman referansı" demiyoruz** — çünkü bu set bir insan uzman tarafından
+üretilmedi. Buna "sentetik referans" diyoruz ve sınırını açıkça yazıyoruz:
+
+- **Nesnel/deterministik kriterlerde** (açılış, KVKK, kimlik, kapanış, üslup)
+  sentetik referans güvenilirdir: "şu ifade transkriptte geçti mi?" sorusunun
+  cevabı okunarak doğrulanabilir. Burada referans bir *spesifikasyondur*,
+  bir yargı değil.
+- **Öznel kriterlerde** (aktif dinleme, ihtiyaç analizi, çözüm, bilgi doğruluğu)
+  sentetik referans **döngüseldir**: puanlama prompt'unu tasarlayan ile cevap
+  anahtarını yazan aynı taraftır. Bu kriterlerin sentetik kappa'sı
+  **bağımsız bir doğruluk kanıtı sayılmaz.**
+
+Bu yüzden metrikler ikiye ayrılarak raporlanır (§4.1 ve §4.2) ve insan
+referansı hazır olduğunda ikisi yan yana yayımlanır (§4.3).
+
+Ölçüm yöntemi ve ham çıktılar: `docs/v2/eval/`. Yeniden üretim: `make eval`.
+
+### 4.1 Kriterler iki gruba ayrılır — ve ayrı raporlanır
+
+Tek bir ortalama, iki farklı gerçeği gizliyordu. Sistemin en güçlü yanı
+(nesnel kriterlerde kappa 0.94–1.00) en zayıf yanıyla (öznel kriterlerde
+0.08–0.20) ortalanınca ikisi de yanlış görünüyordu.
+
+| | Nesnel / deterministik | Öznel |
+|---|---|---|
+| **Kriterler** | Açılış, KVKK, Kimlik Doğrulama, Kapanış, Yasaklı Kelime, Script Uyumu | Aktif Dinleme, İhtiyaç Analizi, Çözüm/Yönlendirme, Bilgi Doğruluğu |
+| **Cevabı ne belirler** | Transkriptte bir ifadenin varlığı | Yargı |
+| **Nasıl puanlanır** | Katman A — kodla, LLM'e sorulmadan | Katman B — kanıt zorunlu LLM |
+| **Referans güvenilir mi** | Evet — bir *spesifikasyon*, doğrulanabilir | Hayır — sentetik referans döngüsel (§4.0) |
+| **Kappa hedefi** | Sabit **≥ 0.90** | **İnsan-insan uyumunun %85'i** (§4.2) |
+
+**"%100 kapsam" iddiası yalnızca nesnel kriterler için kurulur.** Öznel
+kriterlerde sistem bir **öneri** üretir; geçerli puan kalite uzmanı onayından
+sonra oluşur. Ürünün iki aşamalı yapısı tam olarak bu ayrımın sonucudur.
+
+### 4.2 Öznel kriterlerde hedef neden sabit değil?
+
+Sabit bir kappa hedefi, kriterin doğasını yok sayar. İki deneyimli kalite
+uzmanı "aktif dinleme"de birbiriyle 0.55 uyum yakalıyorsa, yapay zekâdan 0.75
+beklemek bir hedef değil, **imkânsız bir şarttır** — insanın kendisi o eşiği
+geçemiyor.
+
+Bu yüzden öznel kriterlerde hedef **ölçülen insan-insan uyumuna** bağlanır:
+
+```
+AI hedefi (öznel kriter) = insan-insan kappa × 0.85
+```
+
+İnsanlar birbirine 0.60 uyuyorsa AI hedefi 0.51; 0.90 uyuyorsa 0.77 olur.
+Hedef, uydurulmuş bir sayıya değil ölçülmüş bir gerçeğe bağlanır.
+
+**İnsan-insan IRR henüz ölçülmediği için öznel kriterlerde şu an hedef
+KOYULMUYOR.** `make eval` kapısı yalnızca nesnel kriterleri denetler; öznel
+kriterler raporlanır ama build'i kırmaz. IRR ölçümü için altyapı hazır:
+`scripts/golden/human_ref.py`.
+
+### 4.3 Genel metrikler — v1 tabanı → v2
 
 | Metrik | v1 | v2 | Hedef |
 |---|---|---|---|
@@ -79,9 +142,9 @@ hangisinde değil — açıkça yazıyoruz:
 
 | Kriter | Katman | kappa | Yorum |
 |---|---|---|---|
-| KVKK / Aydınlatma | A | **1.00** | Uzmanla tam mutabık |
-| Yasaklı Kelime / Üslup | A | **1.00** | Uzmanla tam mutabık |
-| Açılış | A | **1.00** | Uzmanla tam mutabık |
+| KVKK / Aydınlatma | A | **1.00** | Spesifikasyonla tam mutabık |
+| Yasaklı Kelime / Üslup | A | **1.00** | Spesifikasyonla tam mutabık |
+| Açılış | A | **1.00** | Spesifikasyonla tam mutabık |
 | Kapanış | A | **0.90** | Güvenilir |
 | Kimlik Doğrulama | A | 0.49 | Sınırda — geç doğrulama yorumu değişebiliyor |
 | Bilgi Doğruluğu | B | 0.21 | **Güvenilir değil** → insana gider |
@@ -90,15 +153,23 @@ hangisinde değil — açıkça yazıyoruz:
 | Aktif Dinleme | B | 0.03 | **Güvenilir değil** → insana gider |
 | İhtiyaç Analizi | B | 0.03 | **Güvenilir değil** → insana gider |
 
-**Uyum ve iletişim kriterlerinde sistem uzman seviyesinde. Öznel kriterlerde
+**Nesnel kriterlerde sistem spesifikasyonla tam mutabık. Öznel kriterlerde
 değil — ve bunu biliyor.** Ölçülen kappa'sı 0.40'ın altındaki kriterlerde
 güven skoru otomatik tavanlanır ve çağrı **garantili** insan onayına düşer.
+
+> ⚠️ **Öznel kriterlerin kappa'sı bağımsız bir doğruluk kanıtı değildir**
+> (§4.0). Bu satırlar "AI kötü puanlıyor" demez; "sentetik referans bu
+> kriterlerde bir doğruluk ölçüsü sayılamaz" der. Gerçek yargı, insan
+> referansı ve IRR ölçüldüğünde çıkacak.
 
 ### Ne denendi, ne işe yaramadı
 Öznel kriterlerdeki uyumu artırmak için üç mekanizma denendi ve **ölçüldü**:
 few-shot geri besleme (kappa 0.492→0.499), skala kalibrasyonu, deterministik
-tavan. Hiçbiri anlamlı fark yaratmadı. Bu, 7B model boyutunun ve kriterin
-doğasının sınırıdır. Daha büyük modelle tekrar ölçülmelidir.
+tavan. Hiçbiri anlamlı fark yaratmadı.
+
+Dördüncü deneme — **daha büyük model** (`qwen2.5:14b-instruct`, yalnız öznel
+kriterler için) — sonucu §4.4'te. Bu, "tavan model kaynaklı mı, metodoloji
+kaynaklı mı" sorusunu ayırt eder.
 
 ## 5. İnsan onayı ne zaman devreye girer
 
@@ -142,7 +213,9 @@ Yedi kural; hepsi yapılandırılabilir:
 
 ## 9. Ne iddia ediyoruz — ve kanıtı var
 
-- ✅ **%100 kapsam**: her çağrı puanlanır, hiçbiri denetimsiz kalmaz
+- ✅ **Nesnel kriterlerde %100 kapsam**: her çağrının açılışı, KVKK anonsu,
+  kimlik doğrulaması, kapanışı ve üslubu denetlenir — hiçbiri atlanmaz.
+  Öznel kriterlerde sistem **öneri** üretir; geçerli puan insan onayıyla oluşur
 - ✅ **Her puanın kanıtı var**: alıntı transkriptte doğrulanır (%100)
 - ✅ **Tekrarlanabilir**: aynı çağrı üç kez puanlandığında aynı sonuç (std 0.00)
 - ✅ **Uyum kriterlerinde uzman seviyesi**: kappa 0.90–1.00

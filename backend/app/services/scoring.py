@@ -27,6 +27,7 @@ from . import acoustics, ai_config, calibration_scale, compliance, deterministic
 from . import alert_engine
 from . import alerts as alerts_svc
 from . import review_feedback
+from . import model_routing
 from . import scoring_layers
 from . import tr_quality
 from .llm import generate_json
@@ -228,7 +229,8 @@ def _windows(segments: list[Segment], window_sec: int) -> list[list[Segment]]:
 
 
 def _evaluate_llm_criteria(
-    criteria: list[Criterion], segments: list[Segment], hint: str, few_shot_for=None
+    criteria: list[Criterion], segments: list[Segment], hint: str,
+    few_shot_for=None, model_for=None,
 ) -> list[scoring_layers.CriterionDecision]:
     """Katman B + C. Uzun cagrida pencereleme, sonra karar birlestirme."""
     blob = " ".join(s.text for s in segments)
@@ -236,7 +238,7 @@ def _evaluate_llm_criteria(
 
     if len(windows) == 1:
         kararlar = scoring_layers.evaluate_all(
-            criteria, format_transcript(segments), hint, few_shot_for)
+            criteria, format_transcript(segments), hint, few_shot_for, model_for)
         return [scoring_layers.verify(k, blob) for k in kararlar]
 
     logger.info("Uzun cagri: %d pencere ile degerlendiriliyor", len(windows))
@@ -248,7 +250,7 @@ def _evaluate_llm_criteria(
             "'insufficient_evidence' de.\n"
         )
         kararlar = scoring_layers.evaluate_all(
-            criteria, format_transcript(win), hint + note, few_shot_for)
+            criteria, format_transcript(win), hint + note, few_shot_for, model_for)
         for k in kararlar:
             d = scoring_layers.verify(k, blob)
             prev = best.get(d.criterion_id)
@@ -394,7 +396,27 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
                 logger.warning("Kalibrasyon ornekleri okunamadi: %s", exc)
                 return ""
 
-        decisions.extend(_evaluate_llm_criteria(llm_criteria, segments, hint, _few_shot))
+        # S2c: oznel kriterler icin kurum daha buyuk bir model secmis olabilir.
+        # Model kurulu degilse yonlendirme YAPILMAZ (sessizce varsayilan).
+        _oznel_model = model_routing.subjective_model_name(
+            tenant.settings if tenant else None)
+        if _oznel_model and not model_routing.available(
+                _oznel_model, ai_config.active_llm().base_url):
+            logger.warning("Oznel kriter modeli (%s) kurulu degil; yonlendirme kapali.",
+                           _oznel_model)
+            _oznel_model = None
+
+        if _oznel_model:
+            logger.info("Oznel kriter yonlendirmesi ACIK: %s", _oznel_model)
+
+        def _model_for(group: list[Criterion]) -> str | None:
+            if not _oznel_model:
+                return None
+            return _oznel_model if any(
+                model_routing.is_subjective(c.name) for c in group) else None
+
+        decisions.extend(_evaluate_llm_criteria(
+            llm_criteria, segments, hint, _few_shot, _model_for))
 
     # ---------------- KATMAN C (devam) — skala kalibrasyonu --------------
     # LLM ile puanlanan kriterlerde olculmus, tek yonlu bir sapma var (altin

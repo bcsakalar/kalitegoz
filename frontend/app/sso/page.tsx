@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { tokenStore } from "@/lib/api";
-import { useAuth } from "@/components/AuthProvider";
+import { landingFor, useAuth } from "@/components/AuthProvider";
 import { useT } from "@/components/I18nProvider";
 
 /** SSO geri dönüş: backend token'ları URL fragment'ında (#access_token=...) taşır.
@@ -27,7 +27,8 @@ export default function SsoCallbackPage() {
     tokenStore.set(access, refreshTok);
     // URL'den token'ları temizle
     window.history.replaceState(null, "", "/sso");
-    refresh().then(() => router.replace("/")).catch(() => router.replace("/login"));
+    // S14: SSO girisi de rol bazli acilis ekranina duser (parola girisiyle ayni)
+    refresh().then((u) => router.replace(landingFor(u))).catch(() => router.replace("/login"));
   }, [router, refresh]);
 
   return (

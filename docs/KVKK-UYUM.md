@@ -41,12 +41,81 @@ denetim günlüğüne yazılır**.
 Ses dosyaları ve transkriptler uygulama seviyesinde şifrelenebilir
 (zarf şifreleme, HMAC bütünlük doğrulamalı).
 
-**Ana anahtar `.env` dosyasında DEĞİLDİR.** `KG_MASTER_KEY` ortam değişkeninden
-okunur ve ayrı bir secret kaynağında tutulmalıdır (Docker secret, systemd
-`EnvironmentFile`, KMS/Vault).
+**Ana anahtar `.env` dosyasında DEĞİLDİR.** Anahtar üç kaynaktan okunabilir;
+öncelik sırası aşağıdadır ve bu sıra bilinçlidir:
+
+| Öncelik | Kaynak | Ortam değişkeni | Ne zaman |
+|---|---|---|---|
+| 1 | **Dosya** | `KG_MASTER_KEY_FILE` | Üretim — Docker/K8s secret |
+| 2 | Ortam değişkeni | `KG_MASTER_KEY` | Geliştirme, tek makine |
+| 3 | — | (yok) | Şifreleme **kapalı** |
+
+**Dosya, ortam değişkenini EZER.** Sebep: ortam değişkenleri `docker inspect`,
+`/proc/<pid>/environ` ve çöken süreçlerin log'larında görünür; dosya ise dosya
+sistemi izinleriyle (0400, uygulama kullanıcısına ait) korunur. Bir kurulum
+yanlışlıkla ikisini birden tanımlarsa güvenli olan kazanır.
 
 Anahtar tanımlı değilse şifreleme **kapalıdır** ve güvenlik sayfası bunu açıkça
 söyler. Sessizce düz metin yazıp "şifreli" demek yapılmaz.
+
+### 3.1 Anahtar rotasyonu
+
+Anahtar değişince eski veriyi okuyamamak veri kaybıdır. Bu yüzden sistem bir
+**rotasyon penceresi** destekler: yeni anahtarla yazar, eski anahtarlarla okur.
+
+```
+KG_MASTER_KEY_FILE=/run/secrets/kg_master_key        # AKTIF — yeni yazimlar
+KG_MASTER_KEY_OLD_FILES=/run/secrets/kg_key_2025     # ESKI — yalniz okuma
+KG_MASTER_KEY_ID=2026-08                             # denetim izi icin etiket
+```
+
+`KG_MASTER_KEY_OLD_FILES` virgülle ayrılmış birden çok dosya alabilir.
+Çözme sırası: önce aktif anahtar, sonra eski anahtarlar sırayla. HMAC bütünlük
+etiketi tutmayan anahtar denenmiş sayılır ve sıradakine geçilir — yanlış
+anahtarla "başarıyla çözülmüş" bozuk veri üretilemez.
+
+**Rotasyon prosedürü (kesintisiz):**
+
+1. Yeni anahtar üret: `openssl rand -base64 48 > kg_key_yeni`
+2. Eski anahtarı `KG_MASTER_KEY_OLD_FILES` listesine ekle
+3. `KG_MASTER_KEY_FILE` → yeni dosyayı gösterecek şekilde değiştir
+4. `KG_MASTER_KEY_ID` → yeni etiket (örn. `2026-08`)
+5. Servisleri yeniden başlat. Bu andan sonra **yeni yazımlar** yeni anahtarla,
+   **eski kayıtlar** eski anahtarla okunur — kesinti yok.
+6. Yönetim → Güvenlik sayfasından `anahtar_kimligi` alanının yeni etikete
+   döndüğünü doğrula.
+7. (İsteğe bağlı) Eski kayıtları yeniden şifreleyen bakım görevi çalıştırıldıktan
+   sonra eski anahtar listeden çıkarılabilir. Bu adım **atlanabilir**; eski
+   anahtarı listede tutmak da geçerli bir işletme kararıdır.
+
+Durum sorgusu: `GET /api/v1/enterprise/encryption/status` — aktif mi, kaynak
+nedir (`dosya` / `ortam` / `yok`), anahtar kimliği ne, kaç eski anahtar tanımlı.
+**Anahtarın kendisi hiçbir uçtan dönmez.**
+
+### 3.2 Harici KMS / Vault entegrasyonu
+
+Kurumsal ihalelerde "anahtar HSM/KMS'te durmalı" maddesi sık çıkar. Sistem bunu
+**dosya arayüzü üzerinden** karşılar — uygulamaya KMS SDK'sı gömülü değildir ve
+bu bilinçlidir: her müşterinin KMS'i farklıdır (AWS KMS, Azure Key Vault,
+HashiCorp Vault, Thales HSM), hepsini uygulamaya gömmek bakım borcudur.
+
+Entegrasyon deseni: **KMS'ten çekip dosyaya yaz, uygulama dosyayı okusun.**
+
+| Ortam | Yöntem |
+|---|---|
+| **Kubernetes** | External Secrets Operator / Vault Agent Injector anahtarı `/run/secrets/`e mount eder |
+| **Docker Swarm** | `docker secret create` → `/run/secrets/kg_master_key` |
+| **AWS** | Secrets Manager + `sidecar` ya da `awscli` ile başlangıç betiğinde dosyaya yaz |
+| **Azure** | Key Vault + CSI Secrets Store driver |
+| **Vault** | `vault agent` template ile dosyaya render |
+
+Uygulama açısından hepsi aynıdır: `KG_MASTER_KEY_FILE` bir dosyayı gösterir.
+Anahtarın oraya nasıl geldiği **altyapının sorumluluğudur**, uygulamanın değil.
+Bu sınır, KMS değiştiğinde uygulama kodunun değişmemesini sağlar.
+
+**Anahtar bellekte tutulmaz:** her şifreleme/çözme işleminde dosya yeniden
+okunur. Böylece KMS anahtarı döndürdüğünde uygulama yeniden başlatılmadan da
+yeni anahtarı görebilir (dosya güncellenmişse).
 
 ## 4. Saklama süresi (retention)
 
