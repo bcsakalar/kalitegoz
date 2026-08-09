@@ -252,12 +252,12 @@ def test_run_all_tum_kontrolleri_dondurur():
 
 def test_check_key_for_ad_bazli_eslesme():
     class C:
-        name = "KVKK / Aydinlatma"
+        name = "KVKK / Aydınlatma"
         check_key = None
     assert det.check_key_for(C()) == "kvkk_anons"
 
     class D:
-        name = "Cozum / Yonlendirme"
+        name = "Çözüm / Yönlendirme"
         check_key = None
     assert det.check_key_for(D()) is None
 

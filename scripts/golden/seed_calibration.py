@@ -41,7 +41,7 @@ GOLDEN_TENANT = "__golden__"
 # Deterministik kriterlerin sapmasi zaten sifir; onlara ornek eklemek
 # prompt'u gereksiz sisirir.
 HEDEF_KRITERLER = {
-    "Aktif Dinleme", "Ihtiyac Analizi", "Cozum / Yonlendirme", "Bilgi Dogrulugu",
+    "Aktif Dinleme", "İhtiyaç Analizi", "Çözüm / Yönlendirme", "Bilgi Doğruluğu",
 }
 
 

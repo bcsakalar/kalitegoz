@@ -42,7 +42,7 @@ DEMO_AGENTS = [
 DEFAULT_CRITERIA: list[dict] = [
     # --- UYUM (Compliance) -------------------------------------------------
     {
-        "name": "KVKK / Aydinlatma",
+        "name": "KVKK / Aydınlatma",
         "group": "Uyum",
         "description": (
             "Gorusmenin kayit altina alindigi VE kisisel verilerin islendigi "
@@ -59,7 +59,7 @@ DEFAULT_CRITERIA: list[dict] = [
         "check_key": "kvkk_anons",
     },
     {
-        "name": "Kimlik Dogrulama",
+        "name": "Kimlik Doğrulama",
         "group": "Uyum",
         "description": (
             "Islem yapilmadan ONCE musteri kimligi (ad-soyad + musteri/hizmet no) "
@@ -89,8 +89,8 @@ DEFAULT_CRITERIA: list[dict] = [
     },
     # --- ILETISIM (Communication) ------------------------------------------
     {
-        "name": "Acilis",
-        "group": "Iletisim",
+        "name": "Açılış",
+        "group": "İletişim",
         "description": (
             "Temsilci kurum adini VE kendi adini bildirdi mi? Kurum adinin cumle "
             "basinda olmasi gerekmez; VARLIGI aranir."
@@ -102,8 +102,8 @@ DEFAULT_CRITERIA: list[dict] = [
         "check_key": "acilis",
     },
     {
-        "name": "Yasakli Kelime / Uslup",
-        "group": "Iletisim",
+        "name": "Yasaklı Kelime / Üslup",
+        "group": "İletişim",
         "description": (
             "Temsilci kaba, kucumseyici, suclayici ifade veya yasak vaat kullandi "
             "mi? MUSTERININ kufru temsilciyi CEZALANDIRMAZ."
@@ -120,8 +120,8 @@ DEFAULT_CRITERIA: list[dict] = [
         "check_key": "yasakli_kelime",
     },
     {
-        "name": "Kapanis",
-        "group": "Iletisim",
+        "name": "Kapanış",
+        "group": "İletişim",
         "description": (
             "'Baska bir konuda yardimci olabilir miyim?' soruldu mu ve uygun veda "
             "cumlesi kuruldu mu?"
@@ -134,7 +134,7 @@ DEFAULT_CRITERIA: list[dict] = [
     },
     {
         "name": "Aktif Dinleme",
-        "group": "Iletisim",
+        "group": "İletişim",
         "description": (
             "Temsilci musteriyi kesmeden dinledi mi, anladigini teyit etti mi? "
             "YALNIZCA TEMSILCININ soz kesmesi puan kirar; musteri keserse kirmaz."
@@ -145,7 +145,7 @@ DEFAULT_CRITERIA: list[dict] = [
     },
     # --- YETKINLIK (Competence) --------------------------------------------
     {
-        "name": "Bilgi Dogrulugu",
+        "name": "Bilgi Doğruluğu",
         "group": "Yetkinlik",
         "description": (
             "Verilen bilgi (sure, ucret, sart, prosedur) sirket bilgi bankasindaki "
@@ -158,7 +158,7 @@ DEFAULT_CRITERIA: list[dict] = [
         "weight": 2.0,
     },
     {
-        "name": "Ihtiyac Analizi",
+        "name": "İhtiyaç Analizi",
         "group": "Yetkinlik",
         "description": (
             "Temsilci musterinin gercek ihtiyacini dogru soru sorarak netlestirdi mi?"
@@ -169,8 +169,8 @@ DEFAULT_CRITERIA: list[dict] = [
     },
     # --- MUSTERI ODAGI (Customer focus) ------------------------------------
     {
-        "name": "Cozum / Yonlendirme",
-        "group": "Musteri Odagi",
+        "name": "Çözüm / Yönlendirme",
+        "group": "Müşteri Odağı",
         "description": (
             "Musterinin sorunu cozuldu mu veya dogru birime net sekilde "
             "yonlendirildi mi? Somut adim, sure ve beklenti verildi mi?"

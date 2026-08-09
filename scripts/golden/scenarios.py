@@ -14,9 +14,9 @@ from ._authoring import Expected, Scenario, Turn
 T, M = "temsilci", "musteri"
 
 CRITERIA = [
-    "Acilis", "KVKK / Aydinlatma", "Kimlik Dogrulama", "Aktif Dinleme",
-    "Ihtiyac Analizi", "Cozum / Yonlendirme", "Yasakli Kelime / Uslup",
-    "Kapanis", "Script Uyumu", "Bilgi Dogrulugu",
+    "Açılış", "KVKK / Aydınlatma", "Kimlik Doğrulama", "Aktif Dinleme",
+    "İhtiyaç Analizi", "Çözüm / Yönlendirme", "Yasaklı Kelime / Üslup",
+    "Kapanış", "Script Uyumu", "Bilgi Doğruluğu",
 ]
 
 
@@ -51,11 +51,11 @@ def det5(scores: dict, *, acilis: int, kvkk: int, kimlik: int,
 
     return derive_script_uyumu({
         **scores,
-        "Acilis": acilis,
-        "KVKK / Aydinlatma": kvkk,
-        "Kimlik Dogrulama": kimlik,
-        "Kapanis": kapanis,
-        "Yasakli Kelime / Uslup": uslup,
+        "Açılış": acilis,
+        "KVKK / Aydınlatma": kvkk,
+        "Kimlik Doğrulama": kimlik,
+        "Kapanış": kapanis,
+        "Yasaklı Kelime / Üslup": uslup,
     })
 
 
@@ -118,10 +118,10 @@ add(Scenario(
         Turn(T, "Kaydı öncelikli statüde açtım, teknisyen yola çıkmadan yarım saat önce sizi arayacak."),
     ]),
     expected=Expected(
-        scores=det5(sc(default=9, Acilis=10, **{"KVKK / Aydinlatma": 10, "Kimlik Dogrulama": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+        scores=det5(sc(default=9, **{"Açılış": 10}, **{"KVKK / Aydınlatma": 10, "Kimlik Doğrulama": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
         zeroed=False, alerts=[],
-        evidence_must_contain={"Acilis": "ben Mehmet"},
-        must_not_penalize=["Acilis"],
+        evidence_must_contain={"Açılış": "ben Mehmet"},
+        must_not_penalize=["Açılış"],
         notes="Kurum adi (Netik Iletisim) + temsilci adi (Mehmet) ilk replikte. "
               "Acilis 10 disinda bir puan ALAMAZ. B1'in birebir karsiligi.",
     ),
@@ -147,10 +147,10 @@ add(Scenario(
         Turn(M, "Onaylıyorum."),
     ] + close_std(),
     expected=Expected(
-        scores=det5(sc(default=9, **{"KVKK / Aydinlatma": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+        scores=det5(sc(default=9, **{"KVKK / Aydınlatma": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
         zeroed=False, alerts=[],
-        evidence_must_contain={"KVKK / Aydinlatma": "kaydediliyor"},
-        must_not_penalize=["KVKK / Aydinlatma"],
+        evidence_must_contain={"KVKK / Aydınlatma": "kaydediliyor"},
+        must_not_penalize=["KVKK / Aydınlatma"],
         notes="'kayit altina alinmaktadir' kalibinin HICBIRI gecmiyor ama anons anlamca "
               "eksiksiz yapildi. Anlam kumesi eslesmesi calismali; ihlal URETILMEMELI.",
     ),
@@ -177,9 +177,9 @@ add(Scenario(
         Turn(M, "Tamam, olur."),
     ] + close_std(),
     expected=Expected(
-        scores=det5(sc(default=9, Aktif_Dinleme=9, **{"Yasakli Kelime / Uslup": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+        scores=det5(sc(default=9, **{"Aktif Dinleme": 9}, **{"Yasaklı Kelime / Üslup": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
         zeroed=False, alerts=[],
-        must_not_penalize=["Aktif Dinleme", "Yasakli Kelime / Uslup"],
+        must_not_penalize=["Aktif Dinleme", "Yasaklı Kelime / Üslup"],
         notes="4 soz kesmenin 4'u de MUSTERI kaynakli (overlap alanlari musteri "
               "repliklerinde). Temsilci hicbir repligi kesmiyor ve her seferinde sakin "
               "devam ediyor. Aktif Dinleme CEZALANDIRILAMAZ — B3'un birebir karsiligi.",
@@ -200,9 +200,9 @@ add(Scenario(
         Turn(T, "Takibini bizzat yapacağım. Çözülmezse yarın ben sizi arayacağım."),
     ]),
     expected=Expected(
-        scores=det5(sc(default=9, **{"Yasakli Kelime / Uslup": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+        scores=det5(sc(default=9, **{"Yasaklı Kelime / Üslup": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
         zeroed=False, alerts=[],
-        must_not_penalize=["Yasakli Kelime / Uslup"],
+        must_not_penalize=["Yasaklı Kelime / Üslup"],
         notes="'Kesinlikle haklisiniz' ve 'Kesin bir tarih veremiyorum' — ikisi de DOGRU, "
               "kibar ifadeler. Mevcut fuzzy eslesme bunlari 'kesin cozulur' yasak vaadi "
               "sanip cagriyi SIFIRLIYOR. Sifirlama YASAK, yasakli kelime alarmi YASAK.",
@@ -226,10 +226,10 @@ add(Scenario(
         Turn(T, "Evet, başka bir şey yok."),
     ],
     expected=Expected(
-        scores=det5(sc(default=4, **{"Yasakli Kelime / Uslup": 0, "Aktif Dinleme": 2, "Kapanis": 2}), acilis=10, kvkk=10, kimlik=10, kapanis=1, uslup=0),
-        zeroed=True, zeroing_criterion="Yasakli Kelime / Uslup",
+        scores=det5(sc(default=4, **{"Yasaklı Kelime / Üslup": 0, "Aktif Dinleme": 2, "Kapanış": 2}), acilis=10, kvkk=10, kimlik=10, kapanis=1, uslup=0),
+        zeroed=True, zeroing_criterion="Yasaklı Kelime / Üslup",
         alerts=["zeroing", "banned_word"],
-        evidence_must_contain={"Yasakli Kelime / Uslup": "saçmalamayın"},
+        evidence_must_contain={"Yasaklı Kelime / Üslup": "saçmalamayın"},
         notes="Temsilci musteriye hakaret ediyor. Cagri SIFIRLANMALI, gerekce "
               "kalici olarak saklanmali ve kanit cumlesi ('sacmalamayin artik') "
               "gosterilmeli. Kanitsiz sifirlama sistem hatasidir.",
@@ -250,7 +250,7 @@ add(Scenario(
         Turn(M, "Peki, tamam."),
     ]),
     expected=Expected(
-        scores=det5(sc(default=9, Acilis=10, **{"KVKK / Aydinlatma": 10, "Kimlik Dogrulama": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+        scores=det5(sc(default=9, **{"Açılış": 10}, **{"KVKK / Aydınlatma": 10, "Kimlik Doğrulama": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
         zeroed=False, alerts=[],
         notes="reg-b6-ikiz-b ile toplam puan farki 5 puani (100 uzerinden) GECEMEZ.",
     ),
@@ -270,7 +270,7 @@ add(Scenario(
         Turn(M, "Tamam, peki."),
     ]),
     expected=Expected(
-        scores=det5(sc(default=9, Acilis=10, **{"KVKK / Aydinlatma": 10, "Kimlik Dogrulama": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+        scores=det5(sc(default=9, **{"Açılış": 10}, **{"KVKK / Aydınlatma": 10, "Kimlik Doğrulama": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
         zeroed=False, alerts=[],
         notes="reg-b6-ikiz-a ile toplam puan farki 5 puani (100 uzerinden) GECEMEZ.",
     ),
@@ -383,7 +383,7 @@ _MED = [
          Turn(M, "Tamam anladım."),
          Turn(T, "İyi günler."),
      ],
-     det5(sc(default=7, Kapanis=4, **{"Ihtiyac Analizi": 6}), acilis=10, kvkk=10, kimlik=10, kapanis=1, uslup=10),
+     det5(sc(default=7, **{"İhtiyaç Analizi": 6}), acilis=10, kvkk=10, kimlik=10, kapanis=1, uslup=10),
      "Kapanis kalibi yok, 'baska yardim' sorulmadi. Kapanis 5 ve alti olmali."),
 
     ("orta-02-ihtiyac-analizi-zayif", "Ihtiyac analizi yapilmadan cozum onerildi",
@@ -397,7 +397,7 @@ _MED = [
          Turn(M, "Yetmez ki bana."),
          Turn(T, "Peki o zaman mevcut paketinizde kalın."),
      ] + close_std(),
-     det5(sc(default=7, **{"Ihtiyac Analizi": 3, "Cozum / Yonlendirme": 4}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+     det5(sc(default=7, **{"İhtiyaç Analizi": 3, "Çözüm / Yönlendirme": 4}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
      "Kullanim sorulmadan paket onerildi, sonuc cozumsuz. Ihtiyac Analizi 4 ve alti."),
 
     ("orta-03-kimlik-gec", "Kimlik dogrulama cok gec yapildi",
@@ -410,7 +410,7 @@ _MED = [
          Turn(T, "Bu arada adınızı ve müşteri numaranızı alabilir miyim?"),
          Turn(M, "Ozan Demir, 220145."),
      ] + close_std(),
-     det5(sc(default=7, **{"Kimlik Dogrulama": 4, "Script Uyumu": 5}), acilis=10, kvkk=10, kimlik=4, kapanis=10, uslup=10),
+     det5(sc(default=7, **{"Kimlik Doğrulama": 4, "Script Uyumu": 5}), acilis=10, kvkk=10, kimlik=4, kapanis=10, uslup=10),
      "Kimlik, islem YAPILDIKTAN sonra soruldu. Uyum acisindan ciddi eksik ama "
      "tamamen atlanmadigi icin sifirlama YOK — Kimlik Dogrulama 3-5 bandinda."),
 
@@ -425,7 +425,7 @@ _MED = [
          Turn(M, "Yani bilmiyor musunuz?"),
          Turn(T, "Kalan aya göre hesaplanıyor."),
      ] + close_std(),
-     det5(sc(default=7, **{"Bilgi Dogrulugu": 5, "Cozum / Yonlendirme": 5}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+     det5(sc(default=7, **{"Bilgi Doğruluğu": 5, "Çözüm / Yönlendirme": 5}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
      "Verilen bilgi YANLIS degil ama somut degil; musteri cevabini alamadi."),
 
     ("orta-05-monoton-uslup", "Islem dogru, uslup mekanik",
@@ -441,7 +441,7 @@ _MED = [
          Turn(M, "Yok."),
          Turn(T, "İyi günler."),
      ],
-     det5(sc(default=6, **{"Aktif Dinleme": 4, "Yasakli Kelime / Uslup": 6, "Kapanis": 6}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+     det5(sc(default=6, **{"Aktif Dinleme": 4, "Yasaklı Kelime / Üslup": 6, "Kapanış": 6}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
      "Bilgi dogru ama hassas durumda taziye/empati yok, cevaplar tek kelimelik."),
 
     ("orta-06-acilis-yarim", "Acilis: kurum adi var, temsilci adi YOK",
@@ -454,7 +454,7 @@ _MED = [
          Turn(M, "Uygun, geçelim."),
          Turn(T, "Geçişi yaptım, gelecek dönemden geçerli olacak."),
      ] + close_std(),
-     det5(sc(default=8, Acilis=6), acilis=6, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+     det5(sc(default=8, **{"Açılış": 6}), acilis=6, kvkk=10, kimlik=10, kapanis=10, uslup=10),
      "Kurum adi VAR, temsilci adi YOK. Acilis KISMEN karsilandi: 5-7 bandi. "
      "0-2 vermek de 10 vermek de hatali."),
 
@@ -468,7 +468,7 @@ _MED = [
          Turn(T, "444 0 555."),
          Turn(M, "Peki, arayayım."),
      ] + close_std(),
-     det5(sc(default=7, **{"Cozum / Yonlendirme": 6, "Ihtiyac Analizi": 6}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+     det5(sc(default=7, **{"Çözüm / Yönlendirme": 6, "İhtiyaç Analizi": 6}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
      "Yonlendirme dogru ama transfer teklif edilmedi, musteri yeniden aramak zorunda."),
 
     ("orta-08-tekrar-soru", "Musteri ayni seyi iki kez sormak zorunda kaldi",
@@ -507,7 +507,7 @@ _LOW = [
         Turn(T, "Kullanımınız fazla olmuş."),
         Turn(M, "Detayını görebilir miyim?"),
         Turn(T, "İnternet şubesinden bakın."),
-    ], det5(sc(default=4, Acilis=1, **{"Ihtiyac Analizi": 3, "Cozum / Yonlendirme": 3, "Kapanis": 1}), acilis=1, kvkk=10, kimlik=7, kapanis=1, uslup=10),
+    ], det5(sc(default=4, **{"Açılış": 1}, **{"İhtiyaç Analizi": 3, "Çözüm / Yönlendirme": 3, "Kapanış": 1}), acilis=1, kvkk=10, kimlik=7, kapanis=1, uslup=10),
      "Kurum adi da temsilci adi da YOK. Acilis 0-2. Kapanis kalibi da yok."),
 
     ("dusuk-02-empati-yok", "Magdur musteriye empatisiz yanit", [
@@ -520,7 +520,7 @@ _LOW = [
         Turn(T, "Sistemde öyle görünüyor, yapabileceğim bir şey yok."),
         Turn(M, "Peki."),
         Turn(T, "İyi günler."),
-    ], det5(sc(default=4, **{"Aktif Dinleme": 2, "Cozum / Yonlendirme": 2, "Yasakli Kelime / Uslup": 4, "Kapanis": 3}), acilis=10, kvkk=10, kimlik=10, kapanis=5, uslup=10),
+    ], det5(sc(default=4, **{"Aktif Dinleme": 2, "Çözüm / Yönlendirme": 2, "Yasaklı Kelime / Üslup": 4, "Kapanış": 3}), acilis=10, kvkk=10, kimlik=10, kapanis=5, uslup=10),
      "Agir magduriyete sifir empati, cozum girisimi yok. Ama hakaret/yasak vaat "
      "YOK — sifirlama URETILEMEZ."),
 
@@ -534,7 +534,7 @@ _LOW = [
         Turn(T, "Hayır, 7 gün."),
         Turn(M, "Peki."),
     ] + close_std(),
-     det5(sc(default=5, **{"Bilgi Dogrulugu": 1, "Aktif Dinleme": 4}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+     det5(sc(default=5, **{"Bilgi Doğruluğu": 1, "Aktif Dinleme": 4}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
      "Mesafeli satista cayma hakki 14 gundur. Temsilci yanlis bilgi verdi ve "
      "musteri duzeltince israr etti. Bilgi Dogrulugu 0-2."),
 
@@ -546,7 +546,7 @@ _LOW = [
         Turn(T, "60 GB'lık paketiniz var, 279 TL."),
         Turn(M, "Tamam, teşekkürler."),
     ] + close_std(),
-     det5(sc(default=7, **{"KVKK / Aydinlatma": 0}), acilis=10, kvkk=0, kimlik=10, kapanis=10, uslup=10),
+     det5(sc(default=7, **{"KVKK / Aydınlatma": 0}), acilis=10, kvkk=0, kimlik=10, kapanis=10, uslup=10),
      "KVKK anonsu HIC yapilmadi. Kritik kriter, esik 3 -> CAGRI SIFIRLANIR. "
      "Bu senaryo 'dusuk' kovasinda ama sifirlama BEKLENIYOR."),
 
@@ -562,7 +562,7 @@ _LOW = [
         Turn(T, "Gerek yok, kayıt böyle.", overlap=1.4),
         Turn(M, "Beni dinlemiyorsunuz."),
         Turn(T, "Dinliyorum efendim."),
-    ], det5(sc(default=4, **{"Aktif Dinleme": 1, "Yasakli Kelime / Uslup": 5, "Ihtiyac Analizi": 3}), acilis=10, kvkk=10, kimlik=10, kapanis=1, uslup=10),
+    ], det5(sc(default=4, **{"Aktif Dinleme": 1, "Yasaklı Kelime / Üslup": 5, "İhtiyaç Analizi": 3}), acilis=10, kvkk=10, kimlik=10, kapanis=1, uslup=10),
      "3 soz kesmenin 3'u de TEMSILCI kaynakli. Aktif Dinleme 0-2 olmali. "
      "reg-b3'un aynasi: burada ceza DOGRU."),
 
@@ -577,7 +577,7 @@ _LOW = [
         Turn(M, "Ne yapacağım peki?"),
         Turn(T, "Yarın tekrar arayın."),
         Turn(M, "Tamam."),
-    ], det5(sc(default=4, **{"Cozum / Yonlendirme": 2, "Kapanis": 3, "Ihtiyac Analizi": 4}), acilis=10, kvkk=10, kimlik=10, kapanis=1, uslup=10),
+    ], det5(sc(default=4, **{"Çözüm / Yönlendirme": 2, "Kapanış": 3, "İhtiyaç Analizi": 4}), acilis=10, kvkk=10, kimlik=10, kapanis=1, uslup=10),
      "Musteri sorunu cozulmeden, somut bir sonraki adim verilmeden kapatildi."),
 
     ("dusuk-07-script-disi", "Script tamamen atlandi", [
@@ -590,7 +590,7 @@ _LOW = [
         Turn(T, "O zaman arıza vardır."),
         Turn(M, "Kayıt açar mısınız?"),
         Turn(T, "Açtım."),
-    ], det5(sc(default=3, Acilis=0, **{"KVKK / Aydinlatma": 0, "Kimlik Dogrulama": 0, "Kapanis": 1, "Script Uyumu": 1}), acilis=0, kvkk=0, kimlik=0, kapanis=1, uslup=10),
+    ], det5(sc(default=3, **{"Açılış": 0}, **{"KVKK / Aydınlatma": 0, "Kimlik Doğrulama": 0, "Kapanış": 1, "Script Uyumu": 1}), acilis=0, kvkk=0, kimlik=0, kapanis=1, uslup=10),
      "Acilis yok, KVKK yok, kimlik yok, kapanis yok. Iki kritik kriter esik "
      "altinda -> SIFIRLANIR."),
 
@@ -605,7 +605,7 @@ _LOW = [
         Turn(M, "Nasıl yani?"),
         Turn(T, "Ben göremiyorum efendim."),
     ] + close_std(),
-     det5(sc(default=4, **{"Cozum / Yonlendirme": 2, "Aktif Dinleme": 3, "Yasakli Kelime / Uslup": 4}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+     det5(sc(default=4, **{"Çözüm / Yönlendirme": 2, "Aktif Dinleme": 3, "Yasaklı Kelime / Üslup": 4}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
      "'Kim soylediyse ona sorun' — sorumluluk reddi. Kaba ama hakaret degil, "
      "sifirlama URETILEMEZ."),
 ]
@@ -616,7 +616,7 @@ for _id, _title, _turns, _scores, _note in _LOW:
         id=_id, title=_title, bucket="dusuk", tags=["agir_eksik"], turns=_turns,
         expected=Expected(
             scores=_scores, zeroed=_zero,
-            zeroing_criterion="KVKK / Aydinlatma" if _zero else None,
+            zeroing_criterion="KVKK / Aydınlatma" if _zero else None,
             alerts=["zeroing"] if _zero else ["low_score"], notes=_note,
         ),
     ))
@@ -627,7 +627,7 @@ for _id, _title, _turns, _scores, _note in _LOW:
 # =========================================================================
 
 _ZERO = [
-    ("sifir-01-hakaret", "Temsilci musteriye hakaret etti", "Yasakli Kelime / Uslup", [
+    ("sifir-01-hakaret", "Temsilci musteriye hakaret etti", "Yasaklı Kelime / Üslup", [
         Turn(T, "Netik İletişim, ben Kemal. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."),
         Turn(T, "Adınızı ve müşteri numaranızı alabilir miyim?"),
         Turn(M, "Necla Sarı, 118990."),
@@ -637,7 +637,7 @@ _ZERO = [
         Turn(T, "Duydunuz işte."),
     ], "Aptalca", ["zeroing", "banned_word"]),
 
-    ("sifir-02-kvkk-anons-yok", "KVKK anonsu hic yapilmadi", "KVKK / Aydinlatma", [
+    ("sifir-02-kvkk-anons-yok", "KVKK anonsu hic yapilmadi", "KVKK / Aydınlatma", [
         Turn(T, "Netik İletişim, ben Rüya, buyurun."),
         Turn(T, "Adınızı ve müşteri numaranızı alabilir miyim?"),
         Turn(M, "Tarık Güneş, 990887."),
@@ -647,7 +647,7 @@ _ZERO = [
         Turn(T, "Ödemeniz alındı, teşekkürler."),
     ] + close_std(), None, ["zeroing"]),
 
-    ("sifir-03-kimlik-atlandi", "Kimlik dogrulama hic yapilmadan islem yapildi", "Kimlik Dogrulama", [
+    ("sifir-03-kimlik-atlandi", "Kimlik dogrulama hic yapilmadan islem yapildi", "Kimlik Doğrulama", [
         Turn(T, "Netik İletişim, ben Nazlı. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."),
         Turn(M, "Hattımdaki tüm ek paketleri iptal edin."),
         Turn(T, "Hemen iptal ediyorum."),
@@ -657,7 +657,7 @@ _ZERO = [
         Turn(T, "Güncelledim."),
     ] + close_std(), None, ["zeroing"]),
 
-    ("sifir-04-yasak-vaat", "Gercek yasak vaat verildi", "Yasakli Kelime / Uslup", [
+    ("sifir-04-yasak-vaat", "Gercek yasak vaat verildi", "Yasaklı Kelime / Üslup", [
         Turn(T, "Netik İletişim, ben Arda. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."),
         Turn(T, "Adınızı ve müşteri numaranızı alabilir miyim?"),
         Turn(M, "Selim Doğan, 445009."),
@@ -667,7 +667,7 @@ _ZERO = [
         Turn(T, "Kesinlikle garanti, söz veriyorum."),
     ] + close_std(), "kesin çözülür", ["zeroing", "banned_word"]),
 
-    ("sifir-05-agir-kufur", "Temsilci kufretti", "Yasakli Kelime / Uslup", [
+    ("sifir-05-agir-kufur", "Temsilci kufretti", "Yasaklı Kelime / Üslup", [
         Turn(T, "Netik İletişim, ben Berk. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."),
         Turn(T, "Adınızı ve müşteri numaranızı alabilir miyim?"),
         Turn(M, "Filiz Ateş, 220990."),
@@ -677,7 +677,7 @@ _ZERO = [
         Turn(T, "Edin bakalım."),
     ], "Salak", ["zeroing", "banned_word"]),
 
-    ("sifir-06-kritik-yanlis-bilgi", "Kimlik dogrulama sahte bilgiyle gecildi", "Kimlik Dogrulama", [
+    ("sifir-06-kritik-yanlis-bilgi", "Kimlik dogrulama sahte bilgiyle gecildi", "Kimlik Doğrulama", [
         Turn(T, "Netik İletişim, ben Ilgın. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."),
         Turn(M, "Eşimin hattındaki görüşme dökümünü istiyorum."),
         Turn(T, "Tabii, hemen gönderiyorum."),
@@ -752,7 +752,7 @@ for _id, _title, _kw, _body in _CRISIS:
         expected=Expected(
             scores=det5(sc(default=8, **{"Aktif Dinleme": 9}), **FULL_GOOD_DET),
             zeroed=False, alerts=["crisis"],
-            must_not_penalize=["Yasakli Kelime / Uslup", "Aktif Dinleme"],
+            must_not_penalize=["Yasaklı Kelime / Üslup", "Aktif Dinleme"],
             notes=f"Kriz sinyali ('{_kw}') MUSTERI kaynakli. Kriz alarmi URETILMELI ama "
                   "temsilci sakin ve cozum odakli davrandigi icin PUANI DUSMEMELI. "
                   "Musterinin davranisi temsilciyi cezalandirmaz.",
@@ -779,10 +779,10 @@ add(Scenario(
         Turn(T, "İşlemi tamamladım, detaylar SMS olarak gelecek."),
     ] + close_std(),
     expected=Expected(
-        scores=det5(sc(default=9, Acilis=10), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+        scores=det5(sc(default=9, **{"Açılış": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
         zeroed=False, alerts=[],
-        evidence_must_contain={"Acilis": "Netik İletişim"},
-        must_not_penalize=["Acilis"],
+        evidence_must_contain={"Açılış": "Netik İletişim"},
+        must_not_penalize=["Açılış"],
         notes="Kurum adi cumle BASINDA degil ORTASINDA. Konum degil VARLIK aranmali. "
               "Acilis tam puan almali.",
     ),
@@ -804,9 +804,9 @@ add(Scenario(
         Turn(T, "Kapattım. Bundan sonra kota bitince ek paket tanımlanmayacak."),
     ]),
     expected=Expected(
-        scores=det5(sc(default=9, **{"Bilgi Dogrulugu": 10, "Aktif Dinleme": 10, "Cozum / Yonlendirme": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+        scores=det5(sc(default=9, **{"Bilgi Doğruluğu": 10, "Aktif Dinleme": 10, "Çözüm / Yönlendirme": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
         zeroed=False, alerts=[],
-        must_not_penalize=["Bilgi Dogrulugu", "Aktif Dinleme"],
+        must_not_penalize=["Bilgi Doğruluğu", "Aktif Dinleme"],
         notes="Musterinin anlamamasi temsilcinin hatasi DEGIL. Temsilci bilgiyi dogru "
               "verdi, anlasilmadigini fark edip BASKA sekilde anlatti ve cozdu. "
               "Bu ORNEK davranistir; ceza verilemez.",
@@ -830,9 +830,9 @@ add(Scenario(
         Turn(M, "Tamam."),
     ] + close_std(),
     expected=Expected(
-        scores=det5(sc(default=9, **{"Yasakli Kelime / Uslup": 10, "Aktif Dinleme": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+        scores=det5(sc(default=9, **{"Yasaklı Kelime / Üslup": 10, "Aktif Dinleme": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
         zeroed=False, alerts=[],
-        must_not_penalize=["Yasakli Kelime / Uslup", "Aktif Dinleme"],
+        must_not_penalize=["Yasaklı Kelime / Üslup", "Aktif Dinleme"],
         notes="'sacmalamayin', 'aptal', 'salaklik' kelimelerinin UCU DE MUSTERI "
               "replikinde. Temsilci sakin ve cozum odakli. SIFIRLAMA YASAK, "
               "yasakli kelime alarmi temsilciye YAZILAMAZ.",
@@ -860,9 +860,9 @@ add(Scenario(
         Turn(T, "Tanımladım, çıkış gününüzde otomatik başlayacak."),
     ] + close_std(),
     expected=Expected(
-        scores=det5(sc(default=9, **{"KVKK / Aydinlatma": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+        scores=det5(sc(default=9, **{"KVKK / Aydınlatma": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
         zeroed=False, alerts=[],
-        must_not_penalize=["KVKK / Aydinlatma"],
+        must_not_penalize=["KVKK / Aydınlatma"],
         notes="Kayit bildirimi ve kisisel veri aydinlatmasi AYRI repliklerde ve "
               "standart kalibin disinda. Ikisi de yapilmis; ihlal URETILEMEZ.",
     ),
@@ -892,9 +892,9 @@ add(Scenario(
         Turn(T, "5 dakika içinde bu numaradan arayacağım."),
     ],
     expected=Expected(
-        scores=det5(sc(default=8, **{"Kimlik Dogrulama": 8, "Ihtiyac Analizi": 6, "Cozum / Yonlendirme": 8}), acilis=10, kvkk=10, kimlik=10, kapanis=1, uslup=10),
+        scores=det5(sc(default=8, **{"Kimlik Doğrulama": 8, "İhtiyaç Analizi": 6, "Çözüm / Yönlendirme": 8}), acilis=10, kvkk=10, kimlik=10, kapanis=1, uslup=10),
         zeroed=False, alerts=[],
-        must_not_penalize=["Kimlik Dogrulama", "Bilgi Dogrulugu"],
+        must_not_penalize=["Kimlik Doğrulama", "Bilgi Doğruluğu"],
         notes="[anlasilmadi] isaretli bolumlere DAYANARAK ceza verilemez. Temsilci "
               "zayif baglantiyi fark edip geri arama teklif etti — dogru davranis. "
               "Duyulamayan kisimlar 'yetersiz kanit' olmali, dusuk puan degil.",
@@ -923,8 +923,8 @@ add(Scenario(
         Turn(T, "Böldüm, detaylar SMS ile gelecek."),
     ] + close_std(),
     expected=Expected(
-        scores=det5(sc(default=8, **{"KVKK / Aydinlatma": 0}), acilis=10, kvkk=0, kimlik=10, kapanis=10, uslup=10),
-        zeroed=True, zeroing_criterion="KVKK / Aydinlatma",
+        scores=det5(sc(default=8, **{"KVKK / Aydınlatma": 0}), acilis=10, kvkk=0, kimlik=10, kapanis=10, uslup=10),
+        zeroed=True, zeroing_criterion="KVKK / Aydınlatma",
         alerts=["zeroing"],
         notes="Kayit bildirimi ve aydinlatma anonsunun IKISI DE yok. Deterministik "
               "motor bunu zaten dogru tespit ediyor (compliance_packs ihlal uretiyor) "
@@ -951,8 +951,8 @@ add(Scenario(
         Turn("bilinmeyen", "Yok, teşekkürler."),
     ],
     expected=Expected(
-        scores=det5(sc(default=5, **{"KVKK / Aydinlatma": 5, "Kimlik Dogrulama": 5,
-                                "Yasakli Kelime / Uslup": 5}), acilis=5, kvkk=5, kimlik=5, kapanis=5, uslup=5),
+        scores=det5(sc(default=5, **{"KVKK / Aydınlatma": 5, "Kimlik Doğrulama": 5,
+                                "Yasaklı Kelime / Üslup": 5}), acilis=5, kvkk=5, kimlik=5, kapanis=5, uslup=5),
         zeroed=False, alerts=[],
         must_not_penalize=[],
         notes="Mono kayit + HF_TOKEN yok -> tum segmentler 'bilinmeyen'. KVKK anonsu "
@@ -989,10 +989,10 @@ add(Scenario(
         + close_std()
     ),
     expected=Expected(
-        scores=det5(sc(default=5, **{"Yasakli Kelime / Uslup": 0, "Aktif Dinleme": 3}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=0),
-        zeroed=True, zeroing_criterion="Yasakli Kelime / Uslup",
+        scores=det5(sc(default=5, **{"Yasaklı Kelime / Üslup": 0, "Aktif Dinleme": 3}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=0),
+        zeroed=True, zeroing_criterion="Yasaklı Kelime / Üslup",
         alerts=["zeroing", "banned_word"],
-        evidence_must_contain={"Yasakli Kelime / Uslup": "saçmalamayın"},
+        evidence_must_contain={"Yasaklı Kelime / Üslup": "saçmalamayın"},
         notes="Cagri 10 dk esigini asiyor -> map-reduce yoluna giriyor. Hakaret "
               "transkriptin TAM ORTASINDA. Mevcut _transcript_outline ilk 25 + son 25 "
               "satiri aliyor, ortayi ATIYOR. Ihlal KACIRILAMAZ.",
@@ -1017,9 +1017,9 @@ add(Scenario(
         Turn(T, "Ayarı açtım. Bundan sonra kotanız bitince ek ücret oluşmayacak."),
     ] + close_std(),
     expected=Expected(
-        scores=det5(sc(default=9, **{"Aktif Dinleme": 10, "Ihtiyac Analizi": 9, "Cozum / Yonlendirme": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
+        scores=det5(sc(default=9, **{"Aktif Dinleme": 10, "İhtiyaç Analizi": 9, "Çözüm / Yönlendirme": 10}), acilis=10, kvkk=10, kimlik=10, kapanis=10, uslup=10),
         zeroed=False, alerts=[],
-        must_not_penalize=["Aktif Dinleme", "Kimlik Dogrulama", "Bilgi Dogrulugu"],
+        must_not_penalize=["Aktif Dinleme", "Kimlik Doğrulama", "Bilgi Doğruluğu"],
         notes="Musterinin konusma bicimi (transkriptte 'Mamet', 'fatora', 'ola') "
               "temsilciyi CEZALANDIRMAZ. Temsilci dogru anladi, teyit etti ve iki "
               "secenek sunarak cozdu. Aktif Dinleme tam puan.",

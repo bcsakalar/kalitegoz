@@ -8,11 +8,14 @@ MODEL := $(if $(MODEL),$(MODEL),qwen2.5:7b)
 EMBED := $(shell grep -E '^EMBED_MODEL=' .env 2>/dev/null | cut -d= -f2)
 EMBED := $(if $(EMBED),$(EMBED),nomic-embed-text)
 
-.PHONY: help demo up down clean logs test test-scripts seed-history pull-model wait-api demo-data rebuild eval eval-build eval-baseline
+.PHONY: help demo up down clean logs test test-scripts seed-history pull-model wait-api demo-data rebuild eval eval-build eval-baseline demo-reset tr-audit perf
 
 help:
 	@echo "KaliteGoz komutlari:"
 	@echo "  make eval      - Altin set regresyon kosumu (puanlama dogrulugu)"
+	@echo "  make demo-reset- Demo verisini temizler"
+	@echo "  make tr-audit  - Turkce karakter ve jargon denetimi"
+	@echo "  make perf      - Kokpit performans olcumu (1000 cagri)"
 	@echo "  make demo      - Her seyi ayaga kaldirir, modeli indirir, demo veriyi uretir"
 	@echo "  make up        - Servisleri baslatir"
 	@echo "  make down      - Servisleri durdurur (veri kalir)"
@@ -57,6 +60,21 @@ eval: eval-build
 eval-baseline:
 	@$(MAKE) eval EVAL_ARGS="--no-gate"
 
+# --- FAZ 6: demo, dil denetimi, performans -------------------------------
+# demo-data hedefi (asagida) gercek ses uretir ve uctan uca isler — yavas.
+# `make demo` ise SATIS demosu icin hazir puanli veri uretir (saniyeler).
+
+demo-reset:
+	@docker compose cp scripts/seed_sales_demo.py api:/tmp/seed_sales_demo.py
+	@docker compose exec -T api python /tmp/seed_sales_demo.py --reset
+
+tr-audit:
+	python scripts/tr_audit.py
+
+perf:
+	@docker compose cp scripts/perf_check.py api:/tmp/perf_check.py
+	@docker compose exec -T api python /tmp/perf_check.py --calls 1000
+
 wait-api:
 	@echo "API hazir bekleniyor..."
 	@i=0; while [ $$i -lt 60 ]; do \
@@ -78,7 +96,14 @@ demo-data:
 	python scripts/generate_demo.py --upload $(API) || python3 scripts/generate_demo.py --upload $(API)
 
 # Tek komutla: stack + model + demo verisi
-demo: up wait-api pull-model demo-data
+demo: up wait-api
+	@docker compose cp scripts/seed_sales_demo.py api:/tmp/seed_sales_demo.py
+	@docker compose exec -T api python /tmp/seed_sales_demo.py
+	@echo ""
+	@echo "Panel: http://localhost:3000  ·  admin@demo.local / demo1234"
+
+# Uctan uca demo: gercek ses uretir ve STT+LLM ile isler (yavas, host worker ister)
+demo-full: up wait-api pull-model demo-data
 	@echo ""
 	@echo "============================================================"
 	@echo " KaliteGoz demo hazir!"

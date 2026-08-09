@@ -44,8 +44,8 @@ _MIN_BIAS = 1.0
 
 _DEFAULT_OFFSETS: dict[str, float] = {
     "Aktif Dinleme": -1.7,
-    "Cozum / Yonlendirme": -1.2,
-    "Ihtiyac Analizi": -1.2,
+    "Çözüm / Yönlendirme": -1.2,
+    "İhtiyaç Analizi": -1.2,
 }
 
 _OVERRIDE_PATH = Path("/data/calibration/offsets.json")
@@ -81,16 +81,16 @@ def offset_for(criterion_name: str) -> float:
 # "Yapay zekâ %100 doğru" iddiası kurmak yerine sistemin sınırını bilmesi ve
 # yönetmesi, ürünün satış argümanıdır.
 MEASURED_KAPPA: dict[str, float] = {
-    "KVKK / Aydinlatma": 1.00,
-    "Yasakli Kelime / Uslup": 1.00,
-    "Acilis": 1.00,
-    "Kapanis": 0.90,
-    "Kimlik Dogrulama": 0.49,
-    "Bilgi Dogrulugu": 0.21,
+    "KVKK / Aydınlatma": 1.00,
+    "Yasaklı Kelime / Üslup": 1.00,
+    "Açılış": 1.00,
+    "Kapanış": 0.90,
+    "Kimlik Doğrulama": 0.49,
+    "Bilgi Doğruluğu": 0.21,
     "Script Uyumu": 0.19,
-    "Cozum / Yonlendirme": 0.13,
+    "Çözüm / Yönlendirme": 0.13,
     "Aktif Dinleme": 0.04,
-    "Ihtiyac Analizi": 0.03,
+    "İhtiyaç Analizi": 0.03,
 }
 # Bu kappa'nın altındaki kriterler GÜVENİLİR SAYILMAZ; güven skoru tavanlanır ve
 # çağrı insan onayına düşer. 0.40, "orta düzeyde uyum" sınırı olarak kabul edilir.

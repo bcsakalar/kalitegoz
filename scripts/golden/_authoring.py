@@ -97,7 +97,7 @@ def build_segments(turns: list[Turn]) -> list[dict]:
     return segs
 
 
-SCRIPT_PARTS = ("Acilis", "KVKK / Aydinlatma", "Kimlik Dogrulama", "Kapanis")
+SCRIPT_PARTS = ("Açılış", "KVKK / Aydınlatma", "Kimlik Doğrulama", "Kapanış")
 
 
 def derive_script_uyumu(scores: dict) -> dict:

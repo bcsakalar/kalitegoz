@@ -134,6 +134,46 @@ _STATEMENTS: list[tuple[str, str]] = [
      "UPDATE calls SET qa_state='kesinlesti' "
      "WHERE status='done' AND qa_state='ai_puanlandi' AND finalized_at IS NULL "
      "  AND created_at < NOW() - INTERVAL '1 hour'"),
+    # --- FAZ 6: B15 — rubrik kriter adlari TAM TURKCE ---
+    # Kriter adlari dogrudan arayuzde gosteriliyor; "Acilis", "Kapanis",
+    # "Bilgi Dogrulugu" kullaniciya ASCII'ye dusurulmus Turkce gosteriyordu.
+    # Idempotent: zaten Turkce olan satirlar etkilenmez.
+    ("criteria adlari -> tam Turkce (B15)",
+     "UPDATE criteria SET name = CASE name "
+     "  WHEN 'Acilis' THEN 'Açılış' "
+     "  WHEN 'Kapanis' THEN 'Kapanış' "
+     "  WHEN 'Bilgi Dogrulugu' THEN 'Bilgi Doğruluğu' "
+     "  WHEN 'Kimlik Dogrulama' THEN 'Kimlik Doğrulama' "
+     "  WHEN 'Cozum / Yonlendirme' THEN 'Çözüm / Yönlendirme' "
+     "  WHEN 'Yasakli Kelime / Uslup' THEN 'Yasaklı Kelime / Üslup' "
+     "  WHEN 'Ihtiyac Analizi' THEN 'İhtiyaç Analizi' "
+     "  WHEN 'KVKK / Aydinlatma' THEN 'KVKK / Aydınlatma' "
+     "  ELSE name END "
+     "WHERE name IN ('Acilis','Kapanis','Bilgi Dogrulugu','Kimlik Dogrulama',"
+     "               'Cozum / Yonlendirme','Yasakli Kelime / Uslup',"
+     "               'Ihtiyac Analizi','KVKK / Aydinlatma')"),
+    ("criteria gruplari -> tam Turkce (B15)",
+     "UPDATE criteria SET \"group\" = CASE \"group\" "
+     "  WHEN 'Iletisim' THEN 'İletişim' "
+     "  WHEN 'Musteri Odagi' THEN 'Müşteri Odağı' "
+     "  ELSE \"group\" END "
+     "WHERE \"group\" IN ('Iletisim','Musteri Odagi')"),
+    # Gecmis puan kayitlarindaki kopya kriter adlari da duzeltilir; aksi halde
+    # eski cagrilarin karnesinde ASCII ad gorunmeye devam eder.
+    ("scores.criterion_name -> tam Turkce (B15)",
+     "UPDATE scores SET criterion_name = CASE criterion_name "
+     "  WHEN 'Acilis' THEN 'Açılış' "
+     "  WHEN 'Kapanis' THEN 'Kapanış' "
+     "  WHEN 'Bilgi Dogrulugu' THEN 'Bilgi Doğruluğu' "
+     "  WHEN 'Kimlik Dogrulama' THEN 'Kimlik Doğrulama' "
+     "  WHEN 'Cozum / Yonlendirme' THEN 'Çözüm / Yönlendirme' "
+     "  WHEN 'Yasakli Kelime / Uslup' THEN 'Yasaklı Kelime / Üslup' "
+     "  WHEN 'Ihtiyac Analizi' THEN 'İhtiyaç Analizi' "
+     "  WHEN 'KVKK / Aydinlatma' THEN 'KVKK / Aydınlatma' "
+     "  ELSE criterion_name END "
+     "WHERE criterion_name IN ('Acilis','Kapanis','Bilgi Dogrulugu','Kimlik Dogrulama',"
+     "                         'Cozum / Yonlendirme','Yasakli Kelime / Uslup',"
+     "                         'Ihtiyac Analizi','KVKK / Aydinlatma')"),
     # --- FAZ 4.3: idempotent isleme ---
     ("calls.audio_hash",
      "ALTER TABLE calls ADD COLUMN IF NOT EXISTS audio_hash VARCHAR(64)"),

@@ -192,7 +192,12 @@ def score_scenario(db, tenant: Tenant, agent: Agent, tr: dict) -> dict:
         "total": call.total_score,
         "zeroed": bool(call.zeroed),
         "is_crisis": bool(call.is_crisis),
-        "alerts": [a[0].value if hasattr(a[0], "value") else str(a[0]) for a in outcome.alerts],
+        # FAZ 4'ten beri outcome.alerts bir AlertDraft listesi (eskiden tuple'di).
+        # Bu satir guncellenmedigi icin FAZ 4 sonrasi ilk kosumda TUM senaryolar
+        # "'AlertDraft' object is not subscriptable" ile dustu — eval'i her faz
+        # sonunda kosmamanin bedeli.
+        "alerts": [d.type.value for d in outcome.alerts],
+        "alert_rules": [d.rule_id for d in outcome.alerts],
         "violations": [{"kind": v.kind, "term": v.term, "speaker": v.speaker} for v in viol],
         "duplicate_criteria": len(rows) - len({r.criterion_id for r in rows}),
     }

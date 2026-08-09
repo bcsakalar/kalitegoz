@@ -53,6 +53,17 @@ jobs:
   # calismaz — Ollama'li self-hosted runner'da veya elle kosulur. FAZ 2'de
   # runner hazir oldugunda buraya eklenecek; esikler evaluate.py:GATES'te.
 
+  turkce:
+    name: Turkce ve jargon denetimi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: ASCII Turkce ve gelistirici jargonu denetimi
+        run: python scripts/tr_audit.py
+
   frontend:
     name: Frontend — lint + build
     runs-on: ubuntu-latest
