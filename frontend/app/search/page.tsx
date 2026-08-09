@@ -2,7 +2,8 @@
 
 import { useT } from "@/components/I18nProvider";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { EmptyState, ErrorState, LoadingRegion } from "@/components/EmptyState";
 import { useAuth } from "@/components/AuthProvider";
 import { CategoryChip, ChannelChip, ScoreBadge } from "@/components/Badges";
 import { api, CHANNEL_LABELS, fmtDate, fmtTs } from "@/lib/api";
@@ -27,6 +28,24 @@ export default function SearchPage() {
   const [res, setRes] = useState<TranscriptSearchResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // B23: son aramalar. Kalite ekibi ayni ifadeleri tekrar tekrar arar;
+  // her seferinde yeniden yazdirmak gereksiz surtunmedir.
+  const [recent, setRecent] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("kg_recent_searches");
+      if (raw) setRecent(JSON.parse(raw) as string[]);
+    } catch { /* bozuk kayit gorulmezden gelinir */ }
+  }, []);
+
+  const remember = useCallback((query: string) => {
+    setRecent((prev) => {
+      const next = [query, ...prev.filter((x) => x !== query)].slice(0, 6);
+      try { localStorage.setItem("kg_recent_searches", JSON.stringify(next)); } catch { /* kota dolu */ }
+      return next;
+    });
+  }, []);
 
   async function run(query = q) {
     if (query.trim().length < 2) { setError(t("search.placeholder")); return; }
@@ -36,6 +55,7 @@ export default function SearchPage() {
       if (speaker) params.speaker = speaker;
       if (channel) params.channel = channel;
       setRes(await api.searchTranscripts(params));
+      remember(query.trim());
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally { setBusy(false); }
@@ -100,9 +120,43 @@ export default function SearchPage() {
       </div>
 
       {error && (
-        <p className="card border-l-4 p-3 text-sm" style={{ borderLeftColor: "var(--status-critical)" }}>
-          {error}
-        </p>
+        <div className="card">
+          <ErrorState
+            what="Arama yapılamadı."
+            next="En az 2 karakter yazın ve tekrar deneyin. Sorun sürerse sayfayı yenileyin."
+            onRetry={() => run()}
+          />
+        </div>
+      )}
+
+      {/* Yukleniyor — iskelet, spinner degil */}
+      {busy && !res && <div className="card p-3"><LoadingRegion label="Aranıyor…" rows={4} /></div>}
+
+      {/* BOS DURUM (B23): arama yapilmadan once ekran bombos kalmaz */}
+      {!res && !busy && !error && (
+        <div className="card">
+          <EmptyState
+            title="Transkriptlerde arama yapın."
+            reason="Bir ifade yazın; sistem tüm çağrıların transkriptlerinde arar ve eşleşen cümleyi çevresiyle birlikte gösterir. Sonuca tıklayınca çağrı o saniyeden açılır."
+            action={
+              recent.length > 0 ? (
+                <div className="text-left">
+                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                    Son aramalarınız
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    {recent.map((r) => (
+                      <button key={r} type="button" className="btn !py-0.5 text-xs"
+                        onClick={() => { setQ(r); run(r); }}>
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : undefined
+            }
+          />
+        </div>
       )}
 
       {res && (
@@ -112,9 +166,12 @@ export default function SearchPage() {
           </p>
 
           {res.items.length === 0 ? (
-            <p className="card p-8 text-center text-sm text-muted">
-              {t("search.noResults")}
-            </p>
+            <div className="card">
+              <EmptyState
+                title={`“${res.query}” için eşleşme bulunamadı.`}
+                reason="Bu ifade hiçbir çağrı transkriptinde geçmiyor. Daha kısa bir kök deneyin (örn. 'iptal ed' yerine 'iptal') veya konuşmacı/kanal filtresini kaldırın."
+              />
+            </div>
           ) : (
             <div className="space-y-2">
               {res.items.map((h, i) => (
@@ -124,8 +181,10 @@ export default function SearchPage() {
                   className="card block p-3 transition hover:border-series"
                 >
                   <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className="font-semibold text-series">{h.filename}</span>
-                    <ChannelChip channel={h.channel} />
+                    <span className="font-mono font-semibold tabular-nums text-series">
+                      #{String(h.call_id).padStart(4, "0")}
+                    </span>
+                    <ChannelChip channel={h.channel} compact />
                     <span className="text-ink2">{h.agent_name ?? "—"}</span>
                     <CategoryChip category={h.category} />
                     <ScoreBadge score={h.total_score} />

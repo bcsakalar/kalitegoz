@@ -235,3 +235,23 @@ bakım penceresinde yapılmalıdır.
 
 **Rio'nun yapması gereken:** KVKK denetimi mevcut kayıtların da şifreli
 olmasını gerektiriyorsa ayrı bir migrasyon planlanmalı.
+
+---
+
+## FAZ 5 — Arayüz
+
+### S14. Rol bazlı varsayılan açılış ekranı hangisi olsun? 🟡
+
+**Varsayım:** Şu an tüm roller "Çağrılar"a açılıyor (mevcut davranış korundu).
+
+**Tasarım planının önerisi:**
+- `kaliteci` → İnceleme Kuyruğum (günü orada geçiyor)
+- `supervizor` / `yonetici` → Kokpit
+- `temsilci` → Kendi Karnem
+
+**Gerekçe (neden varsayımla geçildi):** Bu, "ürünün ana kullanıcısı kim?"
+sorusudur ve satış konumlandırmasını da etkiler. Kaliteci için
+optimize edilmiş bir ürün ile yönetici için optimize edilmiş bir ürün
+farklı şeylerdir.
+
+**Uygulanması:** `Shell.tsx` içinde rol bazlı yönlendirme; tek dosyalık iş.

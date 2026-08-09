@@ -14,16 +14,47 @@ const TICKS = [0, 25, 50, 75, 100];
  * Tek seri oldugu icin legend yok (baslik seriyi adlandirir);
  * crosshair + tooltip ile her noktanin degeri okunabilir.
  */
+/** Eğilim çizmek için gereken asgari nokta — backend `stats_honesty` ile aynı. */
+const MIN_POINTS = 7;
+
 export default function TrendChart({ data, title }: { data: TrendPoint[]; title: string }) {
   const t = useT();
   const wrapRef = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<{ i: number; px: number; py: number } | null>(null);
 
-  if (data.length === 0) {
+  // B10 + B19: BOŞ GRAFİK ÇİZİLMEZ ve "Veri yok" denmez.
+  //
+  // Çizgi grafik bir "değişim" iddiasıdır; tek nokta değişim göstermez ve
+  // bomboş bir kutu çizilir. Kullanıcı "Veri yok" görünce sistemin bozuk
+  // olduğunu sanıyordu — oysa veri VAR, sadece eğilim için yetmiyor.
+  // Bu yüzden: tekil değer kartı + ne gerektiğinin açıkça söylenmesi.
+  if (data.length < MIN_POINTS) {
+    const degerler = data.map((d) => d.avg_score).filter((v): v is number => v != null);
+    const ortalama = degerler.length
+      ? Math.round((degerler.reduce((a, b) => a + b, 0) / degerler.length) * 10) / 10
+      : null;
+    const toplamCagri = data.reduce((a, d) => a + (d.call_count ?? 0), 0);
+
     return (
       <div className="card p-4">
         <h3 className="text-sm font-semibold text-ink2">{title}</h3>
-        <p className="py-10 text-center text-sm text-muted">{t("common.noData")}</p>
+        <div className="flex flex-col items-center justify-center gap-1.5 py-8 text-center">
+          {ortalama != null ? (
+            <>
+              <p className="text-3xl font-bold tabular-nums">{ortalama.toFixed(1)}</p>
+              <p className="text-xs text-ink2">
+                {toplamCagri} çağrının ortalaması ({data.length} gün)
+              </p>
+            </>
+          ) : (
+            <p className="text-sm font-semibold">Henüz puanlanmış çağrı yok.</p>
+          )}
+          <p className="mt-1 max-w-xs text-xs leading-relaxed text-muted">
+            Eğilim grafiği için en az {MIN_POINTS} günlük veri gerekir
+            {data.length > 0 && ` (şu an ${data.length} gün)`}. O zamana kadar
+            tekil değer gösteriliyor.
+          </p>
+        </div>
       </div>
     );
   }

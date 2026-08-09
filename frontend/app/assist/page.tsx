@@ -91,10 +91,50 @@ export default function AssistPage() {
           ) : (
             <>
               <div className="text-xs text-muted">
-                {vstatus && <span className="badge badge-neutral">{vstatus.provider} · {vstatus.model}</span>}
+                {vstatus && (
+                  /* B18: "ollama · llama3.2-vision:11b" kullaniciya hicbir sey
+                     anlatmiyor. Ne yaptigi yazilir; teknik ayrinti tooltip'te. */
+                  <span
+                    className="badge badge-neutral"
+                    title={`Sağlayıcı: ${vstatus.provider} · Model: ${vstatus.model}`}
+                  >
+                    {vstatus.provider === "ollama" ? "Yerel yapay zekâ" : "Bulut yapay zekâ"} · görsel analiz
+                  </span>
+                )}
               </div>
-              <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onImage}
-                className="block w-full text-sm" />
+              {/* B18: tarayicinin "Choose File / No file chosen" metni Turkcelestirilemez.
+                  Gercek input gizlenir, gorunur tetikleyici bir <label> olur —
+                  boylece hem Turkce olur hem klavyeyle erisilebilir kalir. */}
+              <label
+                htmlFor="kg-vision-file"
+                className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-6 text-center transition-colors hover:border-[var(--series-1)] focus-within:ring-2 focus-within:ring-[var(--series-1)]"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const f = e.dataTransfer.files?.[0];
+                  if (f && fileRef.current) {
+                    const dt = new DataTransfer();
+                    dt.items.add(f);
+                    fileRef.current.files = dt.files;
+                    fileRef.current.dispatchEvent(new Event("change", { bubbles: true }));
+                  }
+                }}
+              >
+                <span className="text-sm font-medium text-[var(--ink)]">
+                  Görsel seçin veya buraya sürükleyin
+                </span>
+                <span className="text-[11px] text-muted">
+                  PNG, JPEG veya WEBP · en fazla 10 MB
+                </span>
+                <input
+                  id="kg-vision-file"
+                  ref={fileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={onImage}
+                  className="sr-only"
+                />
+              </label>
               {vbusy && <p className="text-sm text-muted">{t("assist.visionAnalyzing")}</p>}
               {verr && <p className="text-sm text-[var(--status-critical)]">{verr}</p>}
               {vresult && (
