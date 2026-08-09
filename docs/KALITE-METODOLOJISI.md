@@ -92,8 +92,13 @@ referansı hazır olduğunda ikisi yan yana yayımlanır (§4.3).
 ### 4.1 Kriterler iki gruba ayrılır — ve ayrı raporlanır
 
 Tek bir ortalama, iki farklı gerçeği gizliyordu. Sistemin en güçlü yanı
-(nesnel kriterlerde kappa 0.94–1.00) en zayıf yanıyla (öznel kriterlerde
+(uyum kriterlerinde kappa 0.94–1.00) en zayıf yanıyla (öznel kriterlerde
 0.08–0.20) ortalanınca ikisi de yanlış görünüyordu.
+
+Ancak "nesnel" olmak tek başına yüksek kappa garanti etmiyor: nesnel
+kriterlerden **ikisi düşük** ve bunun sebebi model değil, **tanımın kendisi**
+(§4.3'teki tabloya bakın). Deterministik bir kural, yanlış tanımlanmışsa
+kusursuz tutarlılıkla yanlış cevap verir.
 
 | | Nesnel / deterministik | Öznel |
 |---|---|---|
@@ -101,7 +106,7 @@ Tek bir ortalama, iki farklı gerçeği gizliyordu. Sistemin en güçlü yanı
 | **Cevabı ne belirler** | Transkriptte bir ifadenin varlığı | Yargı |
 | **Nasıl puanlanır** | Katman A — kodla, LLM'e sorulmadan | Katman B — kanıt zorunlu LLM |
 | **Referans güvenilir mi** | Evet — bir *spesifikasyon*, doğrulanabilir | Hayır — sentetik referans döngüsel (§4.0) |
-| **Kappa hedefi** | Sabit **≥ 0.90** | **İnsan-insan uyumunun %85'i** (§4.2) |
+| **Kappa hedefi** | Çekirdek 4 kriter: her biri **≥ 0.90** | **İnsan-insan uyumunun %85'i** (§4.2) |
 
 **"%100 kapsam" iddiası yalnızca nesnel kriterler için kurulur.** Öznel
 kriterlerde sistem bir **öneri** üretir; geçerli puan kalite uzmanı onayından
@@ -144,18 +149,33 @@ kriterler raporlanır ama build'i kırmaz. IRR ölçümü için altyapı hazır:
 **Bu tablo ürünün en dürüst kısmıdır.** Sistem hangi kriterde güvenilir,
 hangisinde değil — açıkça yazıyoruz:
 
-| Kriter | Katman | kappa | Yorum |
-|---|---|---|---|
-| KVKK / Aydınlatma | A | **1.00** | Spesifikasyonla tam mutabık |
-| Yasaklı Kelime / Üslup | A | **1.00** | Spesifikasyonla tam mutabık |
-| Açılış | A | **1.00** | Spesifikasyonla tam mutabık |
-| Kapanış | A | **0.90** | Güvenilir |
-| Kimlik Doğrulama | A | 0.49 | Sınırda — geç doğrulama yorumu değişebiliyor |
-| Bilgi Doğruluğu | B | 0.21 | **Güvenilir değil** → insana gider |
-| Script Uyumu | A | 0.19 | **Güvenilir değil** → insana gider |
-| Çözüm / Yönlendirme | B | 0.12 | **Güvenilir değil** → insana gider |
-| Aktif Dinleme | B | 0.03 | **Güvenilir değil** → insana gider |
-| İhtiyaç Analizi | B | 0.03 | **Güvenilir değil** → insana gider |
+50 senaryoluk tam koşum, varsayılan kurulum (`qwen2.5:7b-instruct`):
+
+| Kriter | Katman | kappa | MAE | Yorum |
+|---|---|---|---|---|
+| Açılış | A | **1.00** | 0.02 | Kuralla tam mutabık |
+| KVKK / Aydınlatma | A | **1.00** | 0.00 | Kuralla tam mutabık |
+| Yasaklı Kelime / Üslup | A | **1.00** | 0.00 | Kuralla tam mutabık |
+| Kapanış | A | **0.94** | 0.08 | Güvenilir |
+| Kimlik Doğrulama | A | 0.54 | 0.39 | **Tanım sorunu** — "geç doğrulama kaç puan?" bir *politika* kararı, teknik değil |
+| Çözüm / Yönlendirme | B | 0.20 | 1.67 | Öznel → insana gider |
+| Bilgi Doğruluğu | B | 0.19 | 1.54 | Öznel → insana gider |
+| İhtiyaç Analizi | B | 0.11 | 1.71 | Öznel → insana gider |
+| Script Uyumu | A | 0.10 | 0.47 | **Tanım sorunu** — kriter diğer dördünün türevi, bağımsız bilgi taşımıyor |
+| Aktif Dinleme | B | 0.08 | 1.98 | Öznel → insana gider |
+
+**İki farklı düşük kappa sebebi var, karıştırılmamalı:**
+
+- **Tanım sorunu** (Kimlik Doğrulama, Script Uyumu): Kural deterministik ve
+  %100 tekrarlanabilir; referansla ayrıştığı yer *kuralın ne olması gerektiği*.
+  Bir insan kuralı ve transkripti okuyup kimin haklı olduğuna karar verebilir.
+  Bunlar **çözülebilir** sorulardır — kurumun politikası belirlenince biter.
+- **Yargı sorunu** (dört öznel kriter): Cevap tartışmaya açık. Burada
+  "doğru cevap" ancak insan-insan uyumu ölçülerek tanımlanabilir (§4.2).
+
+Çekirdek dört kriterin ortalaması **0.985**. `make eval` kapısı bu dördünü
+**tek tek** denetler (≥0.90), çünkü ortalama tek bir kriterin bozulmasını
+gizleyebilir.
 
 **Nesnel kriterlerde sistem spesifikasyonla tam mutabık. Öznel kriterlerde
 değil — ve bunu biliyor.** Ölçülen kappa'sı 0.40'ın altındaki kriterlerde
@@ -171,9 +191,61 @@ güven skoru otomatik tavanlanır ve çağrı **garantili** insan onayına düş
 few-shot geri besleme (kappa 0.492→0.499), skala kalibrasyonu, deterministik
 tavan. Hiçbiri anlamlı fark yaratmadı.
 
-Dördüncü deneme — **daha büyük model** (`qwen2.5:14b-instruct`, yalnız öznel
-kriterler için) — sonucu §4.4'te. Bu, "tavan model kaynaklı mı, metodoloji
-kaynaklı mı" sorusunu ayırt eder.
+Dördüncü deneme — **daha büyük model** — işe yaradı. §4.4.
+
+### 4.4 Daha büyük model ne kazandırıyor? — ölçüldü
+
+Aynı 50 senaryo, aynı prompt, aynı doğrulama. Tek fark: dört öznel kriter
+`qwen2.5:14b-instruct` ile puanlandı, geri kalan her şey aynı kaldı.
+
+| Kriter | 7B kappa | 14B kappa | Fark |
+|---|---|---|---|
+| İhtiyaç Analizi | 0.113 | **0.462** | +0.349 |
+| Çözüm / Yönlendirme | 0.197 | **0.448** | +0.251 |
+| Aktif Dinleme | 0.081 | **0.226** | +0.145 |
+| Bilgi Doğruluğu | 0.195 | 0.175 | −0.019 |
+| **Öznel ortalama** | **0.146** | **0.328** | **+0.182** |
+
+**Nesnel kriterlerin altısı da kuruşu kuruşuna aynı kaldı** (fark 0.0000).
+Bu bir tesadüf değil, yönlendirmenin doğru çalıştığının kanıtı: büyük model
+yalnızca öznel kriterlere dokundu.
+
+**Cevap: tavan hem modelden hem metodolojiden geliyor — ama bu ölçüm ikisini
+ayırdı.**
+
+- **Model payı gerçek ve büyük.** Öznel uyum 2.2 katına çıktı. "7B bu işi
+  yapamıyor" iddiası artık bir tahmin değil, ölçüm.
+- **Model payı yetmiyor.** 0.33 hâlâ nesnel kriterlerin (0.94–1.00) çok
+  altında. Model büyütmek tavanı kaldırdı ama kaldırmadı.
+- **Kritik ayrıntı: MAE neredeyse hiç düzelmedi** (1.98→1.94, 1.71→1.69).
+  Yani 14B *sayısal olarak daha doğru puan* vermiyor; **bant kararlarında**
+  daha tutarlı. Bu, kalan farkın büyük ölçüde "doğru sayı kaç?" sorusunun
+  cevapsızlığından geldiğini söylüyor — yani **metodolojiden**, ölçüldüğü
+  referansın döngüselliğinden (§4.0).
+- **Bilgi Doğruluğu hiç düzelmedi.** Bu kriter bilgi *doğruluğunu* ölçüyor;
+  model daha büyük olsa da transkriptte olmayan kurumsal gerçeği bilemez.
+  Buranın çözümü model değil, **bilgi tabanı (RAG)**.
+
+**Bedeli — ölçüldü:** 14B modeli 9 GB yer kaplar. Aynı donanımda (3 senaryo,
+aynı koşullar) senaryo başına süre **21.7 sn → 64.3 sn**, yani yaklaşık **3
+kat**. Nesnel kriterler zaten kodla çözüldüğü için bu maliyet **yalnızca öznel
+kriterler** için ödenir; tüm çağrıyı büyük modele vermek gereksiz olurdu.
+
+**Varsayılan: kapalı.** Her kurulumda 9 GB model bulunmaz ve model yoksa
+sistem sessizce varsayılana düşer. Açmak için kurumun ayarlarında:
+
+```json
+{"ai": {"subjective_model": "qwen2.5:14b-instruct"}}
+```
+
+Ölçümü tekrarlamak için:
+```
+make eval EVAL_ARGS="--subjective-model qwen2.5:14b-instruct --etiket 14b"
+```
+
+**Bu sonuç bir hedefe ulaşıldığı anlamına GELMEZ.** Öznel kriterlerde meşru
+bir hedef ancak insan-insan IRR ölçülünce doğar (§4.2). 0.33'ün iyi mi kötü
+mü olduğunu, iki kalite uzmanının birbirine ne kadar uyduğu belirleyecek.
 
 ## 5. İnsan onayı ne zaman devreye girer
 

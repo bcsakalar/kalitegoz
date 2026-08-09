@@ -77,10 +77,16 @@ kapısı yalnız nesnel kriterleri denetliyor.
 `human_only` yapılmadı. Bunun yerine:
 
 - `evaluate.py` nesnel ve öznel kriterleri **ayrı** raporluyor.
-- Kapı değişti: `kappa_ortalama ≥ 0.75` → **`nesnel_kappa ≥ 0.90`**.
+- Kapı değişti: `kappa_ortalama ≥ 0.75` → nesnel kriterlere bağlı iki kapı.
+  (İlk koyduğum 0.90 değeri ölçülmemişti; §8'de düzeltildi.)
 - "%100 kapsam" iddiası yalnız nesnel kriterler için kuruluyor.
 
 Bu kararın doğrudan sonucu **B33** oldu (aşağıda).
+
+### S2c — Daha büyük model, ölçülerek
+
+Kriter bazlı model yönlendirmesi eklendi ve **ölçüldü**. Sonuç §7'de; özet:
+öznel kappa 0.146 → 0.328, nesnel kriterler değişmedi (fark 0.0000).
 
 ### S12 — SSO panelden, anahtar dosyadan
 
@@ -178,4 +184,84 @@ bahsediyordu; gerçek arayüz (`select`, `compare --a --b`) ile hizalandı.
 
 ## 7. S2c — Tavan model kaynaklı mı, metodoloji kaynaklı mı?
 
-*(Bu bölüm ölçüm bittikten sonra dolduruldu — aşağıya bakınız.)*
+Aynı 50 senaryo, aynı prompt, aynı doğrulama. Tek fark: dört öznel kriter
+`qwen2.5:14b-instruct` ile puanlandı.
+
+| Kriter | 7B | 14B | Fark |
+|---|---|---|---|
+| İhtiyaç Analizi | 0.113 | **0.462** | +0.349 |
+| Çözüm / Yönlendirme | 0.197 | **0.448** | +0.251 |
+| Aktif Dinleme | 0.081 | **0.226** | +0.145 |
+| Bilgi Doğruluğu | 0.195 | 0.175 | −0.019 |
+| **Öznel ortalama** | **0.146** | **0.328** | **+0.182** |
+
+**Altı nesnel kriterin hepsi kuruşu kuruşuna aynı kaldı (fark 0.0000).**
+Yönlendirmenin doğru çalıştığının en temiz kanıtı bu: büyük model yalnızca
+öznel kriterlere dokundu, geri kalanı hiç görmedi.
+
+### Cevap: ikisi de — ama artık ayrıştırılmış halde
+
+**Model payı gerçek ve büyük.** Öznel uyum 2.2 katına çıktı. Önceki üç deneme
+(few-shot, skala kalibrasyonu, deterministik tavan) hiçbir şey değiştirmemişti;
+model boyutu değiştirdi. "7B bu işi yapamıyor" artık tahmin değil, ölçüm.
+
+**Model payı yetmiyor.** 0.33, nesnel kriterlerin (0.94–1.00) çok altında.
+
+**En öğretici ayrıntı: kappa yükseldi ama MAE neredeyse hiç düzelmedi**
+(1.98→1.94, 1.71→1.69, 1.67→1.51). Yani 14B *sayısal olarak daha doğru puan*
+vermiyor — **bant kararlarında** daha tutarlı. Bu, kalan farkın büyük ölçüde
+"doğru sayı kaç?" sorusunun cevapsızlığından geldiğini gösteriyor. O soru bir
+model sorusu değil, **referans sorusu** (§4.0'daki döngüsellik).
+
+**Bilgi Doğruluğu hiç düzelmedi** ve bunun sebebi anlaşılır: bu kriter bilginin
+*doğruluğunu* ölçüyor. Model ne kadar büyük olursa olsun transkriptte olmayan
+kurumsal gerçeği bilemez. Buranın çözümü model değil, **bilgi tabanı (RAG)**.
+
+### Karar: yönlendirme eklendi, varsayılan KAPALI
+
+Fark anlamlı olduğu için kriter bazlı yönlendirme kalıcı hale getirildi. Ama
+varsayılan kapalı, çünkü:
+
+- 9 GB model her kurulumda bulunmaz (model yoksa sessizce varsayılana düşer),
+- ölçülen maliyet senaryo başına **21.7 sn → 64.3 sn**, yaklaşık 3 kat.
+
+Açmak tek satır: `{"ai": {"subjective_model": "qwen2.5:14b-instruct"}}`
+
+### Bu sonuç bir hedefe ulaşıldığı anlamına gelmiyor
+
+0.33'ün iyi mi kötü mü olduğunu söyleyemeyiz — çünkü öznel kriterlerde meşru
+bir hedef ancak insan-insan IRR ölçülünce doğar (S2b). Bu ölçüm "daha iyi"
+olduğunu gösterdi, "yeterli" olduğunu değil.
+
+---
+
+## 8. Ölçerken bulunan ikinci hata — kapı ilk günden kırmızıydı
+
+S10 kapsamında `make eval` kapısını `nesnel_kappa ≥ 0.90` yapmıştım.
+**Bu değeri ölçmeden koydum.** Tam koşumda gerçek **0.7639** çıktı.
+
+Fark iki kriterde toplanıyor ve ikisi de **model hatası değil**:
+
+| Kriter | kappa | Sebep |
+|---|---|---|
+| Kimlik Doğrulama | 0.544 | "Geç doğrulama kaç puan?" — politika kararı (S9) |
+| Script Uyumu | 0.100 | Kriter diğer dördünün türevi (S7) |
+
+Kalan dört kriter ortalaması **0.985**.
+
+**Neden bu önemli:** İlk günden kırmızı yanan bir kapı, kısa sürede
+görmezden gelinir — ve o noktadan sonra gerçek bir regresyonu da yakalayamaz.
+Yeşil görünsün diye eşiği düşürmek de aynı derecede yanlış olurdu.
+
+**Yapılan:**
+- `nesnel_kappa ≥ 0.75` — ölçülen gerçeğe göre, regresyonu yakalar.
+- **Yeni kapı:** `cekirdek_nesnel_kappa_min ≥ 0.90` — tartışmasız dört kriterin
+  **en düşüğü**. Ortalama değil minimum, çünkü ortalama tek bir kriterin
+  bozulmasını gizleyebilir.
+- İki eşiğin de neden o değerde olduğu `evaluate.py` içinde yazılı; S7 ve S9
+  karara bağlanınca eşik yükseltilmeli.
+
+Ayrıca `KALITE-METODOLOJISI.md` §4.1'de "nesnel kriterlerde kappa 0.94–1.00"
+yazıyordu — bu **kendi §4 tablomla çelişiyordu** (Script Uyumu 0.10 orada
+zaten yazılıydı). Düzeltildi; tablo tam koşum değerleriyle yenilendi ve iki
+farklı düşük-kappa sebebi (tanım sorunu / yargı sorunu) ayrıldı.

@@ -328,6 +328,29 @@ def main() -> int:
     print("-" * 70)
     print(f"  nesnel  kappa={rapor['nesnel']['kappa']}  MAE={rapor['nesnel']['mae']}")
     print(f"  oznel   kappa={rapor['oznel']['kappa']}  MAE={rapor['oznel']['mae']}")
+
+    # S2b — Bu karsilastirma bir IRR olcumu MU?
+    #
+    # Yalnizca iki BAGIMSIZ insan seti karsilastirildiginda insan-insan uyumu
+    # olculmus olur. Taraflardan biri sentetik referanssa olculen sey uyum
+    # degil, "AI'nin cevap anahtarina benzerligi"dir ve ondan hedef turetmek
+    # dairesel olur — o yuzden hedef yalnizca insan-insan durumunda basilir.
+    irr_olcumu = "sentetik" not in (args.a, args.b)
+    print("-" * 70)
+    if irr_olcumu:
+        h = hedefler(rapor)
+        print("  BU BIR IRR OLCUMUDUR — AI hedefleri buradan turetilir:")
+        print(f"    nesnel kriterler : kappa >= {h['nesnel_kappa_hedefi']} (sabit)")
+        hedef = h["oznel_kappa_hedefi"]
+        print(f"    oznel kriterler  : kappa >= {hedef if hedef is not None else '—'}"
+              f"   ({h['oznel_hedef_aciklama']})")
+        if hedef is not None:
+            print(f"    formul           : {rapor['oznel']['kappa']} x "
+                  f"{OZNEL_HEDEF_ORANI} = {hedef}")
+    else:
+        print("  Bu bir IRR olcumu DEGIL (taraflardan biri sentetik referans).")
+        print("  Oznel kriterlerde AI hedefi ancak iki BAGIMSIZ insan seti")
+        print("  karsilastirildiginda turetilir — bkz. modul notu.")
     return 0
 
 
