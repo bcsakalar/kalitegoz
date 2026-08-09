@@ -26,7 +26,8 @@ def feed(limit: int = 40, db: Session = Depends(get_db),
     is_staff = user.role != Role.agent
 
     if is_staff:
-        aq = db.query(Alert).filter(Alert.tenant_id == user.tenant_id, Alert.is_read.is_(False))
+        aq = db.query(Alert).filter(Alert.tenant_id == user.tenant_id, Alert.is_read.is_(False),
+        Alert.is_stale.is_(False))
         if user.role == Role.supervisor and user.team_id:
             aq = aq.filter((Alert.team_id == user.team_id) | (Alert.team_id.is_(None)))
         for a in aq.order_by(Alert.created_at.desc()).limit(limit).all():
@@ -73,7 +74,8 @@ def feed(limit: int = 40, db: Session = Depends(get_db),
 def read_all(db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
     """Kullanicinin gordugu tum uyarilari okundu isaretler (yalnizca Alert kaynagi;
     inceleme/kocluk/itiraz aksiyon tamamlaninca kendiliginden dusuyor)."""
-    q = db.query(Alert).filter(Alert.tenant_id == user.tenant_id, Alert.is_read.is_(False))
+    q = db.query(Alert).filter(Alert.tenant_id == user.tenant_id, Alert.is_read.is_(False),
+        Alert.is_stale.is_(False))
     if user.role == Role.supervisor and user.team_id:
         q = q.filter((Alert.team_id == user.team_id) | (Alert.team_id.is_(None)))
     for a in q.all():

@@ -24,6 +24,7 @@ from ..config import settings
 from ..models import AlertType, BannedWord, Call, Channel, Criterion, Score, Segment, Tenant, Violation
 from ..schemas import LLMCagriAnalizi
 from . import acoustics, ai_config, calibration_scale, compliance, deterministic, etiquette, knowledge
+from . import alert_engine
 from . import alerts as alerts_svc
 from . import review_feedback
 from . import scoring_layers
@@ -41,7 +42,8 @@ class ScoringOutcome:
     is_crisis: bool
     banned_word_hits: int
     total_score: float
-    alerts: list[tuple[AlertType, str, str]]  # (tip, siddet, mesaj)
+    # FAZ 4.2: serbest metin yerine ZORUNLU ALANLI taslak (bkz. alert_engine)
+    alerts: list[alert_engine.AlertDraft]
 
 SPEAKER_LABELS = {"musteri": "MUSTERI", "temsilci": "TEMSILCI", "bilinmeyen": "KONUSMACI"}
 
@@ -443,7 +445,7 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
         ))
 
     # ---------------- Ihlaller ve alarmlar -------------------------------
-    alerts: list[tuple[AlertType, str, str]] = []
+    alerts: list[alert_engine.AlertDraft] = []
 
     banned_hits = deterministic.find_banned(segments, banned)
     agent_hits = [h for h in banned_hits if h.speaker == "temsilci"]
@@ -454,10 +456,8 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
             speaker=h.speaker, evidence=h.quote, ts_sec=h.ts_sec,
         ))
     for h in agent_hits:
-        alerts.append((
-            AlertType.banned_word, h.severity,
-            f'Yasakli ifade ({h.category}): "{h.term}" — {h.quote[:80]}',
-        ))
+        alerts.append(alert_engine.banned_word_alert(
+            call.id, h.term, h.category, h.severity, h.quote, h.ts_sec))
 
     for f in etiquette_result.get("bulgular", []):
         db.add(Violation(
@@ -466,11 +466,13 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
             speaker="temsilci", evidence=f["kanit"], ts_sec=f["zaman"],
         ))
     if etiquette_result.get("sen_kullanimi"):
-        alerts.append((
-            AlertType.banned_word, "yuksek",
-            f"Hitap ihlali: temsilci musteriye {etiquette_result['sen_kullanimi']} kez "
-            f"'sen' diye hitap etti",
-        ))
+        alerts.append(alert_engine.AlertDraft(
+            type=AlertType.banned_word, severity="yuksek", rule_id="etiquette:sen",
+            call_id=call.id, title_tr="Hitap ihlali",
+            explanation_tr=(
+                f"Temsilci musteriye {etiquette_result['sen_kullanimi']} kez "
+                "'sen' diye hitap etti."),
+            suggested_action_tr="Temsilciye hitap kurallarini hatirlatin."))
 
     # Deterministik uyum bulgulari ihlal olarak da kaydedilir (izlenebilirlik).
     # ONEMLI (B32): bu bulgular ARTIK kriter puanini dogrudan belirliyor —
@@ -485,8 +487,8 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
                 category=key, severity="yuksek", term=key, speaker="temsilci",
                 evidence=f.rationale_tr, ts_sec=f.evidence_ts,
             ))
-            alerts.append((AlertType.banned_word, "yuksek",
-                           f"Uyum ihlali: {f.rationale_tr}"))
+            alerts.append(alert_engine.compliance_alert(
+                call.id, key, f.rationale_tr, f.evidence_quote, f.evidence_ts))
 
     is_crisis, crisis_ev, crisis_ts = compliance.detect_crisis(segments)
     if is_crisis:
@@ -495,7 +497,7 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
             category="eskalasyon", severity="yuksek", term="", speaker="musteri",
             evidence=crisis_ev or "", ts_sec=crisis_ts,
         ))
-        alerts.append((AlertType.crisis, "yuksek", f"Kriz sinyali: {(crisis_ev or '')[:100]}"))
+        alerts.append(alert_engine.crisis_alert(call.id, crisis_ev or "", crisis_ts))
 
     # ---------------- Cagri geneli analiz (ayri LLM cagrisi) -------------
     analiz = _analyze_call(segments, hint)
@@ -507,7 +509,11 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
         call.zeroing_evidence = zeroing.evidence
         call.zeroing_evidence_ts = zeroing.evidence_ts
         call.zeroing_criterion_id = zeroing.criterion_id
-        alerts.append((AlertType.zeroing, "yuksek", zeroing.reason or "Sifirlayici ihlal"))
+        alerts.append(alert_engine.zeroing_alert(
+            call.id,
+            crit_by_id[zeroing.criterion_id].name if zeroing.criterion_id in crit_by_id
+            else "Kritik kriter",
+            zeroing.reason or "", zeroing.evidence or "", zeroing.evidence_ts))
     else:
         call.total_score = base_total
         call.zeroed = False
@@ -516,7 +522,7 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
         call.zeroing_evidence_ts = None
         call.zeroing_criterion_id = None
         if base_total is not None and base_total < 60:
-            alerts.append((AlertType.low_score, "orta", f"Dusuk kalite puani: {base_total}"))
+            alerts.append(alert_engine.low_score_alert(call.id, base_total))
 
     # Kanitsiz/dusuk guvenli kriterler insan kuyruguna isaret eder
     pending = [d for d in decisions if d.needs_human]
@@ -524,11 +530,7 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
         names = ", ".join(
             crit_by_id[d.criterion_id].name for d in pending[:3] if d.criterion_id in crit_by_id
         )
-        alerts.append((
-            AlertType.low_score, "dusuk",
-            f"{len(pending)} kriter yeterli kanitla puanlanamadi ({names}) — "
-            "kalite uzmani onayi gerekiyor.",
-        ))
+        alerts.append(alert_engine.review_needed_alert(call.id, names, len(pending)))
 
     call.category = analiz.kategori
     call.summary = analiz.ozet
@@ -568,11 +570,7 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
         analiz.musteri_duygu_bitis, analiz.baskin_duygu, analiz.tahmini_csat
     )
     if call.emotion_mismatch:
-        alerts.append((
-            AlertType.low_score, "dusuk",
-            "Duygu-sonuc uyumsuzlugu: musteri duygusu ile tahmini CSAT celisiyor, "
-            "gozden gecirilmeli.",
-        ))
+        alerts.append(alert_engine.emotion_mismatch_alert(call.id))
 
     return ScoringOutcome(
         zeroed=zeroing.zeroed,

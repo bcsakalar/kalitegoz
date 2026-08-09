@@ -18,6 +18,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..models import Agent, Call, CallStatus, Campaign, Team
+from . import stats_honesty
 
 METRICS = {"score": Call.total_score, "csat": Call.predicted_csat, "effort": Call.customer_effort}
 
@@ -73,7 +74,20 @@ def metric_timeseries(
             "avg": round(sum(vals) / len(vals), 1) if vals else None,
             "count": counts[key],
         })
-    return out
+
+    # B10: TEK NOKTAYLA CIZGI GRAFIK CIZILMEZ. Cizgi grafik bir "degisim"
+    # iddiasidir; tek nokta degisim gostermez ve bombos bir grafik cizilir.
+    # Arayuze ne cizecegini soyleyen bir bayrak dondurulur.
+    yeterli = stats_honesty.zaman_serisi(out)
+    tum_degerler = [p["avg"] for p in out if p["avg"] is not None]
+    return {
+        "noktalar": out,
+        "grafik_cizilebilir": yeterli.yeterli,
+        "aciklama": yeterli.aciklama,
+        # Grafik cizilemiyorsa arayuz bunu TEKIL METRIK KARTI olarak gosterir
+        "tekil_deger": round(sum(tum_degerler) / len(tum_degerler), 1) if tum_degerler else None,
+        "toplam_cagri": sum(p["count"] for p in out),
+    }
 
 
 def category_trends(db: Session, tenant_id: int, days: int = 14,
@@ -108,14 +122,34 @@ def category_trends(db: Session, tenant_id: int, days: int = 14,
         out = []
         for k in keys:
             r, p = recent.get(k, 0), prior.get(k, 0)
-            if p == 0:
-                change = 100.0 if r > 0 else 0.0
-            else:
-                change = round(100 * (r - p) / p, 1)
-            out.append({"kind": kind, "label": k, "recent": r, "prior": p, "change_pct": change})
+            # B9: onceki donem bossa YUZDE URETME. "Son: 4 / Onceki: 0 / +100%"
+            # matematiksel olarak anlamsizdir (sifira bolme) ve kullaniciya
+            # yanlis bir buyume hissi verir. Tum konularin "+100%" gorunmesi
+            # tam olarak boyle olusuyordu.
+            olcum = stats_honesty.donem_degisimi(r, p, k)
+            out.append({
+                "kind": kind, "label": k, "recent": r, "prior": p,
+                "change_pct": olcum.deger,
+                "comparable": olcum.yeterli,
+                "note": olcum.aciklama,
+            })
         return sorted(out, key=lambda x: x["recent"], reverse=True)
 
-    return _trend(recent_cat, prior_cat, "category") + _trend(recent_int, prior_int, "intent")
+    # B11: KATEGORI ve ETIKET iki AYRI taksonomidir; tek tabloda karistirilamaz.
+    #   Kategori = cagrinin turu (tekil, zorunlu)   -> "fatura"
+    #   Etiket   = niyet/konu    (coklu, opsiyonel) -> "fatura-itiraz"
+    # Duz bir liste dondurmek, arayuzun ikisini ayni tabloda gostermesine ve
+    # ayni cagrinin iki kez sayilmis gibi gorunmesine yol aciyordu.
+    return {
+        "kategoriler": {
+            "aciklama": "Cagrinin turu — her cagri TEK kategoriye aittir.",
+            "satirlar": _trend(recent_cat, prior_cat, "category"),
+        },
+        "etiketler": {
+            "aciklama": "Niyet/konu etiketleri — bir cagri BIRDEN COK etiket alabilir.",
+            "satirlar": _trend(recent_int, prior_int, "intent"),
+        },
+    }
 
 
 def emotion_distribution(db: Session, tenant_id: int, days: int = 30,

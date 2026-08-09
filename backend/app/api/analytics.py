@@ -20,7 +20,7 @@ from ..schemas import (
     AppealAnalytics, ChurnCall, ChurnSummary,
     CorrelationInsight, EmergingTopic, ExecSummary,
 )
-from ..services import ai_config, analytics
+from ..services import stats_honesty, ai_config, analytics
 from ..services.llm import LLMError, generate_json
 
 router = APIRouter(prefix="/api/v1/analytics", tags=["analytics"])
@@ -131,18 +131,30 @@ def correlations(days: int = Query(90, ge=7, le=365),
                 pairs.append((float(x), float(score)))
             except (TypeError, ValueError):
                 continue
-        r = _pearson(pairs)
-        if r is None or abs(r) < 0.15:   # zayif/gurultu iliskileri gizle
+        # B8: n < 30 ise KATSAYI GOSTERILMEZ. Onceden n=24 ile "+0.68 guclu
+        # iliski" deniyordu; bu, istatistiksel olarak savunulamaz ve bir cagri
+        # merkezi muduru bunu gorup urune guvenmeyi birakir.
+        olcum = stats_honesty.korelasyon(pairs, label)
+        if not olcum.yeterli:
+            # Egilim gozlemi gosterilir ama katsayi ve "guclu iliski" iddiasi YOK
+            if len(pairs) >= 5:
+                out.append(CorrelationInsight(
+                    factor=key, label=label, corr=None, n=olcum.n,
+                    direction="unknown", strength="belirsiz",
+                    insight=olcum.aciklama, significant=False))
+            continue
+
+        r = olcum.deger
+        if abs(r) < 0.15:   # zayif/gurultu iliskileri gizle
             continue
         a = abs(r)
         strength = "guclu" if a >= 0.5 else ("orta" if a >= 0.3 else "zayif")
         direction = "positive" if r > 0 else "negative"
-        trend = "arttıkça puan yükseliyor" if r > 0 else "arttıkça puan düşüyor"
         out.append(CorrelationInsight(
-            factor=key, label=label, corr=round(r, 2), n=len(pairs),
+            factor=key, label=label, corr=round(r, 2), n=olcum.n,
             direction=direction, strength=strength,
-            insight=f"{label} {trend} ({strength} ilişki, n={len(pairs)})."))
-    out.sort(key=lambda c: abs(c.corr), reverse=True)
+            insight=olcum.aciklama, significant=True))
+    out.sort(key=lambda c: (c.significant, abs(c.corr or 0)), reverse=True)
     return out
 
 

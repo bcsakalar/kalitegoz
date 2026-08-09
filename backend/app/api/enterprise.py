@@ -18,7 +18,8 @@ from ..schemas import (
     ScorecardSaveRequest,
     SecurityPosture,
 )
-from ..services import audit, roi, scorecard_builder
+from ..services import audit, crypto, roi, scorecard_builder, sso
+from ..services import security_checks as security_checks_svc
 from ..services.compliance_packs import DEFAULT_ACTIVE
 from ..services.llm import LLMError
 
@@ -28,6 +29,18 @@ router = APIRouter(prefix="/api/v1/enterprise", tags=["enterprise"])
 # =====================================================================
 # Guvenlik durusu — landing/güvenlik sayfasi (on-prem/KVKK satis silahi)
 # =====================================================================
+@router.get("/security-checks")
+def security_checks(db: Session = Depends(get_db), user: CurrentUser = Depends(require_staff)):
+    """B25: her satiri GERCEK bir kontrolden okunan guvenlik durumu.
+
+    Onceki `/security-posture` ucu bayrak okuyordu ("encryption_at_rest: true")
+    — bayrak sifrelemenin CALISTIGINI kanitlamaz. Bu uc her maddeyi calistirir:
+    sifrelemeyi test eder, OIDC saglayicisina gider, maskeleyiciyi ornek PII ile
+    kosar, saklama suresini gecmis kayit arar.
+    """
+    return security_checks_svc.run_all(db, user.tenant_id)
+
+
 @router.get("/security-posture", response_model=SecurityPosture)
 def security_posture(db: Session = Depends(get_db), user: CurrentUser = Depends(require_staff)):
     tenant = db.get(Tenant, user.tenant_id)
@@ -44,10 +57,10 @@ def security_posture(db: Session = Depends(get_db), user: CurrentUser = Depends(
         data_leaves_premises=not local_llm,
         pii_masking_enabled=settings.pii_masking_enabled,
         audit_log_enabled=True,
-        sso_enabled=settings.sso_enabled,
+        sso_enabled=(sso.check()[0] == "ok"),
         rbac_roles=[r.value for r in Role],
         retention_days=tenant.retention_days if tenant else 365,
-        encryption_at_rest=settings.encryption_at_rest,
+        encryption_at_rest=crypto.self_test()[0],
         multi_tenant_isolation=True,
         kvkk_pack_active="kvkk" in DEFAULT_ACTIVE,
         audit_events_30d=int(audit_30d),

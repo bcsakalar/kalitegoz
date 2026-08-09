@@ -67,7 +67,9 @@ def test_audio_missing_returns_404_not_500(seeded, client):
     hdr = token_for(seeded["admin_a"], seeded["tenant_a"], "admin")
     r = client.get(f"/api/v1/calls/{seeded['call_a']}/audio", headers=hdr)
     assert r.status_code == 404
-    assert "ses" in r.json()["detail"].lower()
+    # FAZ 4.3: standart hata zarfi {"error": {"code","message_tr","details"}}
+    assert r.json()["error"]["code"] == "bulunamadi"
+    assert "ses" in r.json()["error"]["message_tr"].lower()
 
 
 def test_agent_cannot_create_criterion(seeded, client):

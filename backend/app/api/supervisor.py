@@ -10,6 +10,7 @@ from ..db import get_db
 from ..deps import CurrentUser, get_current_user, require_staff
 from ..models import Agent, Alert, Call, CallStatus, QAState, Role, Team, Violation
 from ..schemas import LeaderboardRow, SupervisorCockpit
+from ..services import alert_engine, stats_honesty
 
 router = APIRouter(prefix="/api/v1", tags=["supervisor"])
 
@@ -47,12 +48,25 @@ def _leaderboard_rows(db: Session, tenant_id: int, team_id: int | None, since: d
     for aid, name, tid, avg, cnt, crisis in rows:
         avg = round(avg or 0, 1)
         crisis = int(crisis or 0)
+        cnt = cnt or 0
+        siralanabilir, uyari = stats_honesty.siralamaya_girebilir(cnt)
         result.append(LeaderboardRow(
             agent_id=aid, agent_name=name, team_name=team_names.get(tid),
-            avg_score=avg, call_count=cnt or 0, crisis_handled=crisis,
-            points=_points(avg, cnt or 0, crisis),
+            avg_score=avg, call_count=cnt, crisis_handled=crisis,
+            points=_points(avg, cnt, crisis),
+            ranked=siralanabilir, sample_warning=uyari,
         ))
-    result.sort(key=lambda r: r.points, reverse=True)
+
+    # B7: SIRALAMA ANAHTARI GORUNEN SUTUNLA AYNI OLMALI.
+    #
+    # Onceden `points` ile siralaniyordu ama ekranda `avg_score` gosteriliyordu;
+    # kullanici "1: 94.1, 2: 90.4, 3: 88.9, 4: 90.4" gibi bozuk gorunen bir
+    # liste goruyordu. Liste aslinda dogru siralanmisti — YANLIS SEYE gore.
+    # Gorunmeyen bir metrige gore siralamak, siralamayi aciklanamaz yapar.
+    #
+    # Ayrica az orneklemli temsilci (n<5) hicbir zaman ust siralarda cikamaz:
+    # 5 cagrida 95 tutan, 200 cagrida 91 tutandan daha iyi DEGILDIR.
+    result.sort(key=lambda r: (r.ranked, r.avg_score, r.call_count), reverse=True)
     return result
 
 
@@ -139,11 +153,10 @@ def cockpit(team_id: int | None = None, db: Session = Depends(get_db),
             Agent, Call.agent_id == Agent.id).filter(Agent.team_id == team_id)
     violation_dist = {cat or "diger": n for cat, n in vq.group_by(Violation.category).all()}
 
-    aq = db.query(func.count(Alert.id)).filter(
-        Alert.tenant_id == user.tenant_id, Alert.is_read.is_(False))
-    if team_id:
-        aq = aq.filter((Alert.team_id == team_id) | (Alert.team_id.is_(None)))
-    unread = aq.scalar() or 0
+    # B12: rozet YALNIZCA kritik + yuksek alarmlari sayar ve gecersizlesenleri
+    # haric tutar. Onceden "bilgi" seviyesindekiler ve kopyalar da sayiliyordu;
+    # rozet "22" gorunuyor ama cogu kopyaydi -> alarm korlugu.
+    unread = alert_engine.badge_count(db, user.tenant_id, team_id)
 
     repeat_calls = done.filter(Call.is_repeat.is_(True)).count()
 

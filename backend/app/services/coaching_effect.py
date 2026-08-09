@@ -85,14 +85,40 @@ def effectiveness_report(db: Session, tenant_id: int) -> dict:
 
     measurable = len(effects)
     improved = sum(1 for e in effects if e["improved"])
-    avg_delta = round(sum(e["delta"] for e in effects) / measurable, 1) if measurable else 0.0
+
+    # B13: OLCULEBILIR KOCLUK YOKSA SIFIR GOSTERME.
+    #
+    # Panel "0 olculebilir kocluk / %0 iyilesme / Veri yok" gosteriyordu.
+    # "%0 iyilesme" bir SONUCTUR ve "kocluk ise yaramiyor" demektir; oysa
+    # gercek durum "henuz olculemedi"dir. Ikisini ayirmak zorunludur.
+    olculebilir_mi = measurable > 0
+    if not olculebilir_mi:
+        gerekli = (
+            f"Ilk olcum icin kocluk sonrasi en az {WINDOW_DAYS} gun gecmeli ve "
+            f"temsilcinin oncesi/sonrasi pencerelerinde en az {MIN_CALLS}'er "
+            "puanlanmis cagrisi olmali."
+        )
+        if not tasks:
+            aciklama = "Henuz tamamlanmis kocluk gorevi yok. " + gerekli
+        else:
+            aciklama = (
+                f"{len(tasks)} kocluk tamamlandi ancak henuz hicbiri olculebilir "
+                f"degil. {gerekli}"
+            )
+    else:
+        aciklama = ""
 
     return {
+        "olculebilir": olculebilir_mi,
+        "aciklama": aciklama,
         "measurable_count": measurable,
         "total_completed": len(tasks),
-        "improved_count": improved,
-        "improved_rate": round(100 * improved / measurable, 1) if measurable else 0.0,
-        "avg_delta": avg_delta,
+        # Olculemiyorsa SAYI URETME — None, "veri yok" demektir; 0 ise "sonuc kotu".
+        "improved_count": improved if olculebilir_mi else None,
+        "improved_rate": round(100 * improved / measurable, 1) if olculebilir_mi else None,
+        "avg_delta": (round(sum(e["delta"] for e in effects) / measurable, 1)
+                      if olculebilir_mi else None),
         "window_days": WINDOW_DAYS,
+        "min_calls": MIN_CALLS,
         "effects": sorted(effects, key=lambda e: e["delta"], reverse=True),
     }
