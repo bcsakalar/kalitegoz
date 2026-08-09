@@ -117,15 +117,45 @@ class TestSchemaDefaults:
         assert r.sonraki_aksiyon == ""
 
 
-# --- Uyum paketlerinin scoring'e entegrasyonu (denetimde bulunan boslugun kapatilmasi) ---
-class TestCompliancePacksInScoring:
-    def test_compliance_evaluate_wired_importable(self):
-        """scoring modulu compliance_packs'i import ediyor olmali (regresyon)."""
+# --- Uyum kontrolunun puanlamaya baglanmasi ---
+#
+# FAZ 2'de uyum kontrolu `compliance_packs`ten Katman A'ya (deterministic.py)
+# tasindi. Fark sadece modul degil: compliance_packs YALNIZ alarm uretiyordu,
+# puana hic dokunmuyordu — bu yuzden KVKK anonsu hic yapilmamis bir cagri 92
+# puan alabiliyordu (B32). Katman A bulgusu ARTIK kriter puanini belirler.
+#
+# compliance_packs modulu canli asistan (assist.py) ve panel listesi
+# (selfservice.py) icin duruyor; puanlama yolunda kullanilmiyor.
+class TestUyumKontroluPuanlamayaBagli:
+    def test_katman_a_scoring_e_bagli(self):
+        """scoring modulu deterministik katmani import ediyor olmali (regresyon)."""
         from app.services import scoring
-        assert hasattr(scoring, "compliance_packs")
+        assert hasattr(scoring, "deterministic")
+        assert hasattr(scoring, "scoring_layers")
 
-    def test_missing_kvkk_produces_violation_payload(self):
-        """KVKK aciklamasi olmayan temsilci metni ihlal uretmeli."""
+    def test_b32_kvkk_anonsu_yoksa_kriter_puani_sifir(self):
+        """B32: eksik KVKK anonsu artik SADECE alarm degil, PUAN da uretir."""
+        from dataclasses import dataclass
+
+        from app.services import deterministic as det
+
+        @dataclass
+        class S:
+            speaker: str
+            text: str
+            start_sec: float
+            end_sec: float
+
+        segs = [
+            S("temsilci", "Netik İletişim, ben Ceyda, buyurun.", 1.0, 4.0),
+            S("temsilci", "Adınızı ve müşteri numaranızı alabilir miyim?", 4.5, 8.0),
+            S("musteri", "Okan Yılmaz, 771450.", 8.5, 11.0),
+        ]
+        f = det.check_kvkk(segs)
+        assert f.decision == "not_met"
+        assert f.score == 0, "Eksik anons puana yansimadi — B32 geri geldi"
+
+    def test_canli_asistan_uyum_paketlerini_kullanmaya_devam_ediyor(self):
         from app.services import compliance_packs
         v = compliance_packs.evaluate("Buyurun, size nasil yardimci olabilirim?")
         assert any(x["type"] == "missing_required" for x in v)

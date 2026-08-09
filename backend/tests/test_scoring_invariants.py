@@ -3,41 +3,35 @@
 Bu uc hata transkript seviyesinde ifade edilemez (altin set senaryosu olamaz):
 motorun kendi ic davranisidir. Bu yuzden birim/entegrasyon testiyle korunurlar.
 
-FAZ 1'de bu testler KIRMIZI olmali (hata henuz duzeltilmedi) ama takim yesil
-kalmali. Cozum: xfail(strict=True). FAZ 2'de duzeltme yapilinca test "beklenmedik
-sekilde gecti" diye takimi KIRAR ve isaretciyi kaldirmaya zorlar — kimse duzeltmeyi
-sessizce atlayamaz.
-
+FAZ 2'de UCU DE DUZELTILDI; testler artik yesil ve kalici koruma gorevi goruyor.
 Kaynak: docs/v2/00-MEVCUT-DURUM.md §9, docs/v2/01-KOK-NEDEN.md
 """
 
 from __future__ import annotations
 
-import pytest
+from dataclasses import dataclass
 
-from app.models import Criterion
-from app.schemas import LLMDegerlendirme, LLMPuan
-from app.services import scoring
-
-
-def _crit(cid: int, name: str, weight: float = 1.0) -> Criterion:
-    c = Criterion(
-        name=name, group="Test", description=f"{name} kriteri",
-        weight=weight, is_critical=False, critical_threshold=3,
-        is_active=True, channel_scope="all",
-    )
-    c.id = cid
-    return c
+from app.schemas import LLMKriterKarari
+from app.services import scoring_layers as sl
 
 
-def _result(puanlar: list[LLMPuan]) -> LLMDegerlendirme:
-    return LLMDegerlendirme(
-        kategori="diger", ozet="test",
-        musteri_duygu_baslangic="notr", musteri_duygu_bitis="notr",
-        gelisim_onerisi="test", tahmini_csat=3.0, baskin_duygu="notr",
-        duygu_yorungesi="sabit", sonraki_aksiyon="takip gerekmiyor",
-        churn_riski="dusuk", musteri_efor=2.0, niyet_etiketleri=["test"],
-        puanlar=puanlar, riskli_anlar=[],
+@dataclass
+class Crit:
+    id: int
+    name: str
+    weight: float = 1.0
+    is_critical: bool = False
+    critical_threshold: int = 3
+    description: str = "aciklama"
+    anchor_10: str = ""
+    anchor_0: str = ""
+
+
+def _dec(cid: int, score: int | None, decision: str = "met") -> sl.CriterionDecision:
+    return sl.CriterionDecision(
+        criterion_id=cid, decision=decision, score=score, rationale="r",
+        evidence_quote="q", evidence_ts=1.0, evidence_speaker="temsilci",
+        confidence=0.9, evidence_verified=True, source_layer="B",
     )
 
 
@@ -45,89 +39,72 @@ def _result(puanlar: list[LLMPuan]) -> LLMDegerlendirme:
 # B27 — Ayni kriter iki kez puanlanip agirligi iki kez sayilamaz
 # ---------------------------------------------------------------------------
 
-@pytest.mark.xfail(strict=True, reason="FAZ 2'de duzeltilecek — B27: _ensure_coverage tekrarlanan kriter_id'yi elemiyor")
 def test_b27_tekrarlanan_kriter_elenir():
-    """LLM ayni kriter_id'yi iki kez donerse yalnizca BIRI kalmali.
+    """LLM ayni kriteri iki kez donerse yalnizca BIRI sayilmali.
 
     Canli sistemde olculdu: cagri #24'te 11 puan satiri vardi, 'KVKK / Aydinlatma'
-    iki kez. compute_total bu kriterin agirligini hem paya hem paydaya iki kez
-    katiyordu.
+    iki kez. Eski compute_total bu kriterin agirligini hem paya hem paydaya iki
+    kez katiyordu.
     """
-    criteria = [_crit(1, "Acilis"), _crit(2, "KVKK / Aydinlatma", weight=1.5)]
-    result = _result([
-        LLMPuan(kriter_id=1, puan=8, gerekce="ok", kanit="a"),
-        LLMPuan(kriter_id=2, puan=9, gerekce="ok", kanit="b"),
-        LLMPuan(kriter_id=2, puan=3, gerekce="tekrar", kanit="c"),  # <-- tekrar
+    criteria = [Crit(1, "Acilis"), Crit(2, "KVKK / Aydinlatma", weight=1.5)]
+    temiz = sl.compute_total([_dec(1, 8), _dec(2, 9)], criteria)
+    tekrarli = sl.compute_total([_dec(1, 8), _dec(2, 9), _dec(2, 3)], criteria)
+    assert tekrarli == temiz, f"Agirlik iki kez sayildi: {tekrarli} != {temiz}"
+
+
+def test_b27_evaluate_all_tekrarlanan_karari_elemeli(monkeypatch):
+    """Katman B ayni kriter icin iki karar donerse ilki gecerli olmali."""
+    criteria = [Crit(1, "Acilis")]
+    monkeypatch.setattr(sl, "evaluate_group", lambda g, t, h: [
+        LLMKriterKarari(kriter_id=1, karar="met", puan=9),
+        LLMKriterKarari(kriter_id=1, karar="not_met", puan=2),
     ])
-
-    fixed = scoring._ensure_coverage(result, criteria, "transkript")
-
-    ids = [p.kriter_id for p in fixed.puanlar]
-    assert len(ids) == len(set(ids)), f"Tekrarlanan kriter elenmedi: {ids}"
-    assert sorted(ids) == [1, 2]
-
-
-@pytest.mark.xfail(strict=True, reason="FAZ 2'de duzeltilecek — B27: tekrarli kriter agirligi iki kez sayiliyor")
-def test_b27_toplam_puan_agirligi_iki_kez_saymaz():
-    """Tekrarli girdi geldiginde toplam, tekilleştirilmiş sonucla ayni olmali."""
-    criteria = [_crit(1, "Acilis"), _crit(2, "KVKK / Aydinlatma", weight=1.5)]
-    temiz = [LLMPuan(kriter_id=1, puan=8, gerekce="ok"), LLMPuan(kriter_id=2, puan=9, gerekce="ok")]
-    tekrarli = temiz + [LLMPuan(kriter_id=2, puan=9, gerekce="tekrar")]
-
-    beklenen = scoring.compute_total(temiz, criteria)
-    gelen = scoring.compute_total(
-        scoring._ensure_coverage(_result(tekrarli), criteria, "t").puanlar, criteria
-    )
-    assert gelen == beklenen, f"Agirlik iki kez sayildi: {gelen} != {beklenen}"
+    out = sl.evaluate_all(criteria, "transkript", "")
+    assert len(out) == 1
+    assert out[0].puan == 9
 
 
 # ---------------------------------------------------------------------------
 # B28 — Kanitsiz "notr 5" uydurulamaz
 # ---------------------------------------------------------------------------
 
-@pytest.mark.xfail(strict=True, reason="FAZ 2'de duzeltilecek — B28: eksik kriter icin kanitsiz 'notr 5' uyduruluyor")
 def test_b28_degerlendirilemeyen_kriter_uydurma_puan_almaz(monkeypatch):
     """LLM bir kriteri atlarsa sistem 5 puan UYDURMAMALI.
 
-    Dogru davranis: kriter 'yetersiz kanit' olarak isaretlenir ve insan kuyruguna
-    duser. Uydurulan 5 puan ortalamaya gercek puan gibi giriyordu.
+    Dogru davranis: kriter 'insufficient_evidence' isaretlenir ve insan
+    kuyruguna duser. Uydurulan 5 puan ortalamaya gercek puan gibi giriyordu.
     """
-    criteria = [_crit(1, "Acilis"), _crit(2, "Kapanis")]
-    # Tamamlama cagrisi da basarisiz olsun -> sistem eksik kriterle bas basa kalir
-    monkeypatch.setattr(
-        scoring, "generate_json",
-        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("LLM erisilemedi")),
-    )
-    result = _result([LLMPuan(kriter_id=1, puan=8, gerekce="ok", kanit="a")])
+    criteria = [Crit(1, "Acilis"), Crit(2, "Kapanis")]
+    monkeypatch.setattr(sl, "evaluate_group", lambda g, t, h: [
+        LLMKriterKarari(kriter_id=1, karar="met", puan=8)
+    ] if any(c.id == 1 for c in g) else [])
 
-    fixed = scoring._ensure_coverage(result, criteria, "transkript")
-
-    eksik = [p for p in fixed.puanlar if p.kriter_id == 2]
+    out = sl.evaluate_all(criteria, "transkript", "")
+    eksik = [k for k in out if k.kriter_id == 2]
     assert eksik, "Eksik kriter hic raporlanmadi"
-    p = eksik[0]
-    assert getattr(p, "yetersiz_kanit", False) is True, (
-        "Degerlendirilemeyen kriter 'yetersiz_kanit' olarak isaretlenmeli"
-    )
-    assert p.puan is None, f"Kanitsiz puan uyduruldu: {p.puan}"
+    assert eksik[0].karar == "insufficient_evidence"
+    assert eksik[0].puan is None, f"Kanitsiz puan uyduruldu: {eksik[0].puan}"
 
 
-@pytest.mark.xfail(strict=True, reason="FAZ 2'de duzeltilecek — B28: yetersiz_kanit kavrami henuz yok")
 def test_b28_yetersiz_kanitli_kriter_ortalamaya_girmez():
     """Yetersiz kanitli kriter toplam puan aritmetigine KATILMAZ."""
-    criteria = [_crit(1, "Acilis"), _crit(2, "Kapanis")]
-    puanlar = [
-        LLMPuan(kriter_id=1, puan=8, gerekce="ok"),
-        LLMPuan(kriter_id=2, puan=None, gerekce="degerlendirilemedi", yetersiz_kanit=True),
-    ]
-    # Yalniz 1 numarali kriter sayilmali -> 8/10 -> 80.0
-    assert scoring.compute_total(puanlar, criteria) == 80.0
+    criteria = [Crit(1, "Acilis"), Crit(2, "Kapanis")]
+    puanlar = [_dec(1, 8), _dec(2, None, "insufficient_evidence")]
+    # Yalniz 1 numarali kriter sayilir -> 8/10 -> 80.0
+    assert sl.compute_total(puanlar, criteria) == 80.0
+
+
+def test_b28_kanitsiz_kriter_sifirlama_tetikleyemez():
+    """Kanitsiz sifirlama urunun en pahali hatasidir."""
+    criteria = [Crit(1, "KVKK", is_critical=True, critical_threshold=3)]
+    z = sl.decide_zeroing([_dec(1, None, "insufficient_evidence")], criteria)
+    assert z.zeroed is False
 
 
 # ---------------------------------------------------------------------------
 # B31 — Yeniden puanlamada eski alarmlar gecersizlestirilmeli
 # ---------------------------------------------------------------------------
 
-@pytest.mark.xfail(strict=True, reason="FAZ 2'de duzeltilecek — B31: alarm gecersizlestirme servisi henuz yok")
 def test_b31_yeniden_puanlama_eski_alarmlari_gecersizler(seeded):
     """Bir cagri yeniden puanlandiginda onceki alarmlari ekranda ASILI KALMAMALI.
 
@@ -158,5 +135,32 @@ def test_b31_yeniden_puanlama_eski_alarmlari_gecersizler(seeded):
             .count()
         )
         assert kalan == 0, f"{kalan} eski alarm gecersizlestirilmedi"
+
+        # Alarm SILINMEZ — denetim izi olarak kalir
+        toplam = db.query(Alert).filter(Alert.call_id == seeded["call_a"]).count()
+        assert toplam == 1, "Alarm silinmis; denetim izi kayboldu"
+    finally:
+        db.close()
+
+
+def test_b31_gecersizlesen_alarm_kullaniciya_gosterilmez(seeded):
+    from app.models import Alert, AlertType
+    from app.services import alerts as alerts_svc
+
+    from .conftest import TestingSession
+
+    db = TestingSession()
+    try:
+        db.add(Alert(tenant_id=seeded["tenant_a"], call_id=seeded["call_a"],
+                     type=AlertType.zeroing, severity="yuksek", message="eski"))
+        db.add(Alert(tenant_id=seeded["tenant_a"], call_id=seeded["call_other_team"],
+                     type=AlertType.crisis, severity="yuksek", message="guncel"))
+        db.commit()
+
+        alerts_svc.invalidate_for_call(db, seeded["call_a"])
+        db.commit()
+
+        aktif = alerts_svc.active_query(db, seeded["tenant_a"]).all()
+        assert [a.message for a in aktif] == ["guncel"]
     finally:
         db.close()

@@ -40,103 +40,135 @@ DEMO_AGENTS = [
 ]
 
 DEFAULT_CRITERIA: list[dict] = [
-    {
-        "name": "Acilis",
-        "group": "Acilis",
-        "description": (
-            "Temsilci kendini adiyla tanitti mi ve kurum adini soyledi mi? "
-            "Ornek: 'X Iletisim'e hos geldiniz, ben Ayse, size nasil yardimci olabilirim?'"
-        ),
-        "weight": 1.0,
-    },
+    # --- UYUM (Compliance) -------------------------------------------------
     {
         "name": "KVKK / Aydinlatma",
         "group": "Uyum",
         "description": (
-            "Gorusmenin kayit altina alindigi ve kisisel verilerin KVKK kapsaminda "
-            "islendigi bilgisi verildi mi? Bu bilgilendirme yapilmadiysa 0-2 puan verilir."
+            "Gorusmenin kayit altina alindigi VE kisisel verilerin islendigi "
+            "ayri ayri bildirildi mi? Aydinlatma Tebligi m.5/1 uyarinca anons "
+            "cagri basinda sozlu yapilir; birebir ayni cumle beklenmez, ANLAM "
+            "esleşmesi aranir."
         ),
+        "anchor_10": "Hem kayit bildirimi hem kisisel veri aydinlatmasi acikca yapildi.",
+        "anchor_0": "Ikisi de yapilmadi.",
         "weight": 1.5,
         "is_critical": True,
         "critical_threshold": 3,
+        "evaluation_mode": "deterministic",
+        "check_key": "kvkk_anons",
     },
     {
         "name": "Kimlik Dogrulama",
         "group": "Uyum",
         "description": (
-            "Islem oncesi musteri kimligi (ad-soyad + musteri no / dogum yili vb.) "
-            "teyit edildi mi? Hassas islemde kimlik dogrulama atlanmasi kritik ihlaldir."
+            "Islem yapilmadan ONCE musteri kimligi (ad-soyad + musteri/hizmet no) "
+            "teyit edildi mi?"
         ),
+        "anchor_10": "Cagrinin ilk ucte birinde ad ve musteri numarasi istendi.",
+        "anchor_0": "Hicbir dogrulama yapilmadan islem gerceklestirildi.",
         "weight": 1.5,
         "is_critical": True,
         "critical_threshold": 3,
-    },
-    {
-        "name": "Aktif Dinleme",
-        "group": "Iletisim Kalitesi",
-        "description": (
-            "Temsilci musteriyi kesmeden dinledi mi, soyledigini dogru anladigini "
-            "ozetleyerek teyit etti mi? Musterinin sozunu kesme, ayni seyi tekrar "
-            "sordurma puan kirar."
-        ),
-        "weight": 1.0,
-    },
-    {
-        "name": "Ihtiyac Analizi",
-        "group": "Ihtiyac Analizi",
-        "description": (
-            "Temsilci musterinin gercek ihtiyacini/sorununu dogru soru sorarak "
-            "netlestirdi mi? Yuzeysel dinleyip yanlis yone gitme puan kirar."
-        ),
-        "weight": 1.0,
-    },
-    {
-        "name": "Cozum / Yonlendirme",
-        "group": "Cozum",
-        "description": (
-            "Musterinin sorunu cozuldu mu veya dogru birime/kanala net sekilde "
-            "yonlendirildi mi? Somut adim, sure ve beklenti verildi mi?"
-        ),
-        "weight": 2.0,
-    },
-    {
-        "name": "Yasakli Kelime / Uslup",
-        "group": "Iletisim Kalitesi",
-        "description": (
-            "Kaba, kucumseyici, suclayici ifade veya yasakli kelime var mi? "
-            "Ihlal yoksa 10, agir ihlal varsa 0-2 puan."
-        ),
-        "weight": 1.5,
-    },
-    {
-        "name": "Kapanis",
-        "group": "Kapanis",
-        "description": (
-            "'Baska bir konuda yardimci olabilir miyim?' soruldu mu ve uygun bir "
-            "veda cumlesi kuruldu mu? ('Iyi gunler dilerim' vb.)"
-        ),
-        "weight": 1.0,
+        "evaluation_mode": "deterministic",
+        "check_key": "kimlik_dogrulama",
     },
     {
         "name": "Script Uyumu",
         "group": "Uyum",
         "description": (
-            "Zorunlu ifadeler soylendi mi: kayit bilgilendirmesi, kimlik dogrulama, "
-            "islem sonucu ozeti. Eksik zorunlu ifade basina puan dusur."
+            "Kurumun zorunlu akisi izlendi mi: bilgilendirme, dogrulama, islem "
+            "ozeti, teyit. Eksik her zorunlu adim puan dusurur."
         ),
+        "anchor_10": "Zorunlu adimlarin tamami sirasiyla uygulandi.",
+        "anchor_0": "Akis tamamen atlandi.",
         "weight": 1.0,
     },
+    # --- ILETISIM (Communication) ------------------------------------------
+    {
+        "name": "Acilis",
+        "group": "Iletisim",
+        "description": (
+            "Temsilci kurum adini VE kendi adini bildirdi mi? Kurum adinin cumle "
+            "basinda olmasi gerekmez; VARLIGI aranir."
+        ),
+        "anchor_10": "Kurum adi ve temsilci adi acilista birlikte soylendi.",
+        "anchor_0": "Ne kurum adi ne temsilci adi soylendi ('Alo, buyurun').",
+        "weight": 1.0,
+        "evaluation_mode": "deterministic",
+        "check_key": "acilis",
+    },
+    {
+        "name": "Yasakli Kelime / Uslup",
+        "group": "Iletisim",
+        "description": (
+            "Temsilci kaba, kucumseyici, suclayici ifade veya yasak vaat kullandi "
+            "mi? MUSTERININ kufru temsilciyi CEZALANDIRMAZ."
+        ),
+        "anchor_10": "Cagri boyunca profesyonel ve nazik uslup.",
+        "anchor_0": "Temsilci hakaret etti veya agir yasak vaat verdi.",
+        "weight": 1.5,
+        "evaluation_mode": "deterministic",
+        "check_key": "yasakli_kelime",
+    },
+    {
+        "name": "Kapanis",
+        "group": "Iletisim",
+        "description": (
+            "'Baska bir konuda yardimci olabilir miyim?' soruldu mu ve uygun veda "
+            "cumlesi kuruldu mu?"
+        ),
+        "anchor_10": "Ek yardim soruldu ve veda edildi.",
+        "anchor_0": "Cagri kapanis kalibi olmadan sonlandirildi.",
+        "weight": 1.0,
+        "evaluation_mode": "deterministic",
+        "check_key": "kapanis",
+    },
+    {
+        "name": "Aktif Dinleme",
+        "group": "Iletisim",
+        "description": (
+            "Temsilci musteriyi kesmeden dinledi mi, anladigini teyit etti mi? "
+            "YALNIZCA TEMSILCININ soz kesmesi puan kirar; musteri keserse kirmaz."
+        ),
+        "anchor_10": "Kesmeden dinledi, anladigini kendi cumleleriyle ozetleyip teyit etti.",
+        "anchor_0": "Musteriyi surekli kesti, ayni seyi tekrar sordurdu.",
+        "weight": 1.0,
+    },
+    # --- YETKINLIK (Competence) --------------------------------------------
     {
         "name": "Bilgi Dogrulugu",
-        "group": "Cozum",
+        "group": "Yetkinlik",
         "description": (
-            "Temsilcinin verdigi bilgi (sure, ucret, sart, prosedur) sirket bilgi "
-            "bankasindaki resmi dokumanlarla ORTUSUYOR mu? Prompt'ta 'SIRKET BILGI "
-            "BANKASI' bolumu varsa oradaki pasajlari esas al. Temsilci dokumana aykiri "
-            "bilgi verdiyse 0-3 puan ver ve gerekcede dogru bilgiyi + dokuman adini yaz. "
-            "Bilgi bankasi pasaji yoksa veya konu disiysa, bilginin genel tutarliligina "
-            "gore notr (6-8) puanla."
+            "Verilen bilgi (sure, ucret, sart, prosedur) sirket bilgi bankasindaki "
+            "resmi dokumanlarla ortusuyor mu? Prompt'ta 'SIRKET BILGI BANKASI' "
+            "bolumu varsa oradaki pasajlari esas al. MUSTERININ ANLAMAMASI "
+            "temsilcinin hatasi degildir."
         ),
+        "anchor_10": "Verilen her bilgi dogru ve dokumanla ortusuyor.",
+        "anchor_0": "Musteriye acikca yanlis bilgi verildi.",
+        "weight": 2.0,
+    },
+    {
+        "name": "Ihtiyac Analizi",
+        "group": "Yetkinlik",
+        "description": (
+            "Temsilci musterinin gercek ihtiyacini dogru soru sorarak netlestirdi mi?"
+        ),
+        "anchor_10": "Cozum onerilmeden once ihtiyaci netlestiren sorular soruldu.",
+        "anchor_0": "Hic soru sorulmadan, ihtiyaca uymayan cozum dayatildi.",
+        "weight": 1.0,
+    },
+    # --- MUSTERI ODAGI (Customer focus) ------------------------------------
+    {
+        "name": "Cozum / Yonlendirme",
+        "group": "Musteri Odagi",
+        "description": (
+            "Musterinin sorunu cozuldu mu veya dogru birime net sekilde "
+            "yonlendirildi mi? Somut adim, sure ve beklenti verildi mi?"
+        ),
+        "anchor_10": "Sorun cagri icinde cozuldu; somut adim ve sure bildirildi.",
+        "anchor_0": "Sorun cozulmedi, sonraki adim da verilmedi.",
         "weight": 2.0,
     },
 ]

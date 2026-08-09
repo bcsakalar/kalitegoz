@@ -1,10 +1,17 @@
-"""LLM rubrik puanlama.
+"""Rubrik puanlama orkestrasyonu — uc katmanli hibrit motor (FAZ 2).
 
-- Kriterler DB'den okunur, prompt dinamik kurulur (rubrik editorunden eklenen
-  yeni kriter otomatik olarak prompta girer).
-- Kisa cagrilar tek atista puanlanir.
-- Uzun cagrilar (> CHUNK_THRESHOLD_SEC) chunk'lanip map-reduce ile puanlanir:
-  map: her chunk icin kriter gozlemleri, reduce: gozlemlerden nihai puanlar.
+    KATMAN A  deterministik.py    kod, LLM yok. Kesin cevabi olan kriterler
+                                  burada biter ve LLM'in karariNI EZER.
+    KATMAN B  scoring_layers.py   kanit zorunlu LLM. Kriterler 3'lu gruplara
+                                  bolunur, her grup AYRI cagridir.
+    KATMAN C  scoring_layers.py   alinti transkriptte gercekten var mi?
+                                  Puan aritmetigi KODDA yapilir.
+
+Bu modul katmanlari sirayla kosturur, sonuclari DB'ye yazar ve alarm uretir.
+
+Onceki surum tek dev prompt'ta 10 kriteri birden degerlendiriyordu; FAZ 1 taban
+cizgisi olctu: kappa 0.32, kanit dogrulanabilirlik %56, sifirlayici yanlis
+pozitif %38.5 (docs/v2/FAZ-1-RAPOR.md). O implementasyon kaldirildi.
 """
 
 import logging
@@ -15,8 +22,10 @@ from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..models import AlertType, BannedWord, Call, Channel, Criterion, Score, Segment, Tenant, Violation
-from ..schemas import LLMChunkAnaliz, LLMDegerlendirme, LLMPuan
-from . import acoustics, ai_config, compliance, compliance_packs, etiquette, knowledge
+from ..schemas import LLMCagriAnalizi
+from . import acoustics, ai_config, compliance, deterministic, etiquette, knowledge
+from . import alerts as alerts_svc
+from . import scoring_layers
 from .llm import generate_json
 
 logger = logging.getLogger(__name__)
@@ -35,31 +44,6 @@ class ScoringOutcome:
 
 SPEAKER_LABELS = {"musteri": "MUSTERI", "temsilci": "TEMSILCI", "bilinmeyen": "KONUSMACI"}
 
-SYSTEM_PROMPT = (
-    "Sen kidemli bir cagri merkezi kalite guvence (QA) uzmanisin. Yillardir cagri "
-    "dinleyip puanliyorsun; degerlendirmelerin adil, tutarli, KANITA DAYALI ve "
-    "profesyoneldir. Sana zaman damgali, konusmaci etiketli Turkce transkript verilir; "
-    "yalnizca TEMSILCININ performansini rubrik kriterlerine gore degerlendirirsin.\n"
-    "Uzman ilkelerin:\n"
-    "1) TUTARLILIK: Her puan kendi gerekcesiyle uyumlu olmali. Gerekcede bir eksik/"
-    "hata/'ancak' belirtiyorsan puan bunu YANSITMALI; ovup dusuk ya da elestirip yuksek "
-    "puan VERME.\n"
-    "2) KANIT: Her puan transkriptten BIREBIR alintiya dayanir. Kanit yoksa tahmin "
-    "yurutme, puani buna gore ver.\n"
-    "3) ADALET: Musterinin davranisi (bagirma, kufur, sabirsizlik) temsilciyi "
-    "CEZALANDIRMAZ; yalnizca temsilcinin buna verdigi tepkiyi degerlendirirsin.\n"
-    "4) DIL: Turkce'yi dogru, akici ve profesyonel yaz; klise ve bosluk doldurma cumleler kurma.\n"
-    "Yanitin HER ZAMAN sadece gecerli JSON olur; JSON disinda hicbir metin yazmazsin."
-)
-
-MAP_SYSTEM_PROMPT = (
-    "Sen bir cagri merkezi kalite degerlendirme uzmanisin. Sana uzun bir cagrinin "
-    "BIR BOLUMU verilir. Bu bolumde her kritere dair gordugun kanitlari ve riskli "
-    "anlari toplarsin; PUAN VERMEZSIN, sadece gozlem yazarsin. Bir kritere dair bu "
-    "bolumde kanit yoksa o kriteri atlarsin. Yanitin HER ZAMAN sadece gecerli JSON olur."
-)
-
-
 def _fmt_ts(sec: float) -> str:
     m, s = divmod(int(sec), 60)
     return f"{m:02d}:{s:02d}"
@@ -71,91 +55,6 @@ def format_transcript(segments: list[Segment]) -> str:
         label = SPEAKER_LABELS.get(seg.speaker, "KONUSMACI")
         lines.append(f"[{_fmt_ts(seg.start_sec)} | {seg.start_sec:.0f}sn] {label}: {seg.text}")
     return "\n".join(lines)
-
-
-def _criteria_block(criteria: list[Criterion]) -> str:
-    lines = []
-    for c in criteria:
-        flag = " [KRITIK/SIFIRLAYICI]" if c.is_critical else ""
-        lines.append(
-            f"- kriter_id={c.id} | [{c.group}] {c.name} (agirlik: {c.weight}){flag}\n  {c.description}"
-        )
-    return "\n".join(lines)
-
-
-def _eval_prompt(criteria: list[Criterion], transcript: str, extra: str = "") -> str:
-    ids = [c.id for c in criteria]
-    return f"""## DEGERLENDIRME KRITERLERI
-{_criteria_block(criteria)}
-
-## CAGRI TRANSKRIPTI
-Format: [dakika:saniye | saniye] KONUSMACI: metin
-{transcript}
-{extra}
-## PUANLAMA OLCEGI (0-10) — HER kriteri bu capalara gore puanla
-9-10: Kusursuz/ornek — kriterin tum unsurlari eksiksiz karsilandi.
-7-8 : Iyi — kucuk bir eksik var ama kriter buyuk olcude karsilandi.
-5-6 : Orta — onemli bir unsur eksik veya kismen yanlis yapildi.
-3-4 : Zayif — kriterin buyuk kismi karsilanmadi.
-0-2 : Basarisiz — kriter hic karsilanmadi veya agir ihlal var.
-KURAL: Gerekce ile puan TUTARLI olacak. Gerekcede "yapmadi / eksik / yanlis / ancak"
-gecen bir kriter 8-9 ALAMAZ; eksigi puana yansit (orn. zorunlu "baska yardim?" sorusu
-sorulmadiysa Kapanis 6 veya alti).
-
-## GOREV
-1. Her kriteri yukaridaki olcege gore 0-10 puanla.
-2. Her puan icin puanla TUTARLI, spesifik (klise olmayan) Turkce gerekce yaz.
-3. Her puan icin transkriptten BIREBIR kanit cumlesi ve kanitin saniye cinsinden
-   zamanini ver (kanit yoksa bos birak).
-4. Cagriyi su kategorilerden birine ata: fatura, iptal, ariza, sikayet, bilgi, diger.
-5. OZET: Cagriyi 1-2 NESNEL cumlede ozetle — musterinin talebi + temsilcinin ne yaptigi
-   + SONUC (cozuldu / yonlendirildi / cozulmedi). Yorum veya duygu katma.
-6. Riskli anlari listele (kaba uslup, yasakli ifade, KVKK ihlali, musteri magduriyeti,
-   yanlis bilgi vb.) — her biri icin saniye, aciklama ve onem (dusuk/orta/yuksek).
-7. Musterinin duygu durumunu cagrinin BASINDA ve SONUNDA etiketle
-   (olumlu/notr/olumsuz) — iyi bir cagri duyguyu yukseltir veya korur.
-8. KOCLUK: Temsilciye SPESIFIK, davranissal ve uygulanabilir 1-2 cumlelik oneri yaz;
-   transkriptteki GERCEK bir eksige dayandir ("su noktada sunu yapmaliydi"). Klise ogut
-   ("daha iyi iletisim kur") ve ANLAMSIZ oneri (orn. "daha uzun sessizlik birak") VERME.
-   Cagri gercekten iyiyse tek cumleyle en guclu yonunu belirt.
-9. Musteri memnuniyetini (CSAT) 1-5 arasi tahmin et (1=cok kotu, 5=cok iyi).
-10. Musterinin BASKIN duygusunu tek kelimeyle etiketle: ofke, hayal_kirikligi,
-    endise, memnuniyet, notr, saskinlik, minnettarlik, uzuntu.
-11. Duygu YORUNGESI: cagri boyunca musterinin tonu nasil seyretti?
-    yukselen (kotu basladi iyi bitti), dusen (iyi basladi kotu bitti), sabit.
-12. SONRAKI EN IYI AKSIYON: cagri sonrasi atilacak SOMUT adim (orn. "iade talebini
-    sisteme gir", "teknik ekibe is emri ac", "48 saat icinde takip aramasi yap",
-    "ust birime aktar"). Cagri tam cozulduyse "takip gerekmiyor" yaz — BOS BIRAKMA.
-13. CHURN (musteri kaybi) riski: musteri iptal/tehdit/asiri memnuniyetsizlik
-    isareti veriyor mu? dusuk | orta | yuksek.
-14. MUSTERI EFOR skoru (CES) 1-5: musteri sorununu cozdurmek icin ne kadar
-    ugrasmak zorunda kaldi? (1=cok kolay/tek temas, 5=cok zor/tekrar tekrar).
-15. NIYET ETIKETLERI: cagriyi tanimlayan 1-4 ince etiket (orn. "iptal-tehdidi",
-    "fatura-itiraz", "teknik-ariza", "gecikme-sikayeti", "bilgi-talebi").
-
-"puanlar" listesinde su kriter id'lerinin TAMAMI bulunmali: {ids}
-
-SADECE su semada gecerli JSON dondur:
-{{
-  "kategori": "fatura|iptal|ariza|sikayet|bilgi|diger",
-  "ozet": "...",
-  "musteri_duygu_baslangic": "olumlu|notr|olumsuz",
-  "musteri_duygu_bitis": "olumlu|notr|olumsuz",
-  "gelisim_onerisi": "...",
-  "tahmini_csat": 3.5,
-  "baskin_duygu": "ofke|hayal_kirikligi|endise|memnuniyet|notr|saskinlik|minnettarlik|uzuntu",
-  "duygu_yorungesi": "yukselen|dusen|sabit",
-  "sonraki_aksiyon": "...",
-  "churn_riski": "dusuk|orta|yuksek",
-  "musteri_efor": 3.0,
-  "niyet_etiketleri": ["...", "..."],
-  "puanlar": [
-    {{"kriter_id": {ids[0]}, "puan": 0, "gerekce": "...", "kanit": "...", "kanit_zaman": 12.5}}
-  ],
-  "riskli_anlar": [
-    {{"zaman": 45.0, "aciklama": "...", "onem": "dusuk|orta|yuksek"}}
-  ]
-}}"""
 
 
 def _metrics_hint(metrics: dict | None) -> str:
@@ -205,151 +104,6 @@ def _metrics_hint(metrics: dict | None) -> str:
     return "\n".join(lines)
 
 
-def _map_prompt(criteria: list[Criterion], chunk_no: int, total: int, transcript: str) -> str:
-    return f"""## DEGERLENDIRME KRITERLERI
-{_criteria_block(criteria)}
-
-## CAGRI BOLUMU ({chunk_no}/{total})
-Format: [dakika:saniye | saniye] KONUSMACI: metin
-{transcript}
-
-## GOREV
-Bu bolumde her kritere dair gordugun kanitlari topla (puan verme). Bir kritere dair
-kanit yoksa listeye ekleme. Riskli anlari da listele.
-
-SADECE su semada gecerli JSON dondur:
-{{
-  "gozlemler": [
-    {{"kriter_id": 1, "gozlem": "...", "kanit": "...", "kanit_zaman": 12.5}}
-  ],
-  "riskli_anlar": [
-    {{"zaman": 45.0, "aciklama": "...", "onem": "dusuk|orta|yuksek"}}
-  ]
-}}"""
-
-
-def _chunk_segments(segments: list[Segment], chunk_sec: int) -> list[list[Segment]]:
-    chunks: list[list[Segment]] = []
-    current: list[Segment] = []
-    chunk_start = 0.0
-    for seg in segments:
-        if current and seg.start_sec >= chunk_start + chunk_sec:
-            chunks.append(current)
-            current = []
-            chunk_start = seg.start_sec
-        if not current:
-            chunk_start = seg.start_sec
-        current.append(seg)
-    if current:
-        chunks.append(current)
-    return chunks
-
-
-def _evaluate_single(
-    criteria: list[Criterion], segments: list[Segment], extra: str = ""
-) -> LLMDegerlendirme:
-    prompt = _eval_prompt(criteria, format_transcript(segments), extra)
-    result = generate_json(LLMDegerlendirme, SYSTEM_PROMPT, prompt)
-    return _ensure_coverage(result, criteria, format_transcript(segments))
-
-
-def _evaluate_map_reduce(
-    criteria: list[Criterion], segments: list[Segment], extra_hint: str = ""
-) -> LLMDegerlendirme:
-    chunks = _chunk_segments(segments, settings.chunk_size_sec)
-    logger.info("Uzun cagri: %d chunk ile map-reduce puanlama", len(chunks))
-
-    observations: list[str] = []
-    risky: list = []
-    for i, chunk in enumerate(chunks, start=1):
-        analysis = generate_json(
-            LLMChunkAnaliz,
-            MAP_SYSTEM_PROMPT,
-            _map_prompt(criteria, i, len(chunks), format_transcript(chunk)),
-        )
-        span = f"{_fmt_ts(chunk[0].start_sec)}-{_fmt_ts(chunk[-1].end_sec)}"
-        for g in analysis.gozlemler:
-            ts = f", zaman: {g.kanit_zaman:.0f}sn" if g.kanit_zaman is not None else ""
-            observations.append(
-                f"- [bolum {i}, {span}] kriter_id={g.kriter_id}: {g.gozlem}"
-                + (f' | kanit: "{g.kanit}"{ts}' if g.kanit else "")
-            )
-        risky.extend(analysis.riskli_anlar)
-
-    obs_text = "\n".join(observations) if observations else "(gozlem toplanamadi)"
-    extra = (
-        "\n## NOT\nBu cagri uzun oldugu icin bolum bolum incelendi. Asagida tum "
-        "bolumlerden toplanan kriter gozlemleri var; nihai puanlari BU GOZLEMLERE "
-        f"gore ver:\n{obs_text}\n{extra_hint}"
-    )
-    # Reduce asamasina ham transkript yerine ozet akis + gozlemler verilir
-    outline = _transcript_outline(segments)
-    prompt = _eval_prompt(criteria, outline, extra)
-    result = generate_json(LLMDegerlendirme, SYSTEM_PROMPT, prompt)
-    result = _ensure_coverage(result, criteria, outline)
-    # Map asamasindan gelen riskli anlar reduce ciktisiyla birlestirilir
-    seen = {(round(r.zaman), r.aciklama[:40]) for r in result.riskli_anlar}
-    for r in risky:
-        key = (round(r.zaman), r.aciklama[:40])
-        if key not in seen:
-            result.riskli_anlar.append(r)
-            seen.add(key)
-    result.riskli_anlar.sort(key=lambda r: r.zaman)
-    return result
-
-
-def _transcript_outline(segments: list[Segment], head: int = 25, tail: int = 25) -> str:
-    """Uzun cagrida reduce prompt'u sismesin diye bas + son bolumu ver."""
-    if len(segments) <= head + tail:
-        return format_transcript(segments)
-    skipped = len(segments) - head - tail
-    return (
-        format_transcript(segments[:head])
-        + f"\n... ({skipped} satir atlandi, gozlemler bolumune bakin) ...\n"
-        + format_transcript(segments[-tail:])
-    )
-
-
-def _ensure_coverage(
-    result: LLMDegerlendirme, criteria: list[Criterion], transcript: str
-) -> LLMDegerlendirme:
-    """Tum aktif kriterlerin puanlandigini garanti et; eksikse 1 kez tamamlat."""
-    expected = {c.id for c in criteria}
-    got = {p.kriter_id for p in result.puanlar}
-    missing = expected - got
-    # Rubrikte olmayan id'ler atilir (LLM halusinasyonu)
-    result.puanlar = [p for p in result.puanlar if p.kriter_id in expected]
-
-    if missing:
-        logger.warning("LLM su kriterleri atladi, tamamlatiliyor: %s", missing)
-        missing_criteria = [c for c in criteria if c.id in missing]
-        try:
-            fix = generate_json(
-                LLMDegerlendirme,
-                SYSTEM_PROMPT,
-                _eval_prompt(missing_criteria, transcript),
-            )
-            by_id = {p.kriter_id: p for p in fix.puanlar}
-            for cid in list(missing):
-                if cid in by_id:
-                    result.puanlar.append(by_id[cid])
-                    missing.discard(cid)
-        except Exception as exc:
-            logger.warning("Eksik kriter tamamlama basarisiz: %s", exc)
-
-    # Hala eksikse notr puanla isaretle — pipeline'i dusurmek yerine gorunur birak
-    for cid in missing:
-        crit = next(c for c in criteria if c.id == cid)
-        result.puanlar.append(
-            LLMPuan(
-                kriter_id=cid,
-                puan=5,
-                gerekce=f"'{crit.name}' kriteri LLM tarafindan degerlendirilemedi (otomatik notr puan).",
-            )
-        )
-    return result
-
-
 NEGATIVE_EMOTIONS = {"ofke", "hayal_kirikligi", "uzuntu"}
 
 
@@ -369,16 +123,6 @@ def _detect_emotion_mismatch(sentiment_end: str, emotion: str, csat: float) -> b
     if good_feeling and csat <= 2.0:
         return True
     return False
-
-
-def compute_total(puanlar: list[LLMPuan], criteria: list[Criterion]) -> float:
-    """Agirlikli toplam: 0-100 olcegi."""
-    weights = {c.id: c.weight for c in criteria}
-    total_w = sum(weights.get(p.kriter_id, 1.0) for p in puanlar)
-    if total_w <= 0:
-        return 0.0
-    raw = sum(p.puan * weights.get(p.kriter_id, 1.0) for p in puanlar)
-    return round(raw / (total_w * 10) * 100, 1)
 
 
 def _load_criteria(db: Session, call: Call) -> list[Criterion]:
@@ -411,8 +155,139 @@ def run_scoring(db: Session, call: Call) -> ScoringOutcome:
         return _run_scoring_inner(db, call)
 
 
+# =========================================================================
+# UC KATMANLI PUANLAMA (FAZ 2)
+#
+#   KATMAN A — deterministik on kontrol (kod, LLM yok)
+#        v  kesin cevabi olan her sey burada biter ve LLM'i EZER
+#   KATMAN B — kanit zorunlu LLM degerlendirme (kriter grubu bazli)
+#        v  her kararin yaninda transkriptten birebir alinti
+#   KATMAN C — sunucu dogrulamasi + puan aritmetigi
+#        v  alinti gercekten transkriptte var mi? toplam KODDA hesaplanir
+#
+# Gerekce ve olculen taban cizgisi: docs/v2/FAZ-1-RAPOR.md
+# =========================================================================
+
+def _brand_names(tenant: Tenant | None) -> tuple[str, ...]:
+    """Kurumun acilista soylenmesi beklenen marka adlari.
+
+    Tenant ayarindan `brand_names` listesi okunur; yoksa marka adi ve kiraci
+    adindan turetilir.
+    """
+    names: list[str] = []
+    if tenant is not None:
+        settings_names = (tenant.settings or {}).get("brand_names")
+        if isinstance(settings_names, list):
+            names.extend(str(n) for n in settings_names if str(n).strip())
+        for candidate in (tenant.brand_name, tenant.name):
+            if candidate and candidate not in names:
+                names.append(candidate)
+    return tuple(n for n in names if n and not n.startswith("__"))
+
+
+def _windows(segments: list[Segment], window_sec: int) -> list[list[Segment]]:
+    """Uzun cagriyi ORTUSEN pencerelere bol; hicbir bolum atlanmaz.
+
+    B30: eski `_transcript_outline` uzun cagrida ilk 25 + son 25 satiri alip
+    ORTAYI ATIYORDU. Ortadaki bir hakaret hic gorulmuyordu. Kirpma yerine
+    pencereleme yapilir ve pencereler %15 ortusur (sinira denk gelen ihlal kacmasin).
+    """
+    if not segments:
+        return []
+    total = segments[-1].end_sec
+    if total <= window_sec:
+        return [segments]
+    overlap = window_sec * 0.15
+    out: list[list[Segment]] = []
+    start = 0.0
+    while start < total:
+        end = start + window_sec
+        chunk = [s for s in segments if s.end_sec > start and s.start_sec < end]
+        if chunk:
+            out.append(chunk)
+        start = end - overlap
+    return out
+
+
+def _evaluate_llm_criteria(
+    criteria: list[Criterion], segments: list[Segment], hint: str
+) -> list[scoring_layers.CriterionDecision]:
+    """Katman B + C. Uzun cagrida pencereleme, sonra karar birlestirme."""
+    blob = " ".join(s.text for s in segments)
+    windows = _windows(segments, settings.chunk_size_sec)
+
+    if len(windows) == 1:
+        kararlar = scoring_layers.evaluate_all(criteria, format_transcript(segments), hint)
+        return [scoring_layers.verify(k, blob) for k in kararlar]
+
+    logger.info("Uzun cagri: %d pencere ile degerlendiriliyor", len(windows))
+    best: dict[int, scoring_layers.CriterionDecision] = {}
+    for i, win in enumerate(windows, 1):
+        note = (
+            f"\n## NOT\nBu, cagrinin {i}/{len(windows)} bolumudur. Yalnizca bu "
+            "bolumde GORDUGUN kanitlara dayan; gormedigin bir kriter icin "
+            "'insufficient_evidence' de.\n"
+        )
+        kararlar = scoring_layers.evaluate_all(criteria, format_transcript(win), hint + note)
+        for k in kararlar:
+            d = scoring_layers.verify(k, blob)
+            prev = best.get(d.criterion_id)
+            if prev is None:
+                best[d.criterion_id] = d
+                continue
+            # Kanitli bir karar, kanitsiz karari her zaman yener.
+            if prev.score is None and d.score is not None:
+                best[d.criterion_id] = d
+            elif d.score is not None and prev.score is not None and d.score < prev.score:
+                # En dusuk (en kotu) KANITLI karar gecerli: bir bolumde tespit
+                # edilen ihlal, diger bolumlerin temizligiyle silinemez.
+                best[d.criterion_id] = d
+    return list(best.values())
+
+
+def _analyze_call(segments: list[Segment], hint: str) -> LLMCagriAnalizi:
+    """Cagri geneli analiz (ozet, duygu, koclu, niyet) — puanlamadan AYRI cagri.
+
+    Puanlarla ayni prompt'a sikistirilinca modelin dikkati boluyordu.
+    """
+    prompt = f"""## CAGRI TRANSKRIPTI
+Format: [dakika:saniye | saniye] KONUSMACI: metin
+{format_transcript(segments)}
+{hint}
+## GOREV
+1. Kategori: fatura|iptal|ariza|sikayet|bilgi|diger
+2. OZET: 1-2 NESNEL cumle — musterinin talebi + temsilcinin ne yaptigi + SONUC.
+3. Musteri duygusu cagrinin BASINDA ve SONUNDA (olumlu|notr|olumsuz).
+4. BASKIN duygu: ofke|hayal_kirikligi|endise|memnuniyet|notr|saskinlik|minnettarlik|uzuntu
+5. Duygu YORUNGESI: yukselen|dusen|sabit
+6. KOCLUK: temsilciye SPESIFIK, davranissal, transkriptteki GERCEK bir eksige
+   dayali 1-2 cumle. Klise ogut verme. Cagri iyiyse en guclu yonunu belirt.
+7. Tahmini CSAT (1-5) ve musteri efor skoru CES (1-5).
+8. SONRAKI AKSIYON: somut adim; gerekmiyorsa "takip gerekmiyor".
+9. CHURN riski: dusuk|orta|yuksek
+10. NIYET ETIKETLERI: 1-4 ince etiket.
+11. RISKLI ANLAR: zaman + aciklama + onem (dusuk|orta|yuksek).
+
+Turkce yaz ve Turkce karakterleri DOGRU kullan.
+
+SADECE su semada gecerli JSON dondur:
+{{"kategori":"...","ozet":"...","musteri_duygu_baslangic":"notr",
+ "musteri_duygu_bitis":"notr","baskin_duygu":"notr","duygu_yorungesi":"sabit",
+ "gelisim_onerisi":"...","tahmini_csat":3.5,"musteri_efor":3.0,
+ "sonraki_aksiyon":"...","churn_riski":"dusuk","niyet_etiketleri":["..."],
+ "riskli_anlar":[{{"zaman":45.0,"aciklama":"...","onem":"orta"}}]}}"""
+    try:
+        return generate_json(
+            LLMCagriAnalizi,
+            "Sen bir cagri merkezi kalite analistisin. Yalnizca gecerli JSON "
+            "dondurursun. Turkce metinleri dogru Turkce karakterlerle yazarsin.",
+            prompt,
+        )
+    except Exception as exc:  # noqa: BLE001 — analiz puanlamayi dusurmez
+        logger.warning("Cagri analizi uretilemedi: %s", exc)
+        return LLMCagriAnalizi()
 def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
-    """Cagriyi puanla, uyum kontrolu yap ve sonuclari DB'ye yaz.
+    """Cagriyi uc katmanli motorla puanla ve sonuclari DB'ye yaz.
 
     Segmentler onceden cikarilmis olmali. Doner: pipeline'in alarm/webhook
     uretmesi icin ScoringOutcome.
@@ -427,79 +302,100 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
     if not segments:
         raise RuntimeError("Transkript bos — puanlama yapilamadi")
 
-    hint = _metrics_hint(call.metrics if isinstance(call.metrics, dict) else None)
+    tenant = db.get(Tenant, call.tenant_id)
+    banned = db.query(BannedWord).filter(BannedWord.tenant_id == call.tenant_id).all()
 
-    # Hitap & nezaket kural motoru (Turkce'ye ozgu, deterministik)
+    # Yeniden puanlamada onceki cikti temizlenir; alarmlar SILINMEZ,
+    # gecersizlestirilir (B31 — eski alarm ekranda asili kalmasin).
+    db.query(Score).filter(Score.call_id == call.id).delete()
+    db.query(Violation).filter(Violation.call_id == call.id).delete()
+    alerts_svc.invalidate_for_call(db, call.id)
+    db.flush()
+
+    # ---------------- KATMAN A — deterministik on kontrol ----------------
+    findings = deterministic.run_all(
+        segments, brand_names=_brand_names(tenant), banned=banned
+    )
+
+    decisions: list[scoring_layers.CriterionDecision] = []
+    llm_criteria: list[Criterion] = []
+    for c in criteria:
+        mode = getattr(c, "evaluation_mode", "llm_evidence")
+        if mode == "human_only":
+            decisions.append(scoring_layers.CriterionDecision(
+                criterion_id=c.id, decision="insufficient_evidence", score=None,
+                rationale="Bu kriter yalnizca kalite uzmani tarafindan puanlanir.",
+                evidence_quote="", evidence_ts=None, evidence_speaker="",
+                confidence=0.0, evidence_verified=False, source_layer="A",
+            ))
+            continue
+        key = deterministic.check_key_for(c)
+        if key and key in findings:
+            decisions.append(scoring_layers.from_finding(c.id, findings[key]))
+        else:
+            llm_criteria.append(c)
+
+    # ---------------- Ipuclari (nesnel dayanak) --------------------------
+    hint = _metrics_hint(call.metrics if isinstance(call.metrics, dict) else None)
     etiquette_result = etiquette.analyze(segments)
     hint += etiquette.hint(etiquette_result)
-
-    # RAG: sirket bilgi bankasindan ilgili pasajlari prompt'a ekle (bilgi dogrulugu).
-    # Bilgi bankasi bossa veya embedding alinamazsa bos doner; puanlama RAG'siz surer.
     if settings.rag_enabled:
         try:
             hint += knowledge.build_context(db, call.tenant_id, format_transcript(segments))
         except Exception as exc:  # RAG asla puanlamayi dusurmez
             logger.warning("RAG baglami olusturulamadi: %s", exc)
 
-    duration = call.duration_sec or (segments[-1].end_sec if segments else 0)
-    if duration > settings.chunk_threshold_sec:
-        result = _evaluate_map_reduce(criteria, segments, hint)
-    else:
-        result = _evaluate_single(criteria, segments, hint)
+    # ---------------- KATMAN B + C — kanit zorunlu LLM -------------------
+    if llm_criteria:
+        decisions.extend(_evaluate_llm_criteria(llm_criteria, segments, hint))
+
+    # ---------------- Puan ve sifirlama — hepsi KODDA --------------------
+    base_total = scoring_layers.compute_total(decisions, criteria)
+    zeroing = scoring_layers.decide_zeroing(decisions, criteria)
+
+    if zeroing.zeroed and not zeroing.evidence:
+        # Kanitsiz sifirlama bir SISTEM HATASIDIR, sessizce gecilemez.
+        raise ValueError(
+            f"Kanitsiz sifirlama girisimi (call={call.id}): {zeroing.reason}"
+        )
 
     crit_by_id = {c.id: c for c in criteria}
-    db.query(Score).filter(Score.call_id == call.id).delete()
-    for p in result.puanlar:
-        crit = crit_by_id[p.kriter_id]
-        db.add(
-            Score(
-                call_id=call.id,
-                criterion_id=crit.id,
-                criterion_name=crit.name,
-                criterion_group=crit.group,
-                weight=crit.weight,
-                score=p.puan,
-                rationale=p.gerekce,
-                evidence=p.kanit,
-                evidence_ts=p.kanit_zaman,
-            )
-        )
+    for d in decisions:
+        c = crit_by_id.get(d.criterion_id)
+        if c is None:
+            continue
+        db.add(Score(
+            call_id=call.id, criterion_id=c.id, criterion_name=c.name,
+            criterion_group=c.group, weight=c.weight,
+            score=d.score, rationale=d.rationale,
+            evidence=d.evidence_quote, evidence_ts=d.evidence_ts,
+            decision=d.decision, confidence=d.confidence,
+            evidence_verified=d.evidence_verified, source_layer=d.source_layer,
+        ))
 
-    # --- Uyum motoru: yasakli kelime + kriz + sifirlayici ihlal ---
-    db.query(Violation).filter(Violation.call_id == call.id).delete()
+    # ---------------- Ihlaller ve alarmlar -------------------------------
     alerts: list[tuple[AlertType, str, str]] = []
 
-    banned = db.query(BannedWord).filter(BannedWord.tenant_id == call.tenant_id).all()
-    detected = compliance.detect_banned_words(segments, banned)
-    agent_hits = compliance.agent_violations(detected)
-    for v in detected:
-        db.add(
-            Violation(
-                tenant_id=call.tenant_id,
-                call_id=call.id,
-                kind=v.kind,
-                category=v.category,
-                severity=v.severity,
-                term=v.term,
-                speaker=v.speaker,
-                evidence=v.evidence,
-                ts_sec=v.ts_sec,
-            )
-        )
-    for v in agent_hits:
-        alerts.append(
-            (AlertType.banned_word, v.severity, f"Yasakli kelime ({v.category}): '{v.term}' — {v.evidence[:80]}")
-        )
+    banned_hits = deterministic.find_banned(segments, banned)
+    agent_hits = [h for h in banned_hits if h.speaker == "temsilci"]
+    for h in banned_hits:
+        db.add(Violation(
+            tenant_id=call.tenant_id, call_id=call.id, kind="banned_word",
+            category=h.category, severity=h.severity, term=h.term,
+            speaker=h.speaker, evidence=h.quote, ts_sec=h.ts_sec,
+        ))
+    for h in agent_hits:
+        alerts.append((
+            AlertType.banned_word, h.severity,
+            f'Yasakli ifade ({h.category}): "{h.term}" — {h.quote[:80]}',
+        ))
 
-    # Hitap/nezaket ihlalleri (kural motorundan) — ihlal listesine yazilir
     for f in etiquette_result.get("bulgular", []):
-        db.add(
-            Violation(
-                tenant_id=call.tenant_id, call_id=call.id, kind="etiquette",
-                category="hitap", severity=f["onem"], term=f["tur"],
-                speaker="temsilci", evidence=f["kanit"], ts_sec=f["zaman"],
-            )
-        )
+        db.add(Violation(
+            tenant_id=call.tenant_id, call_id=call.id, kind="etiquette",
+            category="hitap", severity=f["onem"], term=f["tur"],
+            speaker="temsilci", evidence=f["kanit"], ts_sec=f["zaman"],
+        ))
     if etiquette_result.get("sen_kullanimi"):
         alerts.append((
             AlertType.banned_word, "yuksek",
@@ -507,64 +403,67 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
             f"'sen' diye hitap etti",
         ))
 
-    # Uyum paketleri: temsilci repliklerinde zorunlu aciklama eksik / yasak ifade var mi?
-    # (KVKK aydinlatma, PCI kart-no vb.) Aktif paketler tenant ayarindan gelmeli;
-    # su an built-in DEFAULT_ACTIVE (kvkk) kullanilir.
-    agent_text = " ".join(s.text for s in segments if s.speaker == "temsilci")
-    for pv in compliance_packs.evaluate(agent_text):
-        db.add(
-            Violation(
+    # Deterministik uyum bulgulari ihlal olarak da kaydedilir (izlenebilirlik).
+    # ONEMLI (B32): bu bulgular ARTIK kriter puanini dogrudan belirliyor —
+    # Katman A yukarida `decisions` icine yazdi. Yani "KVKK anonsu yok" tespiti
+    # hem alarm uretir hem puani sifirlar. Onceden yalniz alarm uretiyordu ve
+    # cagri 92 puan alabiliyordu.
+    for key in ("kvkk_anons", "kimlik_dogrulama"):
+        f = findings.get(key)
+        if f is not None and f.decision == "not_met":
+            db.add(Violation(
                 tenant_id=call.tenant_id, call_id=call.id, kind="compliance",
-                category=pv["pack"], severity=pv["severity"],
-                term=pv["rule"], speaker="temsilci",
-                evidence=pv["description"], ts_sec=None,
-            )
-        )
-        if pv["severity"] == "yuksek":
-            label = "eksik zorunlu aciklama" if pv["type"] == "missing_required" else "yasak ifade"
-            alerts.append((
-                AlertType.banned_word, "yuksek",
-                f"Uyum ihlali ({pv['pack'].upper()} — {label}): {pv['description']}",
+                category=key, severity="yuksek", term=key, speaker="temsilci",
+                evidence=f.rationale_tr, ts_sec=f.evidence_ts,
             ))
+            alerts.append((AlertType.banned_word, "yuksek",
+                           f"Uyum ihlali: {f.rationale_tr}"))
 
     is_crisis, crisis_ev, crisis_ts = compliance.detect_crisis(segments)
     if is_crisis:
-        db.add(
-            Violation(
-                tenant_id=call.tenant_id, call_id=call.id, kind="crisis",
-                category="eskalasyon", severity="yuksek", term="", speaker="musteri",
-                evidence=crisis_ev or "", ts_sec=crisis_ts,
-            )
-        )
+        db.add(Violation(
+            tenant_id=call.tenant_id, call_id=call.id, kind="crisis",
+            category="eskalasyon", severity="yuksek", term="", speaker="musteri",
+            evidence=crisis_ev or "", ts_sec=crisis_ts,
+        ))
         alerts.append((AlertType.crisis, "yuksek", f"Kriz sinyali: {(crisis_ev or '')[:100]}"))
 
-    # Sifirlayici ihlal: kritik kriter esik altinda VEYA temsilci yuksek siddet yasakli kelime
-    zeroing_reason = None
-    score_by_crit = {p.kriter_id: p.puan for p in result.puanlar}
-    for c in criteria:
-        if c.is_critical and score_by_crit.get(c.id, 10) < c.critical_threshold:
-            zeroing_reason = f"Kritik kriter esik alti: {c.name} ({score_by_crit.get(c.id)}/{c.critical_threshold})"
-            break
-    if not zeroing_reason:
-        severe = [v for v in agent_hits if v.severity == "yuksek"]
-        if severe:
-            zeroing_reason = f"Temsilci agir yasakli ifade kullandi: '{severe[0].term}'"
+    # ---------------- Cagri geneli analiz (ayri LLM cagrisi) -------------
+    analiz = _analyze_call(segments, hint)
 
-    base_total = compute_total(result.puanlar, criteria)
-    if zeroing_reason:
+    if zeroing.zeroed:
         call.total_score = 0.0
         call.zeroed = True
-        alerts.append((AlertType.zeroing, "yuksek", zeroing_reason))
+        call.zeroing_reason = zeroing.reason
+        call.zeroing_evidence = zeroing.evidence
+        call.zeroing_evidence_ts = zeroing.evidence_ts
+        call.zeroing_criterion_id = zeroing.criterion_id
+        alerts.append((AlertType.zeroing, "yuksek", zeroing.reason or "Sifirlayici ihlal"))
     else:
         call.total_score = base_total
         call.zeroed = False
-        if base_total < 60:
+        call.zeroing_reason = None
+        call.zeroing_evidence = None
+        call.zeroing_evidence_ts = None
+        call.zeroing_criterion_id = None
+        if base_total is not None and base_total < 60:
             alerts.append((AlertType.low_score, "orta", f"Dusuk kalite puani: {base_total}"))
 
-    call.category = result.kategori
-    call.summary = result.ozet
-    # LLM'in bulduklari + akustik tespitler (bagirma anlari) birlikte
-    risky = [r.model_dump() for r in result.riskli_anlar]
+    # Kanitsiz/dusuk guvenli kriterler insan kuyruguna isaret eder
+    pending = [d for d in decisions if d.needs_human]
+    if pending:
+        names = ", ".join(
+            crit_by_id[d.criterion_id].name for d in pending[:3] if d.criterion_id in crit_by_id
+        )
+        alerts.append((
+            AlertType.low_score, "dusuk",
+            f"{len(pending)} kriter yeterli kanitla puanlanamadi ({names}) — "
+            "kalite uzmani onayi gerekiyor.",
+        ))
+
+    call.category = analiz.kategori
+    call.summary = analiz.ozet
+    risky = [r.model_dump() for r in analiz.riskli_anlar]
     if isinstance(call.metrics, dict):
         seen_ts = {round(r["zaman"]) for r in risky}
         for extra in acoustics.acoustic_risky_moments(call.metrics):
@@ -573,40 +472,33 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
                 seen_ts.add(round(extra["zaman"]))
         risky.sort(key=lambda r: r["zaman"])
     call.risky_moments = risky
-    call.sentiment_start = result.musteri_duygu_baslangic
-    call.sentiment_end = result.musteri_duygu_bitis
-    call.coaching = result.gelisim_onerisi
-    call.predicted_csat = round(result.tahmini_csat, 1)
+    call.sentiment_start = analiz.musteri_duygu_baslangic
+    call.sentiment_end = analiz.musteri_duygu_bitis
+    call.coaching = analiz.gelisim_onerisi
+    call.predicted_csat = round(analiz.tahmini_csat, 1)
     call.is_crisis = is_crisis
+    call.emotion = analiz.baskin_duygu
+    call.sentiment_trajectory = analiz.duygu_yorungesi
+    call.next_action = (analiz.sonraki_aksiyon or "").strip() or None
+    call.churn_risk = analiz.churn_riski
+    call.customer_effort = round(analiz.musteri_efor, 1)
+    call.intent_tags = analiz.niyet_etiketleri
 
-    # --- LLM analitik paketi (Dalga 1) ---
-    call.emotion = result.baskin_duygu
-    call.sentiment_trajectory = result.duygu_yorungesi
-    call.next_action = result.sonraki_aksiyon.strip() or None
-    call.churn_risk = result.churn_riski
-    call.customer_effort = round(result.musteri_efor, 1)
-    call.intent_tags = result.niyet_etiketleri
-
-    # Semantik "benzer cagri" aramasi icin embedding uret (best-effort; hata puanlamayi bozmaz)
+    # Semantik "benzer cagri" aramasi icin embedding (best-effort)
     try:
-        from ..models import Tenant
-        # NOT: `knowledge` modul duzeyinde import edili (bkz. ustteki import).
-        # Burada tekrar import etmek onu fonksiyon-yerel degiskene cevirip
-        # yukaridaki RAG baglami cagrisini UnboundLocalError ile patlatiyordu.
         etext = " ".join(p for p in [call.summary or "", call.category or "",
                                      " ".join(call.intent_tags or [])] if p).strip()
         if etext:
-            _tenant = db.get(Tenant, call.tenant_id)
             call.embedding = knowledge.embed(
-                [etext], _tenant.settings if _tenant else None,
+                [etext], tenant.settings if tenant else None,
                 tenant_id=call.tenant_id, kind="embed")[0]
     except Exception as _exc:  # noqa: BLE001
         logger.warning("Cagri embedding uretilemedi (call %s): %s", call.id, _exc)
+
     call.emotion_mismatch = _detect_emotion_mismatch(
-        result.musteri_duygu_bitis, result.baskin_duygu, result.tahmini_csat
+        analiz.musteri_duygu_bitis, analiz.baskin_duygu, analiz.tahmini_csat
     )
     if call.emotion_mismatch:
-        # Insan gozden gecirmesi icin alarm — AI kendi icinde celisiyor olabilir
         alerts.append((
             AlertType.low_score, "dusuk",
             "Duygu-sonuc uyumsuzlugu: musteri duygusu ile tahmini CSAT celisiyor, "
@@ -614,8 +506,8 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
         ))
 
     return ScoringOutcome(
-        zeroed=bool(zeroing_reason),
-        zeroing_reason=zeroing_reason,
+        zeroed=zeroing.zeroed,
+        zeroing_reason=zeroing.reason,
         is_crisis=is_crisis,
         banned_word_hits=len(agent_hits),
         total_score=call.total_score,

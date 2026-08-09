@@ -149,6 +149,160 @@ def _norm_risk(v) -> str:
     return "dusuk"
 
 
+class LLMKanit(BaseModel):
+    """Bir kriter kararinin dayanagi. Alinti BIREBIR transkriptten olmali —
+    Katman C bunu normalize transkriptte arar, bulunamazsa kanit REDDEDILIR."""
+
+    speaker: Literal["agent", "customer", "temsilci", "musteri"] = "temsilci"
+    start_sec: float = 0.0
+    quote: str = ""
+
+    @field_validator("speaker", mode="before")
+    @classmethod
+    def _norm_speaker(cls, v):
+        m = {"agent": "temsilci", "customer": "musteri"}
+        if isinstance(v, str):
+            return m.get(_fold_tr(v), _fold_tr(v) if _fold_tr(v) in ("temsilci", "musteri") else "temsilci")
+        return "temsilci"
+
+    @field_validator("start_sec", mode="before")
+    @classmethod
+    def _norm_start(cls, v):
+        try:
+            return max(0.0, float(v))
+        except (TypeError, ValueError):
+            return 0.0
+
+
+class LLMKriterKarari(BaseModel):
+    """KATMAN B ciktisi — kriter basina KANIT ZORUNLU karar.
+
+    Altin kural: kanit yoksa CEZA YOK. `kanitlar` bos veya alinti dogrulanamazsa
+    karar `insufficient_evidence` olur ve kriter puani ORTALAMAYA KATILMAZ;
+    cagri insan kuyruguna duser. Bu kural B1, B2, B5'i kokten cozer.
+    """
+
+    # LLM'e kriterler HARF kimlikle sunulur (sayisal sira bias yaratiyor —
+    # arXiv 2506.22316). kriter_id sunucu tarafinda harf haritasindan doldurulur.
+    kriter_harf: str = ""
+    kriter_id: int | None = None
+    karar: Literal["met", "partially_met", "not_met", "not_applicable",
+                   "insufficient_evidence"] = "insufficient_evidence"
+    puan: int | None = Field(default=None, ge=0, le=10)
+    kanitlar: list[LLMKanit] = []
+    gerekce: str = ""
+    guven: float = Field(default=0.5, ge=0.0, le=1.0)
+
+    @field_validator("karar", mode="before")
+    @classmethod
+    def _norm_karar(cls, v):
+        if not isinstance(v, str):
+            return "insufficient_evidence"
+        f = _fold_tr(v).replace(" ", "_").replace("-", "_")
+        aliases = {
+            "karsilandi": "met", "kismen_karsilandi": "partially_met",
+            "karsilanmadi": "not_met", "uygulanamaz": "not_applicable",
+            "yetersiz_kanit": "insufficient_evidence",
+        }
+        f = aliases.get(f, f)
+        valid = {"met", "partially_met", "not_met", "not_applicable", "insufficient_evidence"}
+        return f if f in valid else "insufficient_evidence"
+
+    @field_validator("puan", mode="before")
+    @classmethod
+    def _clamp(cls, v):
+        if v is None or v == "":
+            return None
+        try:
+            return min(10, max(0, round(float(v))))
+        except (TypeError, ValueError):
+            return None
+
+    @field_validator("guven", mode="before")
+    @classmethod
+    def _norm_guven(cls, v):
+        try:
+            return min(1.0, max(0.0, float(v)))
+        except (TypeError, ValueError):
+            return 0.5
+
+
+class LLMKriterGrubu(BaseModel):
+    """Bir kriter grubunun (3-4 kriter) degerlendirme ciktisi.
+
+    Tek dev prompt'ta 12 kriter degerlendirmek yasak (prompt "asla yapma" #3);
+    kriterler gruplara bolunur, her grup AYRI LLM cagrisidir.
+    """
+
+    kararlar: list[LLMKriterKarari] = []
+
+
+class LLMCagriAnalizi(BaseModel):
+    """Puanlamadan AYRI, cagri geneli analiz (ozet, duygu, koclu, niyet).
+
+    Kriter puanlariyla ayni cagriya sikistirilmaz — modelin dikkati bolunuyordu.
+    """
+
+    kategori: str = "diger"
+    ozet: str = ""
+    musteri_duygu_baslangic: str = "notr"
+    musteri_duygu_bitis: str = "notr"
+    gelisim_onerisi: str = ""
+    tahmini_csat: float = 3.0
+    baskin_duygu: str = "notr"
+    duygu_yorungesi: str = "sabit"
+    sonraki_aksiyon: str = ""
+    churn_riski: str = "dusuk"
+    musteri_efor: float = 3.0
+    niyet_etiketleri: list[str] = []
+    riskli_anlar: list[LLMRiskliAn] = []
+
+    @field_validator("kategori", mode="before")
+    @classmethod
+    def _norm_kategori(cls, v):
+        if isinstance(v, str):
+            folded = _fold_tr(v)
+            if folded in CATEGORIES:
+                return folded
+        return "diger"
+
+    @field_validator("musteri_duygu_baslangic", "musteri_duygu_bitis", mode="before")
+    @classmethod
+    def _norm_duygu2(cls, v):
+        if isinstance(v, str):
+            f = _fold_tr(v)
+            if f in ("olumlu", "notr", "olumsuz"):
+                return f
+            return {"positive": "olumlu", "neutral": "notr", "negative": "olumsuz"}.get(f, "notr")
+        return "notr"
+
+    @field_validator("churn_riski", mode="before")
+    @classmethod
+    def _norm_churn2(cls, v):
+        if isinstance(v, str):
+            f = _fold_tr(v)
+            if f in ("dusuk", "orta", "yuksek"):
+                return f
+        return "dusuk"
+
+    @field_validator("duygu_yorungesi", mode="before")
+    @classmethod
+    def _norm_yorunge2(cls, v):
+        if isinstance(v, str):
+            f = _fold_tr(v)
+            if f in ("yukselen", "dusen", "sabit"):
+                return f
+        return "sabit"
+
+    @field_validator("tahmini_csat", "musteri_efor", mode="before")
+    @classmethod
+    def _norm_1_5(cls, v):
+        try:
+            return min(5.0, max(1.0, float(v)))
+        except (TypeError, ValueError):
+            return 3.0
+
+
 class LLMDegerlendirme(BaseModel):
     """Tek atis (veya reduce asamasi) puanlama ciktisi."""
 
