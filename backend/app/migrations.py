@@ -110,6 +110,30 @@ _STATEMENTS: list[tuple[str, str]] = [
      "  WHEN lower(name) LIKE 'cozum%' OR lower(name) LIKE 'çözüm%' THEN 'Musteri Odagi' "
      "  ELSE \"group\" END "
      "WHERE \"group\" NOT IN ('Uyum','Iletisim','Yetkinlik','Musteri Odagi')"),
+    # --- FAZ 3: iki asamali kalite kontrol ---
+    ("calls.qa_state",
+     "ALTER TABLE calls ADD COLUMN IF NOT EXISTS qa_state VARCHAR(20) "
+     "NOT NULL DEFAULT 'ai_puanlandi'"),
+    ("calls.queue_reasons",
+     "ALTER TABLE calls ADD COLUMN IF NOT EXISTS queue_reasons JSON NOT NULL DEFAULT '[]'::json"),
+    ("calls.finalized_at",
+     "ALTER TABLE calls ADD COLUMN IF NOT EXISTS finalized_at TIMESTAMP"),
+    ("calls.finalized_by",
+     "ALTER TABLE calls ADD COLUMN IF NOT EXISTS finalized_by INTEGER"),
+    ("ix_calls_qa_state",
+     "CREATE INDEX IF NOT EXISTS ix_calls_qa_state ON calls (qa_state)"),
+    ("scores.override_reason_code",
+     "ALTER TABLE scores ADD COLUMN IF NOT EXISTS override_reason_code VARCHAR(32)"),
+    ("scores.reviewed_at",
+     "ALTER TABLE scores ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP"),
+    ("scores.reviewed_by",
+     "ALTER TABLE scores ADD COLUMN IF NOT EXISTS reviewed_by INTEGER"),
+    # Gecmis veri: v2 oncesi puanlanmis cagrilar 'kesinlesti' sayilir —
+    # geriye donuk insan onayi beklemek anlamsiz olurdu.
+    ("calls: gecmis puanlar kesinlesmis sayilir",
+     "UPDATE calls SET qa_state='kesinlesti' "
+     "WHERE status='done' AND qa_state='ai_puanlandi' AND finalized_at IS NULL "
+     "  AND created_at < NOW() - INTERVAL '1 hour'"),
     ("alerts.is_stale",
      "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS is_stale BOOLEAN NOT NULL DEFAULT FALSE"),
     ("ix_alerts_is_stale",

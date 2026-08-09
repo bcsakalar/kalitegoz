@@ -15,6 +15,7 @@ from ..models import (
     AppealStatus,
     Call,
     CoachingTask,
+    QAState,
     Role,
     Score,
     TaskStatus,
@@ -30,7 +31,7 @@ from ..schemas import (
     CoachingTaskOut,
     ScoreOverride,
 )
-from ..services import audit
+from ..services import audit, qa_workflow
 
 router = APIRouter(prefix="/api/v1", tags=["workflow"])
 
@@ -84,6 +85,37 @@ def override_score(score_id: int, body: ScoreOverride, request: Request,
               ip=request.client.host if request.client else "")
 
 
+
+def _record_appeal_as_calibration(db: Session, call, appeal, user_id: int) -> None:
+    """Kabul edilen itirazi kalibrasyon ornegi olarak kaydet.
+
+    Temsilci hakli cikti ise sistem (AI ya da kaliteci) yanilmis demektir; bu,
+    prompt'a beslenecek en degerli sinyallerden biridir. En dusuk puanli kriter
+    ornek olarak alinir — itirazin muhtemel konusu odur.
+    """
+    from ..models import Score, Segment
+    from ..services import review_feedback
+
+    dusuk = (
+        db.query(Score)
+        .filter(Score.call_id == call.id, Score.score.isnot(None))
+        .order_by(Score.score.asc())
+        .first()
+    )
+    if dusuk is None or dusuk.criterion_id is None:
+        return
+    segs = db.query(Segment).filter(Segment.call_id == call.id).order_by(Segment.idx).all()
+    excerpt = " ".join(g.text for g in segs)[: review_feedback.EXCERPT_CHARS]
+    hedef = min(10, (dusuk.override_score or dusuk.score or 0) + 2)
+    review_feedback.record_correction(
+        db, tenant_id=call.tenant_id, criterion_id=dusuk.criterion_id,
+        call_id=call.id, excerpt=excerpt, ai_score=dusuk.score,
+        human_score=hedef, reason_code="baglam_kacirildi",
+        note=f"Temsilci itirazi kabul edildi: {appeal.reason[:200]}",
+        user_id=user_id,
+    )
+
+
 # =====================================================================
 # Itiraz akisi (temsilci acar, kalite uzmani karara baglar)
 # =====================================================================
@@ -103,6 +135,9 @@ def create_appeal(body: AppealCreate, db: Session = Depends(get_db),
     appeal = Appeal(tenant_id=user.tenant_id, call_id=body.call_id,
                     created_by=user.id, reason=body.reason)
     db.add(appeal)
+    # FAZ 3.1: itiraz kesinlesmis bir puani bile yeniden acar; cagri
+    # `itiraz_incelemede` durumuna gecer ve karneye ham puan olarak SAYILMAZ.
+    qa_workflow.open_appeal(db, call, user_id=user.id, reason=body.reason)
     db.commit()
     db.refresh(appeal)
     return appeal
@@ -135,6 +170,16 @@ def resolve_appeal(appeal_id: int, body: AppealResolve, request: Request,
     appeal.resolution_note = body.resolution_note
     appeal.resolver_id = user.id
     appeal.resolved_at = datetime.utcnow()
+
+    call = db.get(Call, appeal.call_id)
+    if call is not None:
+        # Kabul edilen itiraz KALIBRASYON VERISIDIR: puan yanlisti demektir.
+        if body.decision == "accepted":
+            _record_appeal_as_calibration(db, call, appeal, user.id)
+        qa_workflow.transition(
+            db, call, QAState.final, user_id=user.id, reason="itiraz_sonuclandi",
+            detail={"karar": body.decision, "appeal_id": appeal.id},
+        )
     db.commit()
     db.refresh(appeal)
     audit.log(db, action="resolve_appeal", tenant_id=user.tenant_id, user_id=user.id,

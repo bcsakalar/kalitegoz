@@ -24,6 +24,7 @@ from .api import (
     knowledge,
     notifications,
     review,
+    review_queue,
     selfservice,
     targets,
     vision_assist,
@@ -163,6 +164,7 @@ app.include_router(supervisor.router)
 app.include_router(reports.router)
 app.include_router(events.router)
 app.include_router(review.router)
+app.include_router(review_queue.router)
 app.include_router(analytics.router)
 app.include_router(selfservice.router)
 app.include_router(vision_assist.router)

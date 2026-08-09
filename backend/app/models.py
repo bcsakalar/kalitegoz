@@ -69,11 +69,55 @@ class ReviewStatus(str, enum.Enum):
 
 
 class ReviewReason(str, enum.Enum):
-    """Bir cagri neden manuel incelemeye alindi?"""
-    random = "random"                # rastgele ornekleme (kalite guvence)
-    low_confidence = "low_confidence"  # AI dusuk guvenli (duygu-sonuc uyumsuzlugu)
-    critical = "critical"            # kritik/sifirlayici ihlal — insan teyidi
-    manual = "manual"                # yonetici elle sectiyle
+    """Bir cagri neden manuel incelemeye alindi? (FAZ 3.2 kuyruk kurallari)"""
+    critical = "critical"                  # 1. sifirlayici ihlal — HER ZAMAN
+    crisis = "crisis"                      # 2. kriz sinyali — HER ZAMAN
+    low_confidence = "low_confidence"      # 3. guven < 0.70 veya yetersiz kanit
+    low_score = "low_score"                # 4. toplam puan alt %10 diliminde
+    emotion_mismatch = "emotion_mismatch"  # 5. duygu <-> puan uyumsuzlugu
+    random = "random"                      # 6. rastgele ornek (kor kontrol grubu)
+    new_agent = "new_agent"                # 7. yeni temsilci (ilk 30 gun)
+    manual = "manual"                      # yonetici elle sectiyle
+
+
+class QAState(str, enum.Enum):
+    """Kalite kontrol durum makinesi (FAZ 3.1).
+
+    Cagrinin ISLEME durumundan (CallStatus) AYRIDIR: CallStatus "ses cozuldu mu,
+    puanlandi mi" sorusunu; QAState "bu puan gecerli mi, insan onayladi mi"
+    sorusunu cevaplar.
+
+        ai_puanlandi
+          |-- risk kurali tetiklenmedi --> kesinlesti
+          `-- risk kurali tetiklendi   --> insan_kuyrugunda
+                                             |-- onaylandi/duzeltildi --> kesinlesti
+                                             `-- temsilci itirazi -----> itiraz_incelemede
+                                                                            `--> kesinlesti
+
+    KESINLESMEYEN puan temsilci karnesinde ve liderlik tablosunda HAM PUAN
+    OLARAK SAYILMAZ (ayri gosterilir: "onay bekliyor").
+    """
+
+    ai_scored = "ai_puanlandi"
+    human_queue = "insan_kuyrugunda"
+    appeal_review = "itiraz_incelemede"
+    final = "kesinlesti"
+
+
+class OverrideReasonCode(str, enum.Enum):
+    """Kaliteci bir puani neden duzeltti? Sabit liste — serbest metin YERINE.
+
+    Sabit kod sarttir: kalibrasyon analizi "hangi sebeple ne kadar duzeltiliyor"
+    sorusunu ancak sayilabilir bir alanla cevaplayabilir. Serbest not AYRICA
+    tutulur.
+    """
+
+    kanit_yanlis = "kanit_yanlis"                      # gosterilen kanit hatali
+    baglam_kacirildi = "baglam_kacirildi"              # cagrinin baglami atlandi
+    kriter_yanlis_yorumlandi = "kriter_yanlis_yorumlandi"
+    stt_hatasi = "stt_hatasi"                          # transkript hatali
+    rubrik_mugak = "rubrik_mugak"                      # kriter tanimi net degil
+    diger = "diger"
 
 
 class AlertType(str, enum.Enum):
@@ -252,6 +296,26 @@ class Call(Base):
     zeroing_criterion_id: Mapped[int | None] = mapped_column(
         ForeignKey("criteria.id", ondelete="SET NULL"), nullable=True
     )
+    # --- FAZ 3: iki asamali kalite kontrol ---
+    # values_callable ZORUNLU: SQLAlchemy varsayilan olarak enum'un ADINI yazar
+    # ("final"), ama migration ve API enum DEGERINI kullaniyor ("kesinlesti").
+    # Bu ikisi ayrisirsa DB'den okurken LookupError alinir — nitekim alindi.
+    qa_state: Mapped[QAState] = mapped_column(
+        SAEnum(QAState, native_enum=False, length=20,
+               values_callable=lambda e: [m.value for m in e]),
+        default=QAState.ai_scored, index=True,
+    )
+    # Hangi kuyruk kurallari tetiklendi (ReviewReason degerleri)
+    queue_reasons: Mapped[list] = mapped_column(JSON, default=list)
+    finalized_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    finalized_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+    @property
+    def score_is_final(self) -> bool:
+        """Puan liderlik tablosuna ve karneye girebilir mi?"""
+        return self.qa_state == QAState.final
     is_crisis: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     predicted_csat: Mapped[float | None] = mapped_column(Float, nullable=True)  # 1-5 LLM tahmini
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -394,6 +458,14 @@ class Score(Base):
     # Insan override (kalite uzmani AI puanini degistirebilir)
     override_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     override_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # FAZ 3: sabit gerekce kodu — kalibrasyon analizi serbest metni sayamaz
+    override_reason_code: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # Kaliteci bu kriteri ONAYLADI mi (puani degistirmeden)? Onay da veridir:
+    # overturn orani = duzeltilen / INCELENEN; onaysiz paydayi bilemeyiz.
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    reviewed_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     overridden_by: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -474,6 +546,48 @@ class Appeal(Base):
     resolution_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class CalibrationExample(Base):
+    """Kaliteci duzeltmesinden ogrenilen ornek (FAZ 3.4 geri besleme dongusu).
+
+    Her duzeltme buraya yazilir. Bir kriterde yeterli ornek birikince o kriterin
+    Katman B prompt'una **few-shot ornek** olarak enjekte edilir.
+
+    ONEMLI — ne YAPILMAZ: duzeltmeler gizlice agirliklara islenip gecmis puanlar
+    geriye donuk degistirilmez. Rubrik DEGISMEZ, yalnizca ornek eklenir; her
+    kalibrasyon etkisi surumlenir (`prompt_version`) ve raporlanir.
+
+    FAZ 2 olcumu, kappa acikinin tamamen dort oznel kriterde toplandigini
+    gosterdi (Aktif Dinleme +0.86, Ihtiyac +0.73, Cozum +0.73 sapma). Bu tablo
+    o acigin kapatilma mekanizmasidir.
+    """
+
+    __tablename__ = "calibration_examples"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id", ondelete="CASCADE"), index=True
+    )
+    criterion_id: Mapped[int] = mapped_column(
+        ForeignKey("criteria.id", ondelete="CASCADE"), index=True
+    )
+    call_id: Mapped[int | None] = mapped_column(
+        ForeignKey("calls.id", ondelete="SET NULL"), nullable=True
+    )
+    # Prompt'a girecek kisa transkript parcasi (tam cagri degil — token bütçesi)
+    excerpt: Mapped[str] = mapped_column(Text, default="")
+    ai_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    human_score: Mapped[int] = mapped_column(Integer)
+    reason_code: Mapped[str] = mapped_column(String(32), default="diger")
+    note: Mapped[str] = mapped_column(Text, default="")
+    created_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    # Kalibrasyon yoneticisi bir ornegi devre disi birakabilir (hatali ornek
+    # prompt'u zehirler); silmek yerine pasiflestirilir — denetim izi kalir.
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
 
 
 class CoachingTask(Base):

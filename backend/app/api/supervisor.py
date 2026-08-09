@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..deps import CurrentUser, get_current_user, require_staff
-from ..models import Agent, Alert, Call, CallStatus, Role, Team, Violation
+from ..models import Agent, Alert, Call, CallStatus, QAState, Role, Team, Violation
 from ..schemas import LeaderboardRow, SupervisorCockpit
 
 router = APIRouter(prefix="/api/v1", tags=["supervisor"])
@@ -20,7 +20,14 @@ def _points(avg_score: float, call_count: int, crisis: int) -> float:
 
 
 def _leaderboard_rows(db: Session, tenant_id: int, team_id: int | None, since: datetime | None):
-    done = (Call.agent_id == Agent.id) & (Call.status == CallStatus.done)
+    # FAZ 3.1: YALNIZCA kesinlesmis puanlar sayilir. Kaliteci onayindan gecmemis
+    # bir AI puani temsilcinin performans kaydina islenmez — urunun "insan
+    # dogrular" vaadinin teknik karsiligi budur.
+    done = (
+        (Call.agent_id == Agent.id)
+        & (Call.status == CallStatus.done)
+        & (Call.qa_state == QAState.final)
+    )
     if since is not None:
         done = done & (Call.created_at >= since)
     q = (

@@ -260,3 +260,39 @@ def test_check_key_for_ad_bazli_eslesme():
         name = "Cozum / Yonlendirme"
         check_key = None
     assert det.check_key_for(D()) is None
+
+
+# =========================================================================
+# Aktif Dinleme deterministik tavani
+# =========================================================================
+
+def test_kesme_yoksa_tavan_uygulanmaz():
+    tavan, _ = det.listening_ceiling({"temsilci_kesinti": 0})
+    assert tavan is None
+
+
+def test_iki_kesme_tavani_7():
+    tavan, gerekce = det.listening_ceiling({"temsilci_kesinti": 2})
+    assert tavan == 7
+    assert "2 kez" in gerekce
+
+
+def test_dort_kesme_tavani_4():
+    tavan, _ = det.listening_ceiling({"temsilci_kesinti": 4})
+    assert tavan == 4
+
+
+def test_cok_kesme_tavani_2():
+    tavan, _ = det.listening_ceiling({"temsilci_kesinti": 9})
+    assert tavan == 2
+
+
+def test_metrik_yoksa_tavan_yok():
+    assert det.listening_ceiling(None)[0] is None
+    assert det.listening_ceiling({})[0] is None
+
+
+def test_musteri_kesmesi_tavani_ETKILEMEZ():
+    """B3'un kalici korumasi: musterinin kesmesi temsilciyi sinirlayamaz."""
+    tavan, _ = det.listening_ceiling({"temsilci_kesinti": 0, "musteri_kesinti": 9})
+    assert tavan is None

@@ -134,11 +134,16 @@ def ensure_golden_tenant(db) -> tuple[Tenant, Agent]:
     return t, a
 
 
+_ONLY: set[str] | None = None
+
+
 def load_scenarios(limit: int | None) -> list[dict]:
     out = []
     for d in sorted(p for p in GOLDEN_DIR.iterdir() if p.is_dir()):
         tr = d / "transcript.json"
         ex = d / "expected.json"
+        if _ONLY is not None and d.name not in _ONLY:
+            continue
         if tr.exists() and ex.exists():
             out.append({
                 "transcript": json.loads(tr.read_text(encoding="utf-8")),
@@ -418,8 +423,16 @@ def main() -> int:
     ap.add_argument("--repeat-n", type=int, default=3)
     ap.add_argument("--no-gate", action="store_true",
                     help="Esikleri kontrol etme (FAZ 1 taban cizgisi icin)")
+    ap.add_argument("--only", default=None,
+                    help="Yalniz bu dosyadaki senaryolari kosur (sinav altkumesi)")
     args = ap.parse_args()
 
+    if args.only:
+        import json as _json
+        sel = set(_json.loads(Path(args.only).read_text(encoding='utf-8'))['sinav'])
+        global _ONLY
+        _ONLY = sel
+        print(f'Yalniz sinav altkumesi: {len(sel)} senaryo')
     report = evaluate(args.limit, args.repeat_n)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)

@@ -11,7 +11,7 @@ from datetime import datetime
 
 from ..config import settings
 from ..db import SessionLocal
-from ..models import Alert, Call, CallStatus, Segment
+from ..models import Alert, AlertType, Call, CallStatus, Segment, Tenant
 from ..services import (
     acoustics,
     audio,
@@ -19,6 +19,7 @@ from ..services import (
     events,
     metrics,
     notifications,
+    qa_workflow,
     scoring,
     webhooks,
 )
@@ -45,7 +46,25 @@ def _save_transcript_file(call: Call, segments: list[dict]) -> None:
 
 
 def _apply_outcome(db, call: Call, outcome: ScoringOutcome) -> None:
-    """Puanlama sonucundan alarm kayitlari olustur ve webhook/canli yayin tetikle."""
+    """Puanlama sonucundan alarm kayitlari olustur ve webhook/canli yayin tetikle.
+
+    Ayrica cagriyi FAZ 3 durum makinesine sokar: risk kurallari tetiklendiyse
+    insan kuyruguna, tetiklenmediyse dogrudan `kesinlesti`ye gider.
+    """
+    # Kuyruk yonlendirmesi alarm uretiminden ONCE: kuyruga dusen cagri icin
+    # ayrica bilgilendirme alarmi eklenir.
+    try:
+        tenant = db.get(Tenant, call.tenant_id)
+        decision = qa_workflow.route_after_scoring(db, call, tenant=tenant)
+        if decision.should_queue:
+            outcome.alerts.append((
+                AlertType.low_score, "dusuk",
+                "Kalite uzmani onayi bekliyor — tetiklenen kural: "
+                + ", ".join(decision.reasons),
+            ))
+    except Exception as exc:  # noqa: BLE001 — yonlendirme puanlamayi dusurmez
+        logger.warning("QA yonlendirmesi basarisiz (call %s): %s", call.id, exc)
+
     team_id = call.agent.team_id if call.agent else None
     rows = [
         Alert(
