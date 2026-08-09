@@ -210,6 +210,22 @@ Aynı 50 senaryo, aynı prompt, aynı doğrulama. Tek fark: dört öznel kriter
 Bu bir tesadüf değil, yönlendirmenin doğru çalıştığının kanıtı: büyük model
 yalnızca öznel kriterlere dokundu.
 
+**Karşılaştırmanın temizliği — bir düzeltme:** İlk hesapta 7B tarafı için
+0.146 (yönlendirme kodu eklenmeden önceki koşum) kullanılmıştı. Sonradan
+ölçüldü ki grup bileşimindeki değişiklik tek başına 7B'yi **0.146 → 0.124**'e
+çekiyor (bkz. B34). Yani iki koşumu *aynı gruplama altında* kıyaslarsak:
+
+| | öznel kappa |
+|---|---|
+| 7B, ayrılmış gruplama | 0.124 |
+| 14B, ayrılmış gruplama | **0.328** |
+| **Yalnızca modele atfedilebilen fark** | **+0.204** |
+
+İlk rapor edilen +0.182, modelin katkısını **eksik** gösteriyordu; gerçek
+katkı biraz daha büyük. Gruplama değişikliği ise düzeltildi ve varsayılan
+yol eski davranışına döndürüldü.
+
+
 **Cevap: tavan hem modelden hem metodolojiden geliyor — ama bu ölçüm ikisini
 ayırdı.**
 

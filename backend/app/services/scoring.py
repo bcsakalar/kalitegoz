@@ -409,11 +409,19 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
         if _oznel_model:
             logger.info("Oznel kriter yonlendirmesi ACIK: %s", _oznel_model)
 
-        def _model_for(group: list[Criterion]) -> str | None:
-            if not _oznel_model:
-                return None
-            return _oznel_model if any(
-                model_routing.is_subjective(c.name) for c in group) else None
+        # Yonlendirme KAPALIYSA hic fonksiyon gecilmez.
+        #
+        # Bu ayrinti olculerek ogrenildi: `evaluate_all`, `model_for` None
+        # degilse kriterleri gruplamadan ONCE oznel/nesnel diye ayiriyor.
+        # Her zaman bir fonksiyon gecmek, yonlendirmeyi kullanmayan
+        # kurulumlarda da grup bilesimini degistiriyordu — altin sette oznel
+        # kappa 0.146'dan 0.124'e DUSTU. Opt-in bir ozellik, varsayilan yolu
+        # degistirmemeli.
+        _model_for = None
+        if _oznel_model:
+            def _model_for(group: list[Criterion]) -> str | None:  # noqa: F811
+                return _oznel_model if any(
+                    model_routing.is_subjective(c.name) for c in group) else None
 
         decisions.extend(_evaluate_llm_criteria(
             llm_criteria, segments, hint, _few_shot, _model_for))

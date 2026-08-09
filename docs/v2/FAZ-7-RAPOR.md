@@ -199,6 +199,22 @@ Aynı 50 senaryo, aynı prompt, aynı doğrulama. Tek fark: dört öznel kriter
 Yönlendirmenin doğru çalıştığının en temiz kanıtı bu: büyük model yalnızca
 öznel kriterlere dokundu, geri kalanı hiç görmedi.
 
+**Karşılaştırmanın temizliği — bir düzeltme:** İlk hesapta 7B tarafı için
+0.146 (yönlendirme kodu eklenmeden önceki koşum) kullanılmıştı. Sonradan
+ölçüldü ki grup bileşimindeki değişiklik tek başına 7B'yi **0.146 → 0.124**'e
+çekiyor (bkz. B34). Yani iki koşumu *aynı gruplama altında* kıyaslarsak:
+
+| | öznel kappa |
+|---|---|
+| 7B, ayrılmış gruplama | 0.124 |
+| 14B, ayrılmış gruplama | **0.328** |
+| **Yalnızca modele atfedilebilen fark** | **+0.204** |
+
+İlk rapor edilen +0.182, modelin katkısını **eksik** gösteriyordu; gerçek
+katkı biraz daha büyük. Gruplama değişikliği ise düzeltildi ve varsayılan
+yol eski davranışına döndürüldü.
+
+
 ### Cevap: ikisi de — ama artık ayrıştırılmış halde
 
 **Model payı gerçek ve büyük.** Öznel uyum 2.2 katına çıktı. Önceki üç deneme
@@ -265,3 +281,44 @@ Ayrıca `KALITE-METODOLOJISI.md` §4.1'de "nesnel kriterlerde kappa 0.94–1.00"
 yazıyordu — bu **kendi §4 tablomla çelişiyordu** (Script Uyumu 0.10 orada
 zaten yazılıydı). Düzeltildi; tablo tam koşum değerleriyle yenilendi ve iki
 farklı düşük-kappa sebebi (tanım sorunu / yargı sorunu) ayrıldı.
+
+---
+
+## 9. Üçüncü hata — opt-in özellik varsayılan yolu bozdu
+
+Son `make eval` koşumunda öznel kappa **0.146 → 0.124** düşmüştü. Aynı model,
+aynı prompt, aynı senaryolar. Yönlendirme kapalıydı — yani hiçbir şeyin
+değişmemesi gerekiyordu.
+
+**Kök neden:** `evaluate_all`, `model_for` parametresi `None` *değilse*
+kriterleri gruplamadan önce öznel/nesnel diye ayırıyor. `scoring.py` ise
+**her zaman** bir fonksiyon geçiyordu:
+
+```python
+def _model_for(group):
+    if not _oznel_model:
+        return None          # ← "kapalıysa yönlendirme yok" mantığı BURADA
+    ...
+decisions.extend(_evaluate_llm_criteria(..., _model_for))   # ← ama fonksiyon
+                                                            #   yine de geçildi
+```
+
+Mantık doğruydu; **yanlış olan, mantığın nerede değerlendirildiğiydi.**
+`model_for is not None` her zaman doğru olduğu için ayırma her koşumda
+çalıştı ve grup bileşimi değişti. Kriterler 3'lü gruplar halinde
+değerlendirildiğinden, grup bileşimi modelin gördüğü bağlamı değiştirir —
+ve sonucu.
+
+Yani **yönlendirmeyi hiç kullanmayan bir kurulum bile** bu değişiklikten
+etkilenirdi. Opt-in bir özellik varsayılan davranışı değiştirmemeli.
+
+**Düzeltme:** Yönlendirme kapalıysa fonksiyon hiç geçilmiyor (`_model_for = None`).
+
+**Regresyon:** `test_model_routing.py::test_yonlendirme_KAPALIYKEN_gruplama_degismez`
+— gruplamanın, yönlendirme eklenmeden önceki `group_criteria(criteria)`
+çıktısıyla **birebir aynı** olduğunu doğruluyor.
+
+**Bu hata neden gözle bulunamazdı:** Kod okununca doğru görünüyor. Hatayı
+yakalayan şey ölçümdü — iki koşum arasında açıklanamayan 0.022'lik bir fark.
+Ölçmeseydim, "yönlendirme eklendi, varsayılan değişmedi" diye rapor edecektim
+ve yanlış olacaktı.

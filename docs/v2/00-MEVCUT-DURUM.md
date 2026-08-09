@@ -250,6 +250,7 @@ puanlandı → uyarı yok, görev 40.8 sn'de başarılı, puan 93.3.
 
 | # | Bulgu | Kanıt |
 |---|---|---|
+| **B34** | **Opt-in model yönlendirmesi, kapalıyken bile gruplamayı değiştiriyor.** `scoring.py` `evaluate_all`'a her zaman bir `model_for` fonksiyonu geçiyor; `evaluate_all` ise `model_for is not None` ise kriterleri gruplamadan önce ayırıyor. Sonuç: yönlendirmeyi kullanmayan kurulumlarda da grup bileşimi değişti — altın sette öznel kappa **0.146 → 0.124**. | `scoring.py:412`, `scoring_layers.py:253` |
 | **B33** | **Temsilci karnesi onaylanmamış AI puanını sayıyor.** `/api/v1/agents` yalnız `status == done` filtreliyor, `qa_state`'e hiç bakmıyor. Kaliteci onaylamamışken inceleme kuyruğunda bekleyen çağrının AI puanı temsilcinin ortalamasına giriyor. Ürünün "AI önerir, insan onaylar" vaadiyle çelişiyor; üstelik `Call.score_is_final` özelliği bu kuralı zaten *yazmış* ama hiçbir yerde uygulanmamış. | `agents.py:94,136` vs. `models.py:328` |
 
 **Nasıl bulundu:** S15 sorusunu ("kaliteci onayı olmadan puan temsilciye
@@ -274,6 +275,7 @@ Bunların hepsi FAZ 1 regresyon setine dahil edildi ve B1–B6 ile aynı statüd
 | B31 | `test_b31_yeniden_puanlama_eski_alarmlari_gecersizler` | entegrasyon | 🔴 xfail |
 | B32 | `data/golden/reg-b32-kvkk-yok-sifirlanmali` | altın set | 🔴 |
 | B33 | `test_agent_scorecard_final.py` (3 vaka) | entegrasyon | 🟢 düzeltildi |
+| B34 | `test_model_routing.py::test_yonlendirme_KAPALIYKEN_gruplama_degismez` | birim test | 🟢 düzeltildi |
 
 `xfail(strict=True)` kullanıldı: hata düzeltilince test "beklenmedik şekilde geçti"
 diye takımı kırar ve işaretçiyi kaldırmaya zorlar — düzeltme sessizce atlanamaz.
