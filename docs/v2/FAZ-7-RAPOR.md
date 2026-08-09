@@ -199,21 +199,6 @@ Aynı 50 senaryo, aynı prompt, aynı doğrulama. Tek fark: dört öznel kriter
 Yönlendirmenin doğru çalıştığının en temiz kanıtı bu: büyük model yalnızca
 öznel kriterlere dokundu, geri kalanı hiç görmedi.
 
-**Karşılaştırmanın temizliği — bir düzeltme:** İlk hesapta 7B tarafı için
-0.146 (yönlendirme kodu eklenmeden önceki koşum) kullanılmıştı. Sonradan
-ölçüldü ki grup bileşimindeki değişiklik tek başına 7B'yi **0.146 → 0.124**'e
-çekiyor (bkz. B34). Yani iki koşumu *aynı gruplama altında* kıyaslarsak:
-
-| | öznel kappa |
-|---|---|
-| 7B, ayrılmış gruplama | 0.124 |
-| 14B, ayrılmış gruplama | **0.328** |
-| **Yalnızca modele atfedilebilen fark** | **+0.204** |
-
-İlk rapor edilen +0.182, modelin katkısını **eksik** gösteriyordu; gerçek
-katkı biraz daha büyük. Gruplama değişikliği ise düzeltildi ve varsayılan
-yol eski davranışına döndürüldü.
-
 
 ### Cevap: ikisi de — ama artık ayrıştırılmış halde
 
@@ -286,9 +271,16 @@ farklı düşük-kappa sebebi (tanım sorunu / yargı sorunu) ayrıldı.
 
 ## 9. Üçüncü hata — opt-in özellik varsayılan yolu bozdu
 
-Son `make eval` koşumunda öznel kappa **0.146 → 0.124** düşmüştü. Aynı model,
-aynı prompt, aynı senaryolar. Yönlendirme kapalıydı — yani hiçbir şeyin
-değişmemesi gerekiyordu.
+Bir `make eval` koşumunda öznel kappa 0.146'dan 0.124'e düşmüş görünüyordu.
+Yönlendirme kapalıydı — hiçbir şeyin değişmemesi gerekiyordu, o yüzden koda
+baktım ve gerçek bir kusur buldum.
+
+> **Önemli düzeltme — bu sayı kanıt değildi.** Sonradan ölçüldü ki öznel
+> kriterlerde koşumdan koşuma doğal bir oynama var (§10): aynı yapılandırmanın
+> iki koşumunda Bilgi Doğruluğu 0.1945 ↔ 0.3497 arasında gitti. Yani
+> 0.146 → 0.124 farkı **gürültünün içindeydi** ve kusurun kanıtı olarak
+> gösterilemezdi. Kusur gerçek; kanıtı ise ölçüm değil, **kodun kendisi** ve
+> onu kilitleyen birim testtir.
 
 **Kök neden:** `evaluate_all`, `model_for` parametresi `None` *değilse*
 kriterleri gruplamadan önce öznel/nesnel diye ayırıyor. `scoring.py` ise
@@ -318,7 +310,76 @@ etkilenirdi. Opt-in bir özellik varsayılan davranışı değiştirmemeli.
 — gruplamanın, yönlendirme eklenmeden önceki `group_criteria(criteria)`
 çıktısıyla **birebir aynı** olduğunu doğruluyor.
 
-**Bu hata neden gözle bulunamazdı:** Kod okununca doğru görünüyor. Hatayı
-yakalayan şey ölçümdü — iki koşum arasında açıklanamayan 0.022'lik bir fark.
-Ölçmeseydim, "yönlendirme eklendi, varsayılan değişmedi" diye rapor edecektim
-ve yanlış olacaktı.
+**Ne öğrendim:** Şüpheyi bir ölçüm farkı uyandırdı, ama o fark kusuru
+*kanıtlamıyordu*. Kanıt, kodun kendisinde: `model_for is not None` her zaman
+doğru olduğu için `split_by_model` her koşumda çalışıyor — bu, ölçüme gerek
+kalmadan okunabilir ve birim testiyle kilitlenebilir bir olgu.
+
+İlk yazdığımda 0.022'lik farkı kanıt gibi sundum. Gürültü seviyesini
+ölçmeden bir farkı kanıt saymak, bu projede düzelttiğim hataların aynısı —
+sadece bu sefer kendi raporumda.
+
+---
+
+## 10. Dördüncü bulgu — öznel kappa koşumdan koşuma oynuyor
+
+B34'ü kovalarken bir şeyi ölçmem gerekti: **aynı yapılandırmanın iki koşumu
+ne kadar farklı sonuç verir?** Cevap ürünü ilgilendiriyor.
+
+Üç koşum, kriter bazında (hepsi 50 senaryo, `qwen2.5:7b-instruct`):
+
+| Kriter | Koşum A | Koşum B | 14B |
+|---|---|---|---|
+| Açılış | 1.0000 | 1.0000 | 1.0000 |
+| KVKK / Aydınlatma | 1.0000 | 1.0000 | 1.0000 |
+| Yasaklı Kelime / Üslup | 1.0000 | 1.0000 | 1.0000 |
+| Kapanış | 0.9392 | 0.9392 | 0.9392 |
+| Kimlik Doğrulama | 0.5438 | 0.5438 | 0.5438 |
+| Script Uyumu | 0.1004 | 0.1004 | 0.1004 |
+| Çözüm / Yönlendirme | 0.1972 | 0.1972 | **0.4482** |
+| Aktif Dinleme | 0.0810 | 0.0756 | **0.2259** |
+| İhtiyaç Analizi | 0.1131 | 0.0980 | **0.4623** |
+| Bilgi Doğruluğu | 0.1945 | **0.3497** | 0.1754 |
+
+**Nesnel kriterlerin altısı da üç koşumda kuruşu kuruşuna aynı.** Katman A'nın
+gerçekten deterministik olduğunun kanıtı bu — kod, sürüm ya da model
+değişse de aynı cevabı veriyor.
+
+**Öznel kriterlerde durum farklı.** Üçü küçük oynuyor (≤0.015) ama
+**Bilgi Doğruluğu tek başına 0.1945 ↔ 0.3497 arası gidiyor** — 0.155'lik bir
+oynama, hem de aynı model, aynı prompt, sıcaklık 0 ile.
+
+### Bunun iki sonucu var
+
+**1. Mevcut tekrarlanabilirlik metriği çok dar.** `tekrarlanabilirlik_std`
+üç senaryonun **toplam puanını** üç kez ölçüyor ve 0.00 çıkıyor. Doğru ama
+yetersiz: toplam puan sabitken kriter bazında oynama olabiliyor, çünkü
+sıfırlayıcı kurallar ve ağırlıklar tek tek kriterlerdeki farkı yutabiliyor.
+
+**2. Tek koşumluk kappa farkları dikkatle okunmalı.** 0.05'in altındaki bir
+fark, en azından Bilgi Doğruluğu için, gürültüden ayırt edilemez.
+
+### S2c sonucu bu ışıkta nasıl duruyor?
+
+**Sağlam kalıyor — ama artık kriter bazında konuşmak gerekiyor:**
+
+| Kriter | 7B (iki koşum) | 14B | Yorum |
+|---|---|---|---|
+| İhtiyaç Analizi | 0.113 / 0.098 | **0.462** | Fark gürültünün ~20 katı — **gerçek** |
+| Çözüm / Yönlendirme | 0.197 / 0.197 | **0.448** | 7B iki koşumda birebir aynı; fark **gerçek** |
+| Aktif Dinleme | 0.081 / 0.076 | **0.226** | Fark gürültünün ~10 katı — **gerçek** |
+| Bilgi Doğruluğu | 0.195 / 0.350 | 0.175 | **Sonuçsuz** — 7B'nin kendi oynaması 14B farkından büyük |
+
+Yani "14B öznel kriterlerde daha iyi" iddiası **dört kriterin üçü için
+ölçümle destekleniyor**; dördüncüsü için ne iyi ne kötü denebilir.
+
+Ortalama üzerinden konuşmak (0.146 → 0.328) bu ayrımı gizliyordu. Doğru
+ifade: **üç kriterde belirgin ve gürültüyü aşan bir kazanç var; Bilgi
+Doğruluğu'nda ölçüm sonuç vermiyor.**
+
+### Ne yapılmalı (yapılmadı, çünkü kapsamı aşıyor)
+
+Tekrarlanabilirlik metriği kriter seviyesine indirilmeli: aynı 50 senaryo
+2-3 kez koşulup **kriter bazında** std hesaplanmalı. Bu, koşum başına ~20
+dakika × tekrar sayısı demek; `make eval`'ın rutin koşumuna eklenmemeli,
+ayrı bir hedef (`make eval-variance`) olmalı. `docs/ROADMAP.md`'ye yazıldı.

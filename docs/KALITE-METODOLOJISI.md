@@ -210,20 +210,30 @@ Aynı 50 senaryo, aynı prompt, aynı doğrulama. Tek fark: dört öznel kriter
 Bu bir tesadüf değil, yönlendirmenin doğru çalıştığının kanıtı: büyük model
 yalnızca öznel kriterlere dokundu.
 
-**Karşılaştırmanın temizliği — bir düzeltme:** İlk hesapta 7B tarafı için
-0.146 (yönlendirme kodu eklenmeden önceki koşum) kullanılmıştı. Sonradan
-ölçüldü ki grup bileşimindeki değişiklik tek başına 7B'yi **0.146 → 0.124**'e
-çekiyor (bkz. B34). Yani iki koşumu *aynı gruplama altında* kıyaslarsak:
+### Bu farkın ne kadarı gerçek? — gürültü ölçüldü
 
-| | öznel kappa |
-|---|---|
-| 7B, ayrılmış gruplama | 0.124 |
-| 14B, ayrılmış gruplama | **0.328** |
-| **Yalnızca modele atfedilebilen fark** | **+0.204** |
+Tek koşumluk bir kappa farkı, o metriğin doğal oynamasından büyük değilse
+bir şey kanıtlamaz. Bu yüzden **aynı yapılandırma iki kez** koşuldu:
 
-İlk rapor edilen +0.182, modelin katkısını **eksik** gösteriyordu; gerçek
-katkı biraz daha büyük. Gruplama değişikliği ise düzeltildi ve varsayılan
-yol eski davranışına döndürüldü.
+| Kriter | 7B koşum A | 7B koşum B | 14B | Sonuç |
+|---|---|---|---|---|
+| İhtiyaç Analizi | 0.113 | 0.098 | **0.462** | Fark gürültünün ~20 katı — **gerçek** |
+| Çözüm / Yönlendirme | 0.197 | 0.197 | **0.448** | 7B iki koşumda birebir aynı — **gerçek** |
+| Aktif Dinleme | 0.081 | 0.076 | **0.226** | Fark gürültünün ~10 katı — **gerçek** |
+| Bilgi Doğruluğu | 0.195 | **0.350** | 0.175 | **Sonuçsuz** — 7B'nin kendi oynaması daha büyük |
+
+**Nesnel kriterlerin altısı da her üç koşumda kuruşu kuruşuna aynı çıktı.**
+Katman A'nın gerçekten deterministik olduğunun kanıtı budur.
+
+Dolayısıyla dürüst ifade şudur: **dört öznel kriterin üçünde büyük model
+belirgin ve gürültüyü aşan bir kazanç sağlıyor; dördüncüsünde (Bilgi
+Doğruluğu) ölçüm sonuç vermiyor.** Ortalama üzerinden konuşmak
+(0.146 → 0.328) bu ayrımı gizler.
+
+> **Bilinen ölçüm sınırı:** `tekrarlanabilirlik_std` metriği üç senaryonun
+> **toplam puanını** ölçer ve 0.00 çıkar. Bu doğru ama dardır — toplam puan
+> sabitken kriter bazında oynama olabiliyor. Kriter seviyesinde varyans
+> ölçümü yol haritasında.
 
 
 **Cevap: tavan hem modelden hem metodolojiden geliyor — ama bu ölçüm ikisini

@@ -250,7 +250,7 @@ puanlandı → uyarı yok, görev 40.8 sn'de başarılı, puan 93.3.
 
 | # | Bulgu | Kanıt |
 |---|---|---|
-| **B34** | **Opt-in model yönlendirmesi, kapalıyken bile gruplamayı değiştiriyor.** `scoring.py` `evaluate_all`'a her zaman bir `model_for` fonksiyonu geçiyor; `evaluate_all` ise `model_for is not None` ise kriterleri gruplamadan önce ayırıyor. Sonuç: yönlendirmeyi kullanmayan kurulumlarda da grup bileşimi değişti — altın sette öznel kappa **0.146 → 0.124**. | `scoring.py:412`, `scoring_layers.py:253` |
+| **B34** | **Opt-in model yönlendirmesi, kapalıyken bile gruplamayı değiştiriyor.** `scoring.py` `evaluate_all`'a her zaman bir `model_for` fonksiyonu geçiyor; `evaluate_all` ise `model_for is not None` ise kriterleri gruplamadan önce ayırıyor. Sonuç: yönlendirmeyi kullanmayan kurulumlarda da grup bileşimi değişti. (Şüpheyi bir kappa farkı uyandırdı ama o fark sonradan gürültü aralığında çıktı; kusurun kanıtı koddadır ve birim testle kilitlendi.) | `scoring.py:412`, `scoring_layers.py:253` |
 | **B33** | **Temsilci karnesi onaylanmamış AI puanını sayıyor.** `/api/v1/agents` yalnız `status == done` filtreliyor, `qa_state`'e hiç bakmıyor. Kaliteci onaylamamışken inceleme kuyruğunda bekleyen çağrının AI puanı temsilcinin ortalamasına giriyor. Ürünün "AI önerir, insan onaylar" vaadiyle çelişiyor; üstelik `Call.score_is_final` özelliği bu kuralı zaten *yazmış* ama hiçbir yerde uygulanmamış. | `agents.py:94,136` vs. `models.py:328` |
 
 **Nasıl bulundu:** S15 sorusunu ("kaliteci onayı olmadan puan temsilciye
