@@ -34,8 +34,9 @@ class TestTimeseries:
             _call(db, t, a, score=80, days_ago=1)  # ayni gun -> ortalama 70
             _call(db, t, a, score=90, days_ago=0)
             db.commit()
+            # B10: donus artik {noktalar, grafik_cizilebilir, tekil_deger, ...}
             ts = analytics.metric_timeseries(db, t, "score", days=7, bucket="day")
-            by_date = {r["date"]: r for r in ts}
+            by_date = {r["date"]: r for r in ts["noktalar"]}
             yday = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d")
             assert by_date[yday]["avg"] == 70.0
             assert by_date[yday]["count"] == 2
@@ -50,8 +51,11 @@ class TestTimeseries:
             _call(db, t, a, days_ago=2)
             db.commit()
             ts = analytics.metric_timeseries(db, t, "score", days=30, bucket="week")
-            assert len(ts) >= 1
-            assert all("date" in r and "avg" in r for r in ts)
+            assert len(ts["noktalar"]) >= 1
+            assert all("date" in r and "avg" in r for r in ts["noktalar"])
+            # B10: 2 nokta ile cizgi grafik cizilmez
+            assert ts["grafik_cizilebilir"] is False
+            assert ts["tekil_deger"] is not None
         finally:
             db.close()
 
@@ -68,7 +72,9 @@ class TestVoC:
             for d in (1, 3, 5, 7):
                 _call(db, t, a, category="iptal", days_ago=d)
             db.commit()
-            trends = analytics.category_trends(db, t, days=14)
+            _voc = analytics.category_trends(db, t, days=14)
+            trends = (_voc['kategoriler']['satirlar']
+                      + _voc['etiketler']['satirlar'])
             iptal = next(x for x in trends if x["kind"] == "category" and x["label"] == "iptal")
             assert iptal["recent"] == 4
             assert iptal["prior"] == 2
@@ -83,7 +89,9 @@ class TestVoC:
             _call(db, t, a, tags=["iptal-tehdidi"], days_ago=2)
             _call(db, t, a, tags=["iptal-tehdidi"], days_ago=4)
             db.commit()
-            trends = analytics.category_trends(db, t, days=14)
+            _voc = analytics.category_trends(db, t, days=14)
+            trends = (_voc['kategoriler']['satirlar']
+                      + _voc['etiketler']['satirlar'])
             intent = [x for x in trends if x["kind"] == "intent"]
             assert any(x["label"] == "iptal-tehdidi" and x["recent"] == 2 for x in intent)
         finally:

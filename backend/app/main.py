@@ -4,8 +4,10 @@ from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .api import (
     admin,
@@ -112,7 +114,7 @@ async def observability_and_rate_limit(request: Request, call_next):
         while bucket and now - bucket[0] > 60:
             bucket.popleft()
         if len(bucket) >= settings.rate_limit_per_min:
-            return JSONResponse({"detail": "Cok fazla istek, lutfen yavaslayin"}, status_code=429)
+            return JSONResponse(_hata_zarfi(429), status_code=429)
         bucket.append(now)
 
     start = time.perf_counter()
@@ -148,6 +150,61 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# =====================================================================
+# FAZ 4.3 — Standart hata zarfi
+#
+# Tum hata cevaplari ayni sekli kullanir:
+#   {"error": {"code": "...", "message_tr": "...", "details": {...}}}
+#
+# Onceden FastAPI'nin varsayilan {"detail": "..."} zarfi doniyordu; istemci
+# tarafinda her hata ayri ayri ele alinmak zorundaydi ve kullaniciya
+# gosterilecek TURKCE mesaj ile gelistirici detayi ayrilmiyordu.
+# =====================================================================
+
+_HATA_KODLARI = {
+    400: ("gecersiz_istek", "Istek gecersiz."),
+    401: ("kimlik_dogrulanamadi", "Oturumunuz sona ermis, lutfen tekrar giris yapin."),
+    403: ("yetki_yok", "Bu islem icin yetkiniz yok."),
+    404: ("bulunamadi", "Aradiginiz kayit bulunamadi."),
+    409: ("cakisma", "Bu islem mevcut durumla cakisiyor."),
+    422: ("dogrulama_hatasi", "Gonderilen veri gecerli degil."),
+    429: ("cok_fazla_istek", "Cok fazla istek gonderildi, lutfen biraz bekleyin."),
+    500: ("sunucu_hatasi", "Beklenmeyen bir hata olustu."),
+}
+
+
+def _hata_zarfi(status: int, mesaj_tr: str | None = None, details=None) -> dict:
+    kod, varsayilan = _HATA_KODLARI.get(status, ("hata", "Bir hata olustu."))
+    return {"error": {
+        "code": kod,
+        "message_tr": mesaj_tr or varsayilan,
+        "details": details or {},
+    }}
+
+
+@app.exception_handler(StarletteHTTPException)
+async def _http_hata(request: Request, exc: StarletteHTTPException):
+    # HTTPException detail'i Turkce mesaj olarak kullanilir (kodda oyle yaziliyor)
+    mesaj = exc.detail if isinstance(exc.detail, str) else None
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=_hata_zarfi(exc.status_code, mesaj),
+        headers=getattr(exc, "headers", None),
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def _dogrulama_hatasi(request: Request, exc: RequestValidationError):
+    alanlar = [
+        {"alan": ".".join(str(x) for x in e.get("loc", [])[1:]), "sorun": e.get("msg", "")}
+        for e in exc.errors()[:10]
+    ]
+    return JSONResponse(
+        status_code=422,
+        content=_hata_zarfi(422, details={"alanlar": alanlar}),
+    )
 
 
 app.include_router(auth.router)

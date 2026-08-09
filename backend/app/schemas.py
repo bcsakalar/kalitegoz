@@ -895,11 +895,14 @@ class EmergingTopic(BaseModel):
 class CorrelationInsight(BaseModel):
     factor: str
     label: str
-    corr: float           # -1..1 Pearson
+    # B8: n<30 ise katsayi GOSTERILMEZ -> None. Arayuz sayi yerine `insight`
+    # metnini gosterir ("egilim gozlemi, henuz anlamli degil").
+    corr: float | None = None
     n: int
-    direction: str        # positive | negative
-    strength: str         # zayif | orta | guclu
+    direction: str        # positive | negative | unknown
+    strength: str         # zayif | orta | guclu | belirsiz
     insight: str
+    significant: bool = True
 
 
 class ExecSummary(BaseModel):
@@ -1309,6 +1312,10 @@ class LeaderboardRow(BaseModel):
     call_count: int
     crisis_handled: int
     points: float
+    # B7: az orneklemli temsilci siralamada yildizli gosterilir ve ust siralara
+    # cikamaz. 5 cagrida 95 tutan, 200 cagrida 91 tutandan iyi DEGILDIR.
+    ranked: bool = True
+    sample_warning: str = ""
 
 
 class AgentScorecard(BaseModel):
@@ -1395,12 +1402,17 @@ class CoachingEffect(BaseModel):
 
 
 class CoachingEffectivenessOut(BaseModel):
+    # B13: "olculemedi" ile "sonuc kotu" ayri seylerdir. Olculemiyorsa sayi
+    # yerine None doner ve arayuz `aciklama`yi gosterir.
+    olculebilir: bool = False
+    aciklama: str = ""
     measurable_count: int
     total_completed: int
-    improved_count: int
-    improved_rate: float
-    avg_delta: float
+    improved_count: int | None = None
+    improved_rate: float | None = None
+    avg_delta: float | None = None
     window_days: int
+    min_calls: int = 3
     effects: list[CoachingEffect]
 
 
@@ -1561,6 +1573,9 @@ class ScorecardSaveRequest(BaseModel):
 
 
 class RoiInputs(BaseModel):
+    # B14: lisans maliyeti girdiye eklendi — onsuz "geri odeme suresi"
+    # hesaplanamaz ve ROI ekrani yarim kalir.
+    platform_monthly_cost: float = Field(default=0.0, ge=0)
     agents: int = Field(default=50, ge=1)
     calls_per_agent_day: int = Field(default=40, ge=1)
     minutes_per_manual_review: int = Field(default=8, ge=1)
@@ -1581,6 +1596,13 @@ class RoiResult(BaseModel):
     est_monthly_saving: float
     est_annual_saving: float
     payback_note: str
+    # B14: ekranin gostermesi gereken somut sonuclar
+    payback_months: float | None = None
+    # hesaplanabilir | maliyet_girilmedi | maliyet_tasarrufuyla_amorti_olmaz
+    payback_durumu: str = "maliyet_girilmedi"
+    net_monthly_benefit: float = 0.0
+    coverage_gain_pct: float = 0.0           # %3 -> %100 farki
+    formuller: list[dict] = []               # formuller ekranda ACIK olmali
 
 
 class BrandingOut(BaseModel):

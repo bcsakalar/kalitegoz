@@ -201,3 +201,37 @@ konumlandırma kararıdır, teknik değil.
 **Gerekçe:** İlk uygulamada yeni temsilci oranı genel oranın yerine geçiyordu;
 kiracı %50 ayarlasa bile yeni temsilciler %20'ye düşüyordu — "daha sıkı takip"
 ayarı yeni temsilciyi daha az denetler hale getiriyordu. Test ile kilitlendi.
+
+---
+
+## FAZ 4 — Backend sağlamlaştırma
+
+### S12. Şifreleme ve SSO ne zaman açılacak? 🟡
+
+**Varsayım:** Kod hazır, yapılandırma müşteri kurulumuna ait. Güvenlik sayfası
+ikisini de "kapalı" gösteriyor ve nasıl açılacağını yazıyor.
+
+**Gerekçe:** Ana anahtar (`KG_MASTER_KEY`) ve OIDC istemci bilgileri kuruma
+özeldir; depoya ya da `.env`'e gömülemez. Kapalıyken sessizce "açık" demek
+güvenlik sayfasını yalancı yapardı — B25'in kökeni tam olarak buydu.
+
+**Rio'nun yapması gereken:** Demo/satış öncesi:
+1. `KG_MASTER_KEY` — en az 32 karakter, `.env` DIŞINDA (Docker secret önerilir)
+2. `OIDC_ISSUER` / `OIDC_CLIENT_ID` / `OIDC_CLIENT_SECRET` — Keycloak ile
+   yerel test edilebilir
+
+İkisi de kurumsal ihalelerde blocker maddedir.
+
+---
+
+### S13. Mevcut veriye geriye dönük şifreleme yapılsın mı? 🟡
+
+**Varsayım:** Hayır. Şifreleme yeni yazılan veriler için devreye girer; mevcut
+düz veriler okunmaya devam eder (biçim öneki sayesinde ikisi bir arada yaşar).
+
+**Gerekçe:** Geriye dönük şifreleme, tüm ses dosyalarını ve transkriptleri
+yeniden yazan bir migrasyondur; kesinti ve veri kaybı riski taşır. Planlı
+bakım penceresinde yapılmalıdır.
+
+**Rio'nun yapması gereken:** KVKK denetimi mevcut kayıtların da şifreli
+olmasını gerektiriyorsa ayrı bir migrasyon planlanmalı.

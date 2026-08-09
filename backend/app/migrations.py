@@ -134,6 +134,50 @@ _STATEMENTS: list[tuple[str, str]] = [
      "UPDATE calls SET qa_state='kesinlesti' "
      "WHERE status='done' AND qa_state='ai_puanlandi' AND finalized_at IS NULL "
      "  AND created_at < NOW() - INTERVAL '1 hour'"),
+    # --- FAZ 4.3: idempotent isleme ---
+    ("calls.audio_hash",
+     "ALTER TABLE calls ADD COLUMN IF NOT EXISTS audio_hash VARCHAR(64)"),
+    ("ix_calls_audio_hash",
+     "CREATE INDEX IF NOT EXISTS ix_calls_audio_hash ON calls (audio_hash)"),
+    # --- FAZ 4.2: alarm motoru (B4 sablon, B12 dedup) ---
+    ("alerts.title_tr",
+     "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS title_tr VARCHAR(200) NOT NULL DEFAULT ''"),
+    ("alerts.explanation_tr",
+     "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS explanation_tr TEXT NOT NULL DEFAULT ''"),
+    ("alerts.evidence_quote",
+     "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS evidence_quote TEXT NOT NULL DEFAULT ''"),
+    ("alerts.evidence_timestamp",
+     "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS evidence_timestamp DOUBLE PRECISION"),
+    ("alerts.suggested_action_tr",
+     "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS suggested_action_tr TEXT NOT NULL DEFAULT ''"),
+    ("alerts.rule_id",
+     "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS rule_id VARCHAR(64) NOT NULL DEFAULT ''"),
+    ("alerts.evidence_hash",
+     "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS evidence_hash VARCHAR(40) NOT NULL DEFAULT ''"),
+    ("alerts.occurrence_count",
+     "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS occurrence_count INTEGER NOT NULL DEFAULT 1"),
+    ("alerts.lifecycle",
+     "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS lifecycle VARCHAR(24) NOT NULL DEFAULT 'yeni'"),
+    ("alerts.lifecycle_note",
+     "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS lifecycle_note TEXT NOT NULL DEFAULT ''"),
+    ("ix_alerts_rule_id",
+     "CREATE INDEX IF NOT EXISTS ix_alerts_rule_id ON alerts (rule_id)"),
+    ("ix_alerts_lifecycle",
+     "CREATE INDEX IF NOT EXISTS ix_alerts_lifecycle ON alerts (lifecycle)"),
+    # B12: mevcut kopyalari temizle (en dusuk id kalir, sayac guncellenir)
+    ("alerts kopya temizligi (B12)",
+     "WITH d AS (SELECT call_id, rule_id, evidence_hash, MIN(id) AS tut, COUNT(*) AS n "
+     "           FROM alerts WHERE call_id IS NOT NULL GROUP BY 1,2,3 HAVING COUNT(*) > 1) "
+     "UPDATE alerts a SET occurrence_count = d.n FROM d "
+     "WHERE a.id = d.tut"),
+    ("alerts kopya silme (B12)",
+     "DELETE FROM alerts a USING alerts b "
+     "WHERE a.call_id = b.call_id AND a.rule_id = b.rule_id "
+     "  AND a.evidence_hash = b.evidence_hash AND a.call_id IS NOT NULL AND a.id > b.id"),
+    ("uq_alerts_dedup",
+     "CREATE UNIQUE INDEX IF NOT EXISTS uq_alerts_dedup "
+     "ON alerts (call_id, rule_id, evidence_hash) "
+     "WHERE call_id IS NOT NULL AND is_stale = FALSE"),
     ("alerts.is_stale",
      "ALTER TABLE alerts ADD COLUMN IF NOT EXISTS is_stale BOOLEAN NOT NULL DEFAULT FALSE"),
     ("ix_alerts_is_stale",

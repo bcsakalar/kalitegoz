@@ -47,6 +47,8 @@ def list_alerts(only_unread: bool = False, db: Session = Depends(get_db),
         q = q.filter((Alert.team_id == user.team_id) | (Alert.team_id.is_(None)))
     if only_unread:
         q = q.filter(Alert.is_read.is_(False))
+    # Gecersizlesen alarmlar (yeniden puanlama sonrasi) kullaniciya GOSTERILMEZ
+    q = q.filter(Alert.is_stale.is_(False))
     return q.order_by(Alert.created_at.desc()).limit(200).all()
 
 

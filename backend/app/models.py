@@ -296,6 +296,17 @@ class Call(Base):
     zeroing_criterion_id: Mapped[int | None] = mapped_column(
         ForeignKey("criteria.id", ondelete="SET NULL"), nullable=True
     )
+    # --- FAZ 4.3: veri modeli ---
+    # Insan-okur kisa referans (#0024). Dosya adi BIRINCIL KIMLIK OLMAKTAN CIKAR:
+    # "deniz.yildiz_sikayet_05_v2.wav" bir kimlik degil, bir dosya adidir.
+    @property
+    def ref(self) -> str:
+        return f"#{self.id:04d}"
+
+    # Idempotent isleme: ayni ses dosyasi iki kez yuklenirse hash ile tespit
+    # edilir ve TEKRAR ISLENMEZ (LLM/STT maliyeti bosa gitmez).
+    audio_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+
     # --- FAZ 3: iki asamali kalite kontrol ---
     # values_callable ZORUNLU: SQLAlchemy varsayilan olarak enum'un ADINI yazar
     # ("final"), ama migration ve API enum DEGERINI kullaniyor ("kesinlesti").
@@ -625,6 +636,24 @@ class Alert(Base):
     type: Mapped[AlertType] = mapped_column(SAEnum(AlertType, native_enum=False, length=16))
     severity: Mapped[str] = mapped_column(String(16), default="orta")
     message: Mapped[str] = mapped_column(Text)
+    # --- FAZ 4.2: alarm sablonunun ZORUNLU alanlari (B4) ---
+    # Sablon motoru bu alanlari doldurmadan alarm uretemez; onceden alarm
+    # metni tek bir serbest string'ti ve "tespit edilen ifade" ile "gosterilen
+    # alinti" birbirini tutmuyordu.
+    title_tr: Mapped[str] = mapped_column(String(200), default="")
+    explanation_tr: Mapped[str] = mapped_column(Text, default="")
+    evidence_quote: Mapped[str] = mapped_column(Text, default="")
+    evidence_timestamp: Mapped[float | None] = mapped_column(Float, nullable=True)
+    suggested_action_tr: Mapped[str] = mapped_column(Text, default="")
+    # --- Dedup (B12) ---
+    # (call_id, rule_id, evidence_hash) uclusunde tekillik. Ayni ihlal ayni
+    # cagrida TEK alarm uretir; tekrarlar occurrence_count ile sayilir.
+    rule_id: Mapped[str] = mapped_column(String(64), default="", index=True)
+    evidence_hash: Mapped[str] = mapped_column(String(40), default="", index=True)
+    occurrence_count: Mapped[int] = mapped_column(Integer, default=1)
+    # --- Yasam dongusu: yeni -> okundu -> aksiyon_alindi | gecersiz_isaretlendi ---
+    lifecycle: Mapped[str] = mapped_column(String(24), default="yeni", index=True)
+    lifecycle_note: Mapped[str] = mapped_column(Text, default="")
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     # Cagri yeniden puanlandiginda onceki alarmlar GECERSIZLESIR (B31).
     # Silinmez — denetim izi ve kalibrasyon sinyali olarak saklanir, ama

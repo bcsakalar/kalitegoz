@@ -19,6 +19,7 @@ from ..services import (
     events,
     metrics,
     notifications,
+    alert_engine,
     qa_workflow,
     scoring,
     webhooks,
@@ -66,19 +67,17 @@ def _apply_outcome(db, call: Call, outcome: ScoringOutcome) -> None:
         logger.warning("QA yonlendirmesi basarisiz (call %s): %s", call.id, exc)
 
     team_id = call.agent.team_id if call.agent else None
-    rows = [
-        Alert(
-            tenant_id=call.tenant_id,
-            call_id=call.id,
-            team_id=team_id,
-            type=alert_type,
-            severity=severity,
-            message=message,
-        )
-        for alert_type, severity, message in outcome.alerts
-    ]
-    for row in rows:
-        db.add(row)
+    # B12: alarm motoru tekillestirir. Ayni ihlal ayni cagrida TEK satir uretir;
+    # tekrarlar occurrence_count artirir. Onceden her puanlama yeni satir aciyordu.
+    rows = []
+    for draft in outcome.alerts:
+        try:
+            alert, yeni = alert_engine.emit(db, call.tenant_id, team_id, draft)
+        except alert_engine.AlertTemplateError as exc:
+            logger.error("Alarm sablonu gecersiz, uretilmedi: %s", exc)
+            continue
+        if yeni:
+            rows.append(alert)
     db.commit()
 
     # Canli yayin (best-effort). Commit'ten SONRA yapilir: aksi halde WebSocket
@@ -94,23 +93,29 @@ def _apply_outcome(db, call: Call, outcome: ScoringOutcome) -> None:
             "type": row.type.value,
             "severity": row.severity,
             "message": row.message,
+            "title": row.title_tr,
+            "evidence": row.evidence_quote,
+            "suggested_action": row.suggested_action_tr,
             "is_read": False,
             "created_at": row.created_at.isoformat() if row.created_at else None,
             "agent": call.agent.name if call.agent else None,
         })
 
     # Webhook + Slack/Teams (best-effort; pipeline'i dusurmez)
-    for alert_type, severity, message in outcome.alerts:
+    for draft in outcome.alerts:
         payload = {
             "call_id": call.id,
             "tenant_id": call.tenant_id,
             "agent": call.agent.name if call.agent else None,
-            "severity": severity,
-            "message": message,
+            "severity": draft.severity,
+            "title": draft.title_tr,
+            "message": draft.explanation_tr,
+            "evidence": draft.evidence_quote,
+            "suggested_action": draft.suggested_action_tr,
             "total_score": outcome.total_score,
         }
-        webhooks.emit(alert_type.value, payload)
-        notifications.notify(alert_type.value, payload)
+        webhooks.emit(draft.type.value, payload)
+        notifications.notify(draft.type.value, payload)
 
 
 @celery_app.task(name="kalitegoz.process_call", bind=True, max_retries=MAX_RETRIES)
