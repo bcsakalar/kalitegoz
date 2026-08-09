@@ -52,7 +52,7 @@ def validate() -> list[str]:
 
         # Sifirlama beklentisi, kritik kriter beklentileriyle TUTARLI olmali.
         # (Rubrikte kritik olanlar: KVKK, Kimlik Dogrulama, Yasakli Kelime / Uslup)
-        kritik = ("KVKK / Aydinlatma", "Kimlik Dogrulama", "Yasakli Kelime / Uslup")
+        kritik = ("KVKK / Aydınlatma", "Kimlik Doğrulama", "Yasaklı Kelime / Üslup")
         esik_alti = [c for c in kritik if s.expected.scores.get(c, 10) < 3]
         if s.expected.zeroed and not esik_alti:
             errors.append(

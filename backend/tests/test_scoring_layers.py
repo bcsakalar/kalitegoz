@@ -145,7 +145,7 @@ def test_yetersiz_kanit_ASLA_sifirlamaz():
 
 
 def test_kritik_olmayan_dusuk_kriter_sifirlamaz():
-    criteria = [Crit(1, "Kapanis", is_critical=False)]
+    criteria = [Crit(1, "Kapanış", is_critical=False)]
     assert sl.decide_zeroing([_dec(1, 0)], criteria).zeroed is False
 
 
@@ -162,15 +162,15 @@ def test_gruplar_azalan_agirlikta_ve_ucerli():
 
 
 def test_kriterler_harf_kimlikle_sunulur():
-    block, mapping = sl._criteria_block([Crit(7, "Acilis"), Crit(9, "Kapanis")])
-    assert "[A] Acilis" in block
-    assert "[B] Kapanis" in block
+    block, mapping = sl._criteria_block([Crit(7, "Açılış"), Crit(9, "Kapanış")])
+    assert "[A] Açılış" in block
+    assert "[B] Kapanış" in block
     assert mapping == {"A": 7, "B": 9}
     assert "7" not in block.split("\n")[0], "Sayisal id prompt'a sizdi"
 
 
 def test_capalar_prompt_a_girer():
-    block, _ = sl._criteria_block([Crit(1, "Acilis", anchor_10="Kurum + isim", anchor_0="Hicbiri")])
+    block, _ = sl._criteria_block([Crit(1, "Açılış", anchor_10="Kurum + isim", anchor_0="Hicbiri")])
     assert "10 PUAN: Kurum + isim" in block
     assert "0 PUAN: Hicbiri" in block
 

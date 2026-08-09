@@ -536,6 +536,7 @@ CHECK_KEYS = ("acilis", "kvkk_anons", "kimlik_dogrulama", "kapanis",
 # kolonu eklenene kadar (ve eski kiracılar için) ad bazlı eşleme yedeği.
 NAME_TO_CHECK = {
     "acilis": "acilis",
+    "açılış": "acilis",
     "kvkk / aydinlatma": "kvkk_anons",
     "kvkk / aydınlatma": "kvkk_anons",
     "kimlik dogrulama": "kimlik_dogrulama",

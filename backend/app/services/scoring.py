@@ -28,6 +28,7 @@ from . import alert_engine
 from . import alerts as alerts_svc
 from . import review_feedback
 from . import scoring_layers
+from . import tr_quality
 from .llm import generate_json
 
 logger = logging.getLogger(__name__)
@@ -295,16 +296,34 @@ SADECE su semada gecerli JSON dondur:
  "gelisim_onerisi":"...","tahmini_csat":3.5,"musteri_efor":3.0,
  "sonraki_aksiyon":"...","churn_riski":"dusuk","niyet_etiketleri":["..."],
  "riskli_anlar":[{{"zaman":45.0,"aciklama":"...","onem":"orta"}}]}}"""
+    sistem = (
+        "Sen bir cagri merkezi kalite analistisin. Yalnizca gecerli JSON "
+        "dondurursun. Turkce metinleri TAM TURKCE karakterlerle yazarsin "
+        "(c, g, i, o, s, u degil; ç, ğ, ı, İ, ö, ş, ü)."
+    )
     try:
-        return generate_json(
-            LLMCagriAnalizi,
-            "Sen bir cagri merkezi kalite analistisin. Yalnizca gecerli JSON "
-            "dondurursun. Turkce metinleri dogru Turkce karakterlerle yazarsin.",
-            prompt,
-        )
+        analiz = generate_json(LLMCagriAnalizi, sistem, prompt)
     except Exception as exc:  # noqa: BLE001 — analiz puanlamayi dusurmez
         logger.warning("Cagri analizi uretilemedi: %s", exc)
         return LLMCagriAnalizi()
+
+    # B16: AI ciktisi da Turkce kalite denetiminden GECER.
+    # Prompt'ta "Turkce yaz" demek yetmiyor; model bazen yine ASCII uretiyor
+    # ("Temsilci agir yasakli ifade kullandi"). Cikti OLCULUR ve bir kez
+    # duzeltme istenir.
+    sorunlu = tr_quality.denetle({
+        "ozet": analiz.ozet,
+        "gelisim_onerisi": analiz.gelisim_onerisi,
+        "sonraki_aksiyon": analiz.sonraki_aksiyon,
+    })
+    if sorunlu:
+        logger.info("Turkce karakter eksigi, duzeltme isteniyor: %s", sorunlu)
+        try:
+            analiz = generate_json(
+                LLMCagriAnalizi, sistem, prompt + tr_quality.duzeltme_istegi(sorunlu))
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Turkce duzeltmesi alinamadi: %s", exc)
+    return analiz
 def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
     """Cagriyi uc katmanli motorla puanla ve sonuclari DB'ye yaz.
 

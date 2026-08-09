@@ -14,15 +14,15 @@ from app.services import calibration_scale as cs
 
 
 @pytest.mark.parametrize("kriter", [
-    "KVKK / Aydinlatma", "Yasakli Kelime / Uslup", "Acilis", "Kapanis",
+    "KVKK / Aydınlatma", "Yasaklı Kelime / Üslup", "Açılış", "Kapanış",
 ])
 def test_guvenilir_kriterlerde_tavan_yok(kriter):
     assert cs.confidence_cap(kriter, "B") is None
 
 
 @pytest.mark.parametrize("kriter", [
-    "Aktif Dinleme", "Ihtiyac Analizi", "Cozum / Yonlendirme",
-    "Bilgi Dogrulugu", "Script Uyumu",
+    "Aktif Dinleme", "İhtiyaç Analizi", "Çözüm / Yönlendirme",
+    "Bilgi Doğruluğu", "Script Uyumu",
 ])
 def test_guvenilmez_kriterlerde_guven_tavanlanir(kriter):
     cap = cs.confidence_cap(kriter, "B")
