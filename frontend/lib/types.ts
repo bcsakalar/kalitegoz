@@ -610,3 +610,90 @@ export interface RoiResult {
 }
 
 export interface Branding { brand_name: string; brand_color: string; logo_data_url: string | null; }
+
+// =====================================================================
+// FAZ 3/5 — kaliteci inceleme kuyrugu
+// =====================================================================
+
+export interface ReviewCriterion {
+  score_id: number;
+  criterion_id: number | null;
+  ad: string;
+  grup: string;
+  agirlik: number;
+  ai_puani: number | null;
+  karar: string;
+  guven: number;
+  gerekce: string;
+  kanit: string;
+  kanit_saniye: number | null;
+  kanit_dogrulandi: boolean;
+  katman: string;
+  duzeltilmis_puan: number | null;
+  incelendi: boolean;
+}
+
+export interface ReviewTranscriptLine {
+  idx: number;
+  konusmaci: string;
+  saniye: number;
+  metin: string;
+}
+
+export interface ReviewCall {
+  call_id: number;
+  ref: string;
+  dosya: string;
+  temsilci: string | null;
+  toplam_puan: number | null;
+  sifirlandi: boolean;
+  sifirlama_gerekcesi: string | null;
+  sifirlama_kaniti: string | null;
+  qa_durumu: string;
+  kuyruk_sebepleri: string[];
+  sure_sn: number | null;
+  ozet: string | null;
+  kriterler: ReviewCriterion[];
+  transkript: ReviewTranscriptLine[];
+  kalan_kuyruk: number;
+}
+
+export interface ReviewDecision {
+  score_id: number;
+  /** null = onayla (AI puani dogru); sayi = duzelt */
+  yeni_puan: number | null;
+  gerekce_kodu: string | null;
+  not: string;
+}
+
+export interface ReviewSubmit {
+  kararlar: ReviewDecision[];
+  kapanis_notu: string;
+}
+
+export interface ReviewQueueStats {
+  bekleyen: number;
+  bugun_tamamlanan: number;
+  sebep_dagilimi: Record<string, number>;
+  olculen_inceleme_sayisi: number;
+}
+
+// --- B25: guvenlik sayfasi GERCEK kontrollerden okur ---
+export interface SecurityCheck {
+  anahtar: string;
+  baslik: string;
+  /** ok | uyari | kapali */
+  durum: string;
+  kanit: string;
+  nasil_acilir: string;
+  kritik: boolean;
+  detay: Record<string, unknown>;
+}
+
+export interface SecurityChecks {
+  olculme_zamani: string;
+  toplam: number;
+  gecen: number;
+  kritik_acik: string[];
+  kontroller: SecurityCheck[];
+}

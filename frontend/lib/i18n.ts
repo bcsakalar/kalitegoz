@@ -181,6 +181,16 @@ const tr: Dict = {
   "nav.admin": "Yönetim",
   "nav.collapse": "Menüyü daralt",
   "nav.expand": "Menüyü genişlet",
+  // FAZ 5: rol bazlı gruplu navigasyon (B21)
+  "ct.ref": "Ref",
+  "nav.main": "Ana gezinme",
+  "nav.group.monitor": "İzleme",
+  "nav.group.work": "Çalışma",
+  "nav.group.team": "Ekip",
+  "nav.group.setup": "Kurulum",
+  "nav.group.system": "Sistem",
+  "nav.review": "İnceleme Kuyruğum",
+  "nav.pendingReview": "onay bekleyen çağrı",
 
   // --- Kurumsal: güvenlik, ROI, denetim, AI rubrik, marka, SSO ---
   "sec.title": "Güvenlik & Uyum Durumu",
@@ -1046,6 +1056,15 @@ const en: Dict = {
   "nav.admin": "Admin",
   "nav.collapse": "Collapse menu",
   "nav.expand": "Expand menu",
+  "ct.ref": "Ref",
+  "nav.main": "Main navigation",
+  "nav.group.monitor": "Monitor",
+  "nav.group.work": "Work",
+  "nav.group.team": "Team",
+  "nav.group.setup": "Setup",
+  "nav.group.system": "System",
+  "nav.review": "My review queue",
+  "nav.pendingReview": "calls awaiting approval",
 
   // --- Enterprise: security, ROI, audit, AI rubric, branding, SSO ---
   "sec.title": "Security & Compliance Posture",

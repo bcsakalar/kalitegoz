@@ -155,9 +155,14 @@ export default function RubricPage() {
                 <select className="input" value={d.group} onChange={(e) => setDraft(c.id, { group: e.target.value })}>
                   {GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
                 </select>
-                <label className="flex items-center gap-1 text-xs text-ink2">{t("common.weight")}
-                  <input type="number" step={0.5} min={0.1} max={10} className="input w-16" value={d.weight}
+                {/* B20: "Agirlik 1.5" tek basina hicbir sey anlatmiyordu.
+                    Kontrolun puana ETKISI yaninda yazili olmali. */}
+                <label className="flex items-center gap-1 text-xs text-ink2"
+                  title="Bu kriterin toplam puandaki payı. 2.0, ağırlığı 1.0 olan bir kriterin iki katı etki eder.">
+                  {t("common.weight")}
+                  <input type="number" step={0.5} min={0.1} max={10} className="input w-16 tabular-nums" value={d.weight}
                     onChange={(e) => setDraft(c.id, { weight: Number(e.target.value) })} />
+                  <span className="text-[10px] text-muted">toplam puandaki payı</span>
                 </label>
                 <select className="input text-xs" value={d.channel_scope} onChange={(e) => setDraft(c.id, { channel_scope: e.target.value })}>
                   {CHANNELS.map((ch) => <option key={ch.v} value={ch.v}>{ch.l}</option>)}
@@ -175,10 +180,18 @@ export default function RubricPage() {
                   {t("rubric.critical")}
                 </label>
                 {d.is_critical && (
-                  <label className="flex items-center gap-1 text-xs text-ink2">{t("rubric.threshold")}
-                    <input type="number" min={0} max={10} className="input w-16" value={d.critical_threshold}
+                  <label className="flex items-center gap-1 text-xs text-ink2">
+                    {t("rubric.threshold")}
+                    <input type="number" min={0} max={10} className="input w-16 tabular-nums" value={d.critical_threshold}
                       onChange={(e) => setDraft(c.id, { critical_threshold: Number(e.target.value) })} />
                   </label>
+                )}
+                {/* Kritik kriterin ne yaptigi ACIKCA yazili — tooltip'e gizlenmez */}
+                {d.is_critical && (
+                  <p className="basis-full text-[11px] leading-relaxed text-[var(--status-critical)]">
+                    Bu kriter <strong>{d.critical_threshold}</strong> puanın altında kalırsa çağrının
+                    toplam puanı <strong>0</strong> olur — diğer kriterler ne alırsa alsın.
+                  </p>
                 )}
                 <label className="flex items-center gap-1.5 text-sm text-ink2">
                   <input type="checkbox" checked={d.is_active} onChange={(e) => setDraft(c.id, { is_active: e.target.checked })} />

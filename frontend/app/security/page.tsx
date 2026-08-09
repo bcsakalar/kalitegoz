@@ -1,74 +1,164 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
-import { useT } from "@/components/I18nProvider";
-import type { SecurityPosture } from "@/lib/types";
+/**
+ * Güvenlik & Uyum — B25.
+ *
+ * Eski sayfa `security-posture` uçundan **bayrak** okuyordu ve her satırı
+ * yeşil/kırmızı bir nokta olarak çiziyordu. İki sorunu vardı:
+ *
+ *  1. Bayrak, şifrelemenin gerçekten çalıştığını kanıtlamaz.
+ *  2. "Kapalı" gören kullanıcı ne yapacağını bilmiyordu — kurumsal satışta
+ *     bu doğrudan blocker.
+ *
+ * Yeni sayfa `security-checks` uçunu kullanır: her satır **çalıştırılmış bir
+ * kontrolün** sonucudur, kanıtını gösterir ve kapalıysa **nasıl açılacağını**
+ * yazar.
+ */
 
-function Row({ label, ok, value }: { label: string; ok?: boolean; value?: string }) {
+import { useCallback, useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import PageHeader from "@/components/PageHeader";
+import { ErrorState, LoadingRegion } from "@/components/EmptyState";
+import type { SecurityCheck, SecurityChecks } from "@/lib/types";
+
+const DURUM_RENK: Record<string, string> = {
+  ok: "var(--status-good)",
+  uyari: "var(--status-warning)",
+  kapali: "var(--status-critical)",
+};
+
+const DURUM_ETIKET: Record<string, string> = {
+  ok: "Açık",
+  uyari: "Dikkat",
+  kapali: "Kapalı",
+};
+
+function KontrolSatiri({ k }: { k: SecurityCheck }) {
+  const renk = DURUM_RENK[k.durum] ?? "var(--muted)";
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-hairline py-2.5 last:border-0">
-      <span className="text-sm text-ink2">{label}</span>
-      {value !== undefined ? (
-        <span className="text-sm font-semibold tabular-nums">{value}</span>
-      ) : (
-        <span className={`badge ${ok ? "badge-good" : "badge-critical"}`}>
-          <span className="dot" aria-hidden />
-        </span>
-      )}
-    </div>
+    <li className="border-b border-[var(--border)] py-3 last:border-0">
+      <div className="flex items-start gap-3">
+        <span
+          className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
+          style={{ background: renk }}
+          aria-hidden="true"
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <h3 className="text-sm font-semibold">{k.baslik}</h3>
+            <span className="text-[11px] font-medium" style={{ color: renk }}>
+              {DURUM_ETIKET[k.durum] ?? k.durum}
+            </span>
+            {k.kritik && k.durum !== "ok" && (
+              <span className="rounded bg-[var(--surface-2)] px-1.5 text-[10px] font-medium text-[var(--ink-2)]">
+                kurumsal satışta zorunlu
+              </span>
+            )}
+          </div>
+
+          {/* KANIT — kontrolün ne bulduğu. Bayrak değil, ölçüm. */}
+          <p className="mt-1 text-[13px] leading-relaxed text-[var(--ink-2)]">{k.kanit}</p>
+
+          {/* NASIL AÇILIR — kapalıysa kullanıcı ne yapacağını bilir */}
+          {k.nasil_acilir && (
+            <div className="mt-2 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                Nasıl açılır
+              </p>
+              <p className="mt-0.5 text-[13px] leading-relaxed text-[var(--ink-2)]">
+                {k.nasil_acilir}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </li>
   );
 }
 
 export default function SecurityPage() {
-  const t = useT();
-  const [p, setP] = useState<SecurityPosture | null>(null);
-  const [err, setErr] = useState("");
+  const [veri, setVeri] = useState<SecurityChecks | null>(null);
+  const [hata, setHata] = useState(false);
+  const [yukleniyor, setYukleniyor] = useState(true);
 
-  useEffect(() => {
-    api.securityPosture().then(setP).catch((e) => setErr(e.message ?? String(e)));
+  const yukle = useCallback(async () => {
+    setYukleniyor(true);
+    setHata(false);
+    try {
+      setVeri(await api.securityChecks());
+    } catch {
+      setHata(true);
+    } finally {
+      setYukleniyor(false);
+    }
   }, []);
+
+  useEffect(() => { void yukle(); }, [yukle]);
+
+  if (yukleniyor) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="Güvenlik & Uyum" />
+        <LoadingRegion label="Güvenlik kontrolleri çalıştırılıyor…" rows={6} />
+      </div>
+    );
+  }
+
+  if (hata || !veri) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="Güvenlik & Uyum" />
+        <ErrorState
+          what="Güvenlik kontrolleri çalıştırılamadı."
+          next="Sunucuya erişilemiyor olabilir. Tekrar deneyin; sorun sürerse API servisinin çalıştığını kontrol edin."
+          onRetry={() => void yukle()}
+        />
+      </div>
+    );
+  }
+
+  const kritikAcik = veri.kritik_acik.length;
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold">{t("sec.title")}</h1>
-        <p className="text-sm text-ink2">{t("sec.subtitle")}</p>
+      <PageHeader title="Güvenlik & Uyum" />
+
+      <div className="card p-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div>
+            <p className="text-2xl font-bold tabular-nums">
+              {veri.gecen}<span className="text-[var(--muted)]">/{veri.toplam}</span>
+            </p>
+            <p className="text-xs text-[var(--ink-2)]">kontrol geçti</p>
+          </div>
+          {kritikAcik > 0 && (
+            <div className="rounded-md border border-[var(--status-critical)] px-3 py-2">
+              <p className="text-sm font-semibold text-[var(--status-critical)]">
+                {kritikAcik} kritik madde kapalı
+              </p>
+              <p className="text-[12px] text-[var(--ink-2)]">
+                Kurumsal kurulum öncesi açılması gerekir.
+              </p>
+            </div>
+          )}
+          <button type="button" onClick={() => void yukle()} className="btn btn-secondary ml-auto">
+            Yeniden çalıştır
+          </button>
+        </div>
+        <p className="mt-3 text-[11px] text-[var(--muted)]">
+          Her satır, sayfa açıldığında <strong>çalıştırılan</strong> bir kontrolün sonucudur —
+          ayar dosyasındaki bir bayrak değil. Ölçüm zamanı:{" "}
+          <span className="tabular-nums">{veri.olculme_zamani.replace("T", " ")}</span>
+        </p>
       </div>
 
-      {err && <p className="card border-l-4 p-3 text-sm" style={{ borderLeftColor: "var(--status-critical)" }}>{err}</p>}
-      {!p && !err && <p className="card p-6 text-center text-sm text-muted">…</p>}
-
-      {p && (
-        <>
-          {/* Satış vurgusu */}
-          <div className="card border-l-4 p-4" style={{ borderLeftColor: "var(--status-ok)" }}>
-            <div className="flex items-start gap-3">
-              <span className="text-2xl" aria-hidden>🔒</span>
-              <p className="text-sm text-ink">{t("sec.pitch")}</p>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="card p-4">
-              <Row label={t("sec.deployment")} value={p.deployment === "on-premise" ? t("sec.onprem") : p.deployment} />
-              <Row label={t("sec.dataResidency")} value={p.data_leaves_premises ? t("sec.dataLeaves") : t("sec.dataStays")} />
-              <Row label={t("sec.llm")} value={p.llm_provider === "ollama" ? t("sec.llmLocal") : p.llm_provider} />
-              <Row label={t("sec.retention")} value={`${p.retention_days} ${t("sec.days")}`} />
-              <Row label={t("sec.rbac")} value={`${p.rbac_roles.length} ${t("sec.roles")}`} />
-              <Row label={t("sec.auditEvents30d")} value={String(p.audit_events_30d)} />
-            </div>
-            <div className="card p-4">
-              <Row label={t("sec.pii")} ok={p.pii_masking_enabled} />
-              <Row label={t("sec.audit")} ok={p.audit_log_enabled} />
-              <Row label={t("sec.tenantIsolation")} ok={p.multi_tenant_isolation} />
-              <Row label={t("sec.kvkkPack")} ok={p.kvkk_pack_active} />
-              <Row label={t("sec.sso")} ok={p.sso_enabled} />
-              <Row label={t("sec.encryption")} ok={p.encryption_at_rest} />
-            </div>
-          </div>
-        </>
-      )}
+      <div className="card p-4">
+        <ul>
+          {veri.kontroller.map((k) => (
+            <KontrolSatiri key={k.anahtar} k={k} />
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

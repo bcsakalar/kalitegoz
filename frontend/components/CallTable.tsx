@@ -30,15 +30,15 @@ export default function CallTable({ calls, selectable, selected, onToggle, onTog
                 <input type="checkbox" checked={!!allSel} onChange={onToggleAll} aria-label="tümünü seç" />
               </th>
             )}
-            <th className="px-4 py-2.5">#</th>
-            <th className="px-4 py-2.5">{t("ct.file")}</th>
-            <th className="px-4 py-2.5">{t("ct.channel")}</th>
-            <th className="px-4 py-2.5">{t("ct.agent")}</th>
-            <th className="px-4 py-2.5">{t("ct.category")}</th>
-            <th className="px-4 py-2.5">{t("ct.duration")}</th>
-            <th className="px-4 py-2.5">{t("ct.score")}</th>
-            <th className="px-4 py-2.5">{t("ct.status")}</th>
-            <th className="px-4 py-2.5">{t("ct.date")}</th>
+            {/* B22: #Ref birincil kimlik. Dosya adi ("deniz.yildiz_sikayet_05_v2.wav")
+                bir kimlik degil, bir dosya adidir; ikincil satira iner. */}
+            <th scope="col" className="px-4 py-2.5">{t("ct.ref")}</th>
+            <th scope="col" className="px-4 py-2.5">{t("ct.agent")}</th>
+            <th scope="col" className="px-4 py-2.5">{t("ct.category")}</th>
+            <th scope="col" className="px-4 py-2.5">{t("ct.duration")}</th>
+            <th scope="col" className="px-4 py-2.5">{t("ct.score")}</th>
+            <th scope="col" className="px-4 py-2.5">{t("ct.status")}</th>
+            <th scope="col" className="px-4 py-2.5">{t("ct.date")}</th>
           </tr>
         </thead>
         <tbody>
@@ -49,28 +49,35 @@ export default function CallTable({ calls, selectable, selected, onToggle, onTog
                   <input type="checkbox" checked={!!selected?.has(c.id)} onChange={() => onToggle?.(c.id)} aria-label={`seç ${c.id}`} />
                 </td>
               )}
-              <td className="px-4 py-2.5 text-muted">{c.id}</td>
               <td className="px-4 py-2.5">
-                <Link href={`/calls/${c.id}`} className="font-medium text-series hover:underline">
-                  {c.filename}
+                <Link
+                  href={`/calls/${c.id}`}
+                  className="font-mono font-semibold tabular-nums text-series hover:underline"
+                >
+                  #{String(c.id).padStart(4, "0")}
                 </Link>
-                <span className="ml-1 space-x-1 align-middle">
+                <span className="ml-1.5 space-x-1 align-middle">
+                  {/* Kanal ROZET degil kucuk simge: 24 satirda 24 kez tekrarlanan
+                      "Sesli" rozeti bilgi tasimiyor, gurultu yapiyordu (B22). */}
+                  <ChannelChip channel={c.channel} compact />
                   {c.is_golden && <span title={t("golden.badge")} aria-hidden>⭐</span>}
                   {c.is_crisis && <span title={t("ct.crisis")} aria-hidden>🔴</span>}
-                  {c.zeroed && <span title={t("wf.alert.zeroing")} aria-hidden>⛔</span>}
                   {c.is_repeat && (
                     <span title={`${t("ct.repeatOf")}: #${c.repeat_of_id})`} aria-hidden>🔁</span>
                   )}
                 </span>
+                {/* Dosya adi ikincil bilgi — birincil kimlik #Ref */}
+                <div className="mt-0.5 truncate text-[11px] text-muted" title={c.filename}>
+                  {c.filename}
+                </div>
                 {c.tags && c.tags.length > 0 && (
-                  <span className="ml-1 space-x-1 align-middle">
+                  <span className="mt-0.5 inline-flex flex-wrap gap-1 align-middle">
                     {c.tags.slice(0, 3).map((tg) => (
                       <span key={tg} className="rounded bg-grid px-1.5 py-0.5 text-[10px] text-ink2">{tg}</span>
                     ))}
                   </span>
                 )}
               </td>
-              <td className="px-4 py-2.5"><ChannelChip channel={c.channel} /></td>
               <td className="px-4 py-2.5">{c.agent?.name ?? "—"}</td>
               <td className="px-4 py-2.5"><CategoryChip category={c.category} /></td>
               <td className="px-4 py-2.5 whitespace-nowrap tabular-nums">

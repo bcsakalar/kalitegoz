@@ -87,7 +87,7 @@ export default function OnboardingPage() {
           <span className="text-ink2">{doneCount} / {STEPS.length}</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-grid">
-          <div className="h-full rounded-full bg-series transition-all" style={{ width: `${(doneCount / STEPS.length) * 100}%` }} />
+          <div className="h-full rounded-full bg-series transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${(doneCount / STEPS.length) * 100}%` }} />
         </div>
         <div className="mt-3 flex flex-wrap gap-1">
           {STEPS.map((s, i) => (

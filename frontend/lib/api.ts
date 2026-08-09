@@ -73,6 +73,10 @@ import type {
   BulkResult,
   SimilarCall,
   NotificationFeed,
+  ReviewCall,
+  ReviewQueueStats,
+  ReviewSubmit,
+  SecurityChecks,
 } from "./types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -163,6 +167,13 @@ const json = (body: unknown): RequestInit => ({
 });
 
 export const api = {
+  // --- FAZ 3/5: kaliteci inceleme kuyrugu ---
+  reviewNext: () => request<ReviewCall | null>("/review-queue/next"),
+  reviewQueueStats: () => request<ReviewQueueStats>("/review-queue/stats"),
+  reviewSubmit: (callId: number, body: ReviewSubmit) =>
+    request<ReviewCall | null>(`/review-queue/${callId}/submit`, json(body)),
+  securityChecks: () => request<SecurityChecks>("/enterprise/security-checks"),
+
   // --- Auth ---
   login: async (email: string, password: string, tenantSlug = "demo") => {
     const data = await request<{ access_token: string; refresh_token: string }>(
