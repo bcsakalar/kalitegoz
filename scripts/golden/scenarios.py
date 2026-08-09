@@ -858,6 +858,104 @@ add(Scenario(
     ),
 ))
 
+# =========================================================================
+# 9) DENETIMDE BULUNAN YENI HATALAR — B29, B30, B32 regresyonu
+# (B27/B28/B31 motor degismezleridir; birim testle korunur —
+#  backend/tests/test_scoring_invariants.py)
+# =========================================================================
+
+add(Scenario(
+    id="reg-b32-kvkk-yok-sifirlanmali",
+    title="B32: Deterministik KVKK tespiti SIFIRLAMAYA baglanmali",
+    bucket="regresyon", regression_for="B32",
+    tags=["kvkk", "uyum", "katman_a"],
+    turns=[
+        Turn(T, "Netik İletişim, ben Ceyda, buyurun."),
+        Turn(T, "Adınızı ve müşteri numaranızı alabilir miyim?"),
+        Turn(M, "Okan Yılmaz, 771450."),
+        Turn(T, "Teşekkürler Okan Bey, kaydınızı görüyorum."),
+        Turn(M, "Faturamı taksitlendirmek istiyorum."),
+        Turn(T, "Faturanızı 3 taksite bölebilirim, ek ücret çıkmaz."),
+        Turn(M, "Olur, bölün."),
+        Turn(T, "Böldüm, detaylar SMS ile gelecek."),
+    ] + close_std(),
+    expected=Expected(
+        scores=sc(default=8, **{"KVKK / Aydinlatma": 0}),
+        zeroed=True, zeroing_criterion="KVKK / Aydinlatma",
+        alerts=["zeroing"],
+        notes="Kayit bildirimi ve aydinlatma anonsunun IKISI DE yok. Deterministik "
+              "motor bunu zaten dogru tespit ediyor (compliance_packs ihlal uretiyor) "
+              "ama sifirlama karari YALNIZ LLM puanina bakiyor. Katman A bulgusu "
+              "kriter puanini EZMELI ve cagri SIFIRLANMALI.",
+    ),
+))
+
+add(Scenario(
+    id="reg-b29-konusmaci-bilinmiyor",
+    title="B29: Konusmaci ayrimi yoksa uyum kriteri 'yetersiz kanit' olmali",
+    bucket="regresyon", regression_for="B29",
+    tags=["diarizasyon", "mono", "yetersiz_kanit"],
+    turns=[
+        Turn("bilinmeyen", "Netik İletişim, ben Tolga. Görüşmemiz kayıt altına alınmaktadır, verileriniz KVKK kapsamında işlenmektedir."),
+        Turn("bilinmeyen", "Adınızı ve müşteri numaranızı alabilir miyim?"),
+        Turn("bilinmeyen", "Sinan Er, 336720."),
+        Turn("bilinmeyen", "Teşekkürler Sinan Bey. Nasıl yardımcı olabilirim?"),
+        Turn("bilinmeyen", "İnternetim iki gündür yavaş."),
+        Turn("bilinmeyen", "Hattınızı test ediyorum, senkron hızınız düşmüş. Profili yeniliyorum."),
+        Turn("bilinmeyen", "Şimdi nasıl?"),
+        Turn("bilinmeyen", "48 Mbps görüyorum, önceden 6 Mbps idi."),
+        Turn("bilinmeyen", "Başka yardımcı olabileceğim bir konu var mı?"),
+        Turn("bilinmeyen", "Yok, teşekkürler."),
+    ],
+    expected=Expected(
+        scores=sc(default=5, **{"KVKK / Aydinlatma": 5, "Kimlik Dogrulama": 5,
+                                "Yasakli Kelime / Uslup": 5}),
+        zeroed=False, alerts=[],
+        must_not_penalize=[],
+        notes="Mono kayit + HF_TOKEN yok -> tum segmentler 'bilinmeyen'. KVKK anonsu "
+              "metinde VAR ama kimin soyledigi BILINMIYOR. Sistem 'ihlal' DIYEMEZ "
+              "(yanlis pozitif) ama 'tam puan' da VEREMEZ. Dogru cevap: yetersiz "
+              "kanit -> insan kuyrugu. SIFIRLAMA KESINLIKLE YASAK.",
+    ),
+))
+
+add(Scenario(
+    id="reg-b30-uzun-cagri-orta-ihlal",
+    title="B30: Uzun cagrida ihlal ORTADA — kirpma yuzunden kacirilmamali",
+    bucket="regresyon", regression_for="B30",
+    tags=["uzun_cagri", "pencereleme"],
+    turns=(
+        [Turn(T, "Netik İletişim, ben Gamze. Görüşmemiz kayıt altına alınmaktadır, verileriniz KVKK kapsamında işlenmektedir."),
+         Turn(T, "Adınızı ve müşteri numaranızı alabilir miyim?"),
+         Turn(M, "Ahmet Korkmaz, 118445."),
+         Turn(T, "Teşekkürler Ahmet Bey, kaydınızı görüyorum.")]
+        # --- dolgu: cagriyi 10 dk esiginin uzerine tasiyan gercek diyalog ---
+        + [t for i in range(22) for t in (
+            Turn(M, f"Peki {i + 1}. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"),
+            Turn(T, f"Elbette. {i + 1}. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; "
+                    "sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."),
+        )]
+        # --- IHLAL TAM ORTADA ---
+        + [Turn(T, "Ya yeter artık, saçmalamayın, bir saattir aynı şeyi anlatıyorum."),
+           Turn(M, "Nasıl konuşuyorsunuz siz?")]
+        + [t for i in range(22) for t in (
+            Turn(M, f"Peki {i + 23}. dönem için de aynı dökümü alabilir miyim?"),
+            Turn(T, f"{i + 23}. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri "
+                    "aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."),
+        )]
+        + close_std()
+    ),
+    expected=Expected(
+        scores=sc(default=5, **{"Yasakli Kelime / Uslup": 0, "Aktif Dinleme": 3}),
+        zeroed=True, zeroing_criterion="Yasakli Kelime / Uslup",
+        alerts=["zeroing", "banned_word"],
+        evidence_must_contain={"Yasakli Kelime / Uslup": "saçmalamayın"},
+        notes="Cagri 10 dk esigini asiyor -> map-reduce yoluna giriyor. Hakaret "
+              "transkriptin TAM ORTASINDA. Mevcut _transcript_outline ilk 25 + son 25 "
+              "satiri aliyor, ortayi ATIYOR. Ihlal KACIRILAMAZ.",
+    ),
+))
+
 add(Scenario(
     id="ses-02-agir-aksan",
     title="Agir aksanli musteri — transkript bozuk ama temsilci dogru anladi",

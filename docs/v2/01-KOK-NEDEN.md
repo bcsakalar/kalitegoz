@@ -328,6 +328,48 @@ sistematik ihlali.
 
 ---
 
+## F-2) B32 — Deterministik uyum tespiti puana HİÇ etki etmiyor
+
+Taban çizgisi koşumu sırasında ortaya çıktı ve B2'nin ikinci yüzünü açıklıyor.
+
+### Ölçüm
+`dusuk-04-kvkk-yok` senaryosunda KVKK anonsu **hiç yapılmıyor**. Beklenen: çağrı
+sıfırlanır. Gerçekleşen: **toplam 88.9, `zeroed=False`.**
+
+Aynı çağrıda deterministik motor eksikliği **doğru tespit ediyor** —
+`compliance_packs.evaluate()` `kayit_bildirimi` + `aydinlatma` ihlallerini üretiyor.
+
+### Kök neden — `scoring.py:514-546`
+
+```python
+for pv in compliance_packs.evaluate(agent_text):
+    db.add(Violation(...))          # ihlal kaydedilir
+    if pv["severity"] == "yuksek":
+        alerts.append(...)          # alarm uretilir
+# ... ve BURADA BITER. score_by_crit'e DOKUNULMAZ.
+
+score_by_crit = {p.kriter_id: p.puan for p in result.puanlar}   # SADECE LLM ciktisi
+for c in criteria:
+    if c.is_critical and score_by_crit.get(c.id, 10) < c.critical_threshold:
+        zeroing_reason = ...
+```
+
+Sıfırlama kararı **yalnızca LLM'in verdiği puana** bakıyor. Deterministik motorun
+kesin bulgusu ("KVKK anonsu yok, kanıtı da yok") ne "KVKK / Aydinlatma" kriterinin
+puanını değiştiriyor ne de sıfırlamayı tetikliyor. LLM o kritere 8 verdiyse çağrı
+88.9 alıyor — anons hiç yapılmamış olmasına rağmen.
+
+### Sonuç
+Sistemde **iki ayrı, birbiriyle konuşmayan uyum gerçeği** var:
+1. `violations` + `alerts` tablosu: deterministik, doğru.
+2. `scores` + `calls.total_score`: LLM'e ait, denetimsiz.
+
+Kullanıcı ekranda "KVKK ihlali" alarmı görüyor ama çağrının puanı 88.9. Bu, ürünün
+savunulabilirliğini doğrudan yok eder. Katman A'nın "LLM'in kararını **ezer**"
+ilkesi tam olarak bu boşluğu kapatmak içindir.
+
+---
+
 ## G) Kök nedenlerin FAZ 2 tasarımına haritası
 
 | Kök neden | FAZ 2 karşılığı |
@@ -344,3 +386,4 @@ sistematik ihlali.
 | Mono'da konuşmacı kaybı (B29) | Konuşmacı bilinmiyorsa uyum kriteri `insufficient_evidence` döner, "ihlal" demez |
 | Uzun çağrıda orta kısım atlanıyor (B30) | Kırpma yerine pencereleme + kriter bazlı ilgili pencere seçimi |
 | Alarmlar geçersizleşmiyor (B31, B2) | Yeniden puanlamada alarmlar geçersizleştirilir; `(call_id, rule_id, evidence_hash)` tekil |
+| **Deterministik uyum puana etki etmiyor (B32)** | Katman A bulgusu ilgili kriterin puanını **doğrudan yazar**; sıfırlama kararı Katman A + LLM birleşiminden çıkar |

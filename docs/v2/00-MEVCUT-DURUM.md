@@ -243,5 +243,18 @@ puanlandı → uyarı yok, görev 40.8 sn'de başarılı, puan 93.3.
 | **B29** | **Mono kayıtta konuşmacı ayrımı tamamen kayboluyor** (`HF_TOKEN` yok → hepsi `bilinmeyen`). Bu durumda uyum motoru "temsilci ne dedi" sorusunu cevaplayamaz; KVKK/yasaklı kelime kontrolleri sessizce boşa düşer. | `diarization.py:48-54` + `compliance_packs` yalnız `speaker=='temsilci'` metnine bakıyor |
 | **B30** | **Uzun çağrılarda transkriptin ortası hiç değerlendirilmiyor** — reduce aşamasına yalnız ilk 25 + son 25 satır gidiyor. | `scoring.py:301-310` |
 | **B31** | **Alarmlar yeniden puanlamada temizlenmiyor.** `scores` ve `violations` siliniyor ama `alerts` birikiyor; eski/geçersiz alarm ekranda kalıyor. | `scoring.py:451,469` vs. `pipeline.py::_apply_outcome` |
+| **B32** | **Deterministik uyum tespiti puana hiç etki etmiyor.** `compliance_packs` "KVKK anonsu yok" ihlalini doğru üretiyor ama sıfırlama kararı yalnız LLM puanına bakıyor. `dusuk-04-kvkk-yok` senaryosu anons hiç yapılmamasına rağmen **88.9** aldı ve sıfırlanmadı. | `scoring.py:514-546`, taban çizgisi koşumu |
 
-Bunların hepsi FAZ 1 regresyon setine dahil edildi ve B1–B6 ile aynı statüde takip edilecek.
+Bunların hepsi FAZ 1 regresyon setine dahil edildi ve B1–B6 ile aynı statüde takip edilecek:
+
+| Hata | Regresyon vakası | Tür | Durum |
+|---|---|---|---|
+| B27 | `test_b27_tekrarlanan_kriter_elenir`, `test_b27_toplam_puan_agirligi_iki_kez_saymaz` | birim test | 🔴 xfail |
+| B28 | `test_b28_degerlendirilemeyen_kriter_uydurma_puan_almaz`, `test_b28_yetersiz_kanitli_kriter_ortalamaya_girmez` | birim test | 🔴 xfail |
+| B29 | `data/golden/reg-b29-konusmaci-bilinmiyor` | altın set | 🔴 |
+| B30 | `data/golden/reg-b30-uzun-cagri-orta-ihlal` | altın set | 🔴 |
+| B31 | `test_b31_yeniden_puanlama_eski_alarmlari_gecersizler` | entegrasyon | 🔴 xfail |
+| B32 | `data/golden/reg-b32-kvkk-yok-sifirlanmali` | altın set | 🔴 |
+
+`xfail(strict=True)` kullanıldı: hata düzeltilince test "beklenmedik şekilde geçti"
+diye takımı kırar ve işaretçiyi kaldırmaya zorlar — düzeltme sessizce atlanamaz.
