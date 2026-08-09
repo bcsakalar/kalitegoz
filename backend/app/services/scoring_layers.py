@@ -25,7 +25,7 @@ from dataclasses import dataclass
 
 from ..config import settings
 from ..schemas import LLMKriterGrubu, LLMKriterKarari
-from .llm import generate_json
+from .llm import generate_json, generate_json_with
 from .text_tr import contains_verbatim
 
 logger = logging.getLogger(__name__)
@@ -209,17 +209,26 @@ def _resolve_letters(
 
 
 def evaluate_group(
-    group: list, transcript: str, hint: str, few_shot: str = ""
+    group: list, transcript: str, hint: str, few_shot: str = "",
+    model_override: str | None = None,
 ) -> list[LLMKriterKarari]:
     """Bir kriter grubunu tek LLM cagrisiyla degerlendir (Katman B).
 
-    `few_shot`: kalite uzmaninin onceki duzeltmelerinden uretilmis ornek blogu
-    (review_feedback.build_block). Bos ise davranis degismez.
+    `few_shot`: kalite uzmaninin onceki duzeltmelerinden uretilmis ornek blogu.
+    `model_override`: bu grup icin farkli model (S2c — kriter bazli yonlendirme).
     """
     block, mapping = _criteria_block(group)
     prompt = _prompt(group, transcript, hint + few_shot, block)
     try:
-        result = generate_json(LLMKriterGrubu, SYSTEM_PROMPT, prompt)
+        if model_override:
+            from . import ai_config, model_routing
+
+            cfg = model_routing.resolve_for(ai_config.active_llm(), model_override)
+            logger.info("Grup %s -> model %s",
+                        [c.name for c in group], cfg.model)
+            result = generate_json_with(LLMKriterGrubu, SYSTEM_PROMPT, prompt, cfg)
+        else:
+            result = generate_json(LLMKriterGrubu, SYSTEM_PROMPT, prompt)
     except Exception as exc:  # noqa: BLE001
         logger.warning("Kriter grubu degerlendirilemedi: %s", exc)
         return []
@@ -227,7 +236,8 @@ def evaluate_group(
 
 
 def evaluate_all(
-    criteria: list, transcript: str, hint: str, few_shot_for=None
+    criteria: list, transcript: str, hint: str, few_shot_for=None,
+    model_for=None,
 ) -> list[LLMKriterKarari]:
     """Tum LLM kriterlerini gruplar halinde degerlendir.
 
@@ -237,9 +247,23 @@ def evaluate_all(
     `few_shot_for(group) -> str`: o gruba ait kalibrasyon orneklerini uretir.
     """
     got: dict[int, LLMKriterKarari] = {}
-    for group in group_criteria(criteria):
+
+    # S2c: model yonlendirmesi varsa kriterler GRUPLANMADAN ONCE ayrilir.
+    # Aksi halde bir grupta hem oznel hem nesnel kriter olur ve grup tek bir
+    # modele gitmek zorunda kalir — nesnel kriterler gereksiz yere buyuk
+    # modele giderdi (yavas) ya da oznel kriterler kucuk modelde kalirdi.
+    if model_for is not None:
+        from . import model_routing
+
+        oznel, diger = model_routing.split_by_model(criteria)
+        gruplar = group_criteria(oznel) + group_criteria(diger)
+    else:
+        gruplar = group_criteria(criteria)
+
+    for group in gruplar:
         shots = few_shot_for(group) if few_shot_for else ""
-        for k in evaluate_group(group, transcript, hint, shots):
+        model = model_for(group) if model_for else None
+        for k in evaluate_group(group, transcript, hint, shots, model):
             if k.kriter_id is not None and k.kriter_id not in got:
                 got[k.kriter_id] = k  # B27: ilk karar gecerli, tekrar elenir
 

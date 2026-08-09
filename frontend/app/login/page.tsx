@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, ssoLoginUrl, fetchPublicBranding } from "@/lib/api";
 import type { AuthConfig, Branding } from "@/lib/types";
-import { useAuth } from "@/components/AuthProvider";
+import { landingFor, useAuth } from "@/components/AuthProvider";
 import { useI18n, useT } from "@/components/I18nProvider";
 import { useTheme, type Theme } from "@/components/ThemeProvider";
 import { LANGS } from "@/lib/i18n";
@@ -43,8 +43,10 @@ export default function LoginPage() {
   }, []);
 
   async function afterAuth() {
-    await refresh();
-    router.replace("/");
+    // S14: rol bazli acilis ekrani. refresh() Me'yi donduruyor cunku `me`
+    // state'i bu turda henuz guncellenmemis olur.
+    const u = await refresh();
+    router.replace(landingFor(u));
   }
 
   async function createOrg(e: React.FormEvent) {

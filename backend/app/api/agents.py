@@ -13,6 +13,7 @@ from ..models import (
     Badge,
     Call,
     CallStatus,
+    QAState,
     Role,
     Score,
     Team,
@@ -38,6 +39,20 @@ class _CoachingLLM(BaseModel):
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 
 
+# B33 — Temsilci karnesi YALNIZCA kesinlesmis puanlari sayar.
+#
+# Urun vaadi "AI onerir, kalite uzmani onaylar". Kaliteci daha onaylamamisken
+# AI'nin gecici puanini temsilcinin karnesine yazmak bu vaadi bozar: temsilci
+# henuz kimsenin dogrulamadigi bir sayiya gore degerlendirilmis olur ve puan
+# inceleme sonrasi degisirse guven biter.
+#
+# Kapsam kaybi yok: risk kurali tetiklemeyen cagri puanlandigi anda `final`
+# olur (qa_workflow.route_after_scoring). Bu filtre yalnizca SU AN inceleme
+# kuyrugunda bekleyen cagrilari disarida birakir — zaten "hakkinda emin
+# olunmayan" cagrilar bunlardir.
+KESINLESMIS = (Call.status == CallStatus.done) & (Call.qa_state == QAState.final)
+
+
 def _team_name_map(db: Session, tenant_id: int) -> dict[int, str]:
     return {t.id: t.name for t in db.query(Team).filter(Team.tenant_id == tenant_id).all()}
 
@@ -60,12 +75,12 @@ def coaching_plan(agent_id: int, days: int = 30, db: Session = Depends(get_db),
         db.query(Score.criterion_name, func.avg(Score.score), func.count(Score.id))
         .join(Call, Score.call_id == Call.id)
         .filter(Call.agent_id == agent_id, Call.tenant_id == user.tenant_id,
-                Call.status == CallStatus.done, Call.created_at >= since)
+                KESINLESMIS, Call.created_at >= since)
         .group_by(Score.criterion_name).order_by(func.avg(Score.score)).all()
     )
     call_count = db.query(func.count(Call.id)).filter(
         Call.agent_id == agent_id, Call.tenant_id == user.tenant_id,
-        Call.status == CallStatus.done, Call.created_at >= since).scalar() or 0
+        KESINLESMIS, Call.created_at >= since).scalar() or 0
     if not rows or call_count < 3:
         raise HTTPException(400, "Yeterli veri yok — kocluk plani icin en az 3 puanli cagri gerekli")
 
@@ -91,7 +106,7 @@ def coaching_plan(agent_id: int, days: int = 30, db: Session = Depends(get_db),
 
 @router.get("", response_model=list[AgentSummary])
 def list_agents(db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
-    done = (Call.agent_id == Agent.id) & (Call.status == CallStatus.done)
+    done = (Call.agent_id == Agent.id) & KESINLESMIS
     q = (
         db.query(
             Agent.id,
@@ -133,7 +148,7 @@ def get_agent(agent_id: int, db: Session = Depends(get_db),
     if user.role == Role.agent and user.agent_id != agent_id:
         raise HTTPException(403, "Yalnizca kendi karnenizi gorebilirsiniz")
 
-    done = (Call.agent_id == agent_id) & (Call.status == CallStatus.done)
+    done = (Call.agent_id == agent_id) & KESINLESMIS
     stats = db.query(
         func.count(Call.id), func.avg(Call.total_score), func.avg(Call.predicted_csat),
         func.sum(cast(Call.zeroed, Integer)),

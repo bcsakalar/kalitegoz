@@ -697,3 +697,42 @@ export interface SecurityChecks {
   kritik_acik: string[];
   kontroller: SecurityCheck[];
 }
+
+// --- S12: OIDC/SSO panelden yapilandirma + sifreleme anahtari durumu ---
+
+export interface SSOConfig {
+  issuer: string;
+  client_id: string;
+  redirect_uri: string;
+  /** Sir ASLA donmez; yalnizca girilmis mi bilgisi doner. */
+  client_secret_girildi: boolean;
+  kaynak: "yonetim_ekrani" | "ortam_degiskeni" | "yok";
+  durum: string;
+  mesaj: string;
+  detay: Record<string, unknown>;
+}
+
+export interface SSOConfigSave {
+  issuer: string;
+  client_id: string;
+  /** Bos birakilirsa mevcut sir KORUNUR. */
+  client_secret: string;
+  redirect_uri: string;
+}
+
+export interface SSOSaveResult {
+  durum: string;
+  mesaj: string;
+  detay: Record<string, unknown>;
+  kaynak: string;
+}
+
+export interface EncryptionStatus {
+  aktif: boolean;
+  kaynak: "dosya" | "ortam" | "yok";
+  kaynak_aciklama: string;
+  anahtar_kimligi: string | null;
+  eski_anahtar_sayisi: number;
+  mesaj: string;
+  uzunluk_yeterli: boolean;
+}

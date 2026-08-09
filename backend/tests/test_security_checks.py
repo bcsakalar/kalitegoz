@@ -132,3 +132,92 @@ def test_kritik_acik_maddeler_raporlanir(db, seeded, monkeypatch):
     monkeypatch.delenv(crypto.ENV_KEY, raising=False)
     rapor = security_checks.run_all(db, seeded["tenant_a"])
     assert "encryption_at_rest" in rapor["kritik_acik"]
+
+
+# =========================================================================
+# S12 — anahtar kaynagi, rotasyon, SSO yonetim ekrani
+# =========================================================================
+
+def test_anahtar_DOSYADAN_okunabilir(monkeypatch, tmp_path):
+    """.env bir anahtar kaynagi DEGILDIR; Docker secret dosyadan mount edilir."""
+    f = tmp_path / "master.key"
+    f.write_text("d" * 40, encoding="utf-8")
+    monkeypatch.delenv(crypto.ENV_KEY, raising=False)
+    monkeypatch.setenv(crypto.KEY_FILE_ENV, str(f))
+
+    assert crypto.is_enabled() is True
+    assert crypto.key_status()["kaynak"] == "dosya"
+    assert crypto.self_test()[0] is True
+
+
+def test_dosya_ortam_degiskenini_EZER(monkeypatch, tmp_path):
+    f = tmp_path / "master.key"
+    f.write_text("f" * 40, encoding="utf-8")
+    monkeypatch.setenv(crypto.ENV_KEY, "e" * 40)
+    monkeypatch.setenv(crypto.KEY_FILE_ENV, str(f))
+
+    sifreli = crypto.encrypt_text("hassas")
+    # Dosya anahtariyla sifrelendiyse, YALNIZ ortam degiskeniyle cozulemez
+    monkeypatch.delenv(crypto.KEY_FILE_ENV)
+    with pytest.raises(crypto.CryptoError):
+        crypto.decrypt_text(sifreli)
+
+
+def test_ROTASYON_eski_anahtarla_yazilani_okur(monkeypatch, tmp_path):
+    """Rotasyon tek seferde bitmez; eski anahtarla yazilan veri okunabilmeli."""
+    eski = tmp_path / "eski.key"
+    yeni = tmp_path / "yeni.key"
+    eski.write_text("1" * 40, encoding="utf-8")
+    yeni.write_text("2" * 40, encoding="utf-8")
+
+    monkeypatch.delenv(crypto.ENV_KEY, raising=False)
+    monkeypatch.setenv(crypto.KEY_FILE_ENV, str(eski))
+    sifreli = crypto.encrypt_text("rotasyon oncesi yazilmis veri")
+
+    # Rotasyon: yeni anahtar aktif, eski hala tanimli
+    monkeypatch.setenv(crypto.KEY_FILE_ENV, str(yeni))
+    monkeypatch.setenv(crypto.OLD_KEYS_ENV, str(eski))
+    assert crypto.decrypt_text(sifreli) == "rotasyon oncesi yazilmis veri"
+
+
+def test_eski_anahtar_tanimli_degilse_okunamaz(monkeypatch, tmp_path):
+    eski = tmp_path / "eski.key"
+    yeni = tmp_path / "yeni.key"
+    eski.write_text("3" * 40, encoding="utf-8")
+    yeni.write_text("4" * 40, encoding="utf-8")
+
+    monkeypatch.delenv(crypto.ENV_KEY, raising=False)
+    monkeypatch.setenv(crypto.KEY_FILE_ENV, str(eski))
+    sifreli = crypto.encrypt_text("veri")
+
+    monkeypatch.setenv(crypto.KEY_FILE_ENV, str(yeni))
+    monkeypatch.delenv(crypto.OLD_KEYS_ENV, raising=False)
+    with pytest.raises(crypto.CryptoError) as exc:
+        crypto.decrypt_text(sifreli)
+    assert crypto.OLD_KEYS_ENV in str(exc.value)
+
+
+def test_sso_veritabani_ayari_ortami_EZER(monkeypatch):
+    monkeypatch.setenv("OIDC_ISSUER", "https://env.example/realms/a")
+    monkeypatch.setenv("OIDC_CLIENT_ID", "env-client")
+    monkeypatch.setenv("OIDC_CLIENT_SECRET", "env-secret")
+
+    sso.set_db_config({
+        "issuer": "https://panel.example/realms/b",
+        "client_id": "panel-client",
+        "client_secret": "panel-secret",
+        "redirect_uri": "",
+    })
+    try:
+        c = sso.config()
+        assert c["issuer"] == "https://panel.example/realms/b"
+        assert sso.kaynak() == "yonetim_ekrani"
+    finally:
+        sso.set_db_config({})
+
+
+def test_sso_ayar_yoksa_ortama_duser(monkeypatch):
+    sso.set_db_config({})
+    monkeypatch.setenv("OIDC_ISSUER", "https://env.example/realms/a")
+    assert sso.config()["issuer"] == "https://env.example/realms/a"
+    assert sso.kaynak() == "ortam_degiskeni"

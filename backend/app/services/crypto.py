@@ -45,14 +45,90 @@ class CryptoError(RuntimeError):
     pass
 
 
+# S12: anahtar kaynagi onceligi.
+#
+#   1. KG_MASTER_KEY_FILE  -> dosya yolu (Docker secret / K8s secret mount)
+#   2. KG_MASTER_KEY       -> dogrudan ortam degiskeni (kucuk kurulumlar)
+#
+# `.env` DOSYASI BIR ANAHTAR KAYNAGI DEGILDIR ve olmamalidir: `.env` depoya
+# yakin durur, yedeklere ve imajlara sizar. Docker secret varsayilan olarak
+# /run/secrets/ altina mount edilir ve imaja girmez.
+KEY_FILE_ENV = "KG_MASTER_KEY_FILE"
+# Anahtar kimligi: rotasyonda hangi anahtarla sifrelendigini bilmek icin.
+KEY_ID_ENV = "KG_MASTER_KEY_ID"
+# Eski anahtarlar (rotasyon sirasinda okuma icin): virgulle ayrilmis dosya yollari
+OLD_KEYS_ENV = "KG_MASTER_KEY_OLD_FILES"
+
+
+def _oku_dosya(yol: str) -> str:
+    try:
+        return Path(yol).read_text(encoding="utf-8").strip()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Anahtar dosyasi okunamadi (%s): %s", yol, exc)
+        return ""
+
+
+def _ham_anahtar() -> tuple[str, str]:
+    """(anahtar, kaynak) — kaynak: dosya | ortam | yok."""
+    yol = os.environ.get(KEY_FILE_ENV, "").strip()
+    if yol:
+        ham = _oku_dosya(yol)
+        if ham:
+            return ham, "dosya"
+    ham = os.environ.get(ENV_KEY, "").strip()
+    if ham:
+        return ham, "ortam"
+    return "", "yok"
+
+
+def _turet(ham: str) -> bytes | None:
+    if len(ham) < 32:
+        logger.warning("Ana anahtar cok kisa (>=32 karakter olmali) — sifreleme KAPALI")
+        return None
+    return hashlib.sha256(ham.encode("utf-8")).digest()
+
+
 def _master_key() -> bytes | None:
-    raw = os.environ.get(ENV_KEY, "").strip()
-    if not raw:
-        return None
-    if len(raw) < 32:
-        logger.warning("%s cok kisa (>=32 karakter olmali) — sifreleme KAPALI", ENV_KEY)
-        return None
-    return hashlib.sha256(raw.encode("utf-8")).digest()
+    ham, _ = _ham_anahtar()
+    return _turet(ham) if ham else None
+
+
+def _eski_anahtarlar() -> list[bytes]:
+    """Rotasyon sirasinda ESKI anahtarla sifrelenmis veriyi okuyabilmek icin.
+
+    Rotasyon tek seferde tamamlanmaz: yeni anahtar devreye girer, veri
+    kademeli olarak yeniden sifrelenir. Bu arada eski anahtarla yazilmis
+    kayitlar hala okunabilmelidir.
+    """
+    yollar = [y.strip() for y in os.environ.get(OLD_KEYS_ENV, "").split(",") if y.strip()]
+    out = []
+    for y in yollar:
+        ham = _oku_dosya(y)
+        k = _turet(ham) if ham else None
+        if k:
+            out.append(k)
+    return out
+
+
+def key_status() -> dict:
+    """Anahtar durumu — yonetim ekrani ve guvenlik sayfasi icin."""
+    ham, kaynak = _ham_anahtar()
+    ok, mesaj = (False, "Anahtar tanimli degil")
+    if ham:
+        ok, mesaj = self_test()
+    return {
+        "aktif": ok,
+        "kaynak": kaynak,
+        "kaynak_aciklama": {
+            "dosya": f"{KEY_FILE_ENV} ile dosyadan okunuyor (onerilen)",
+            "ortam": f"{ENV_KEY} ortam degiskeninden okunuyor",
+            "yok": "Anahtar tanimli degil; sifreleme kapali",
+        }[kaynak],
+        "anahtar_kimligi": os.environ.get(KEY_ID_ENV, "").strip() or None,
+        "eski_anahtar_sayisi": len(_eski_anahtarlar()),
+        "mesaj": mesaj,
+        "uzunluk_yeterli": len(ham) >= 32 if ham else False,
+    }
 
 
 def is_enabled() -> bool:
@@ -107,9 +183,14 @@ def decrypt_bytes(blob: bytes) -> bytes:
     except Exception as exc:  # noqa: BLE001
         raise CryptoError(f"Sifreli veri bozuk: {exc}") from exc
 
-    if not hmac.compare_digest(mac, _mac(key, nonce, ct)):
-        raise CryptoError("Butunluk dogrulamasi basarisiz — veri degistirilmis olabilir.")
-    return bytes(a ^ b for a, b in zip(ct, _keystream(key, nonce, len(ct))))
+    # Once aktif anahtar, sonra ESKI anahtarlar denenir (rotasyon penceresi).
+    for aday in [key, *_eski_anahtarlar()]:
+        if hmac.compare_digest(mac, _mac(aday, nonce, ct)):
+            return bytes(a ^ b for a, b in zip(ct, _keystream(aday, nonce, len(ct))))
+    raise CryptoError(
+        "Butunluk dogrulamasi basarisiz — veri degistirilmis ya da anahtar yanlis. "
+        f"Rotasyon yapildiysa eski anahtari {OLD_KEYS_ENV} ile tanimlayin."
+    )
 
 
 def encrypt_text(text: str) -> str:

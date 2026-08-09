@@ -242,3 +242,62 @@ def test_yetersiz_kanit_kelepcelenmez():
 def test_verify_karari_banda_kelepceler():
     d = sl.verify(karar(1, decision="met", puan=4, quote="ben Mehmet"), TRANSCRIPT)
     assert d.score == 8, "met karari 'kismen' bandinda puan aldi"
+
+
+# =========================================================================
+# S2c — kriter bazli model yonlendirmesi
+# =========================================================================
+
+def test_oznel_kriterler_gruplamadan_ONCE_ayrilir(monkeypatch):
+    """Bir grup her zaman TEK modele ait olmali.
+
+    Ayrim gruplamadan sonra yapilirsa bir grupta hem oznel hem nesnel kriter
+    olur; grup tek modele gitmek zorunda oldugu icin ya nesnel kriterler
+    gereksiz yere buyuk modele gider ya da oznel kriterler kucuk modelde kalir.
+    """
+    from app.services import model_routing
+
+    criteria = [
+        Crit(1, "Aktif Dinleme", weight=1.0),
+        Crit(2, "Açılış", weight=1.0),
+        Crit(3, "İhtiyaç Analizi", weight=1.0),
+        Crit(4, "Kapanış", weight=1.0),
+        Crit(5, "Çözüm / Yönlendirme", weight=2.0),
+    ]
+    gorulen: list[tuple[tuple[str, ...], str | None]] = []
+
+    def sahte_group(group, transcript, hint, shots="", model=None):
+        gorulen.append((tuple(c.name for c in group), model))
+        return []
+
+    monkeypatch.setattr(sl, "evaluate_group", sahte_group)
+    sl.evaluate_all(
+        criteria, "t", "",
+        model_for=lambda g: "buyuk" if any(
+            model_routing.is_subjective(c.name) for c in g) else None,
+    )
+
+    for adlar, model in gorulen:
+        oznel_var = any(model_routing.is_subjective(a) for a in adlar)
+        nesnel_var = any(not model_routing.is_subjective(a) for a in adlar)
+        assert not (oznel_var and nesnel_var), f"Karisik grup: {adlar}"
+        assert (model == "buyuk") == oznel_var
+
+
+def test_yonlendirme_yoksa_davranis_degismez(monkeypatch):
+    criteria = [Crit(i, f"K{i}") for i in range(1, 5)]
+    gorulen = []
+    monkeypatch.setattr(
+        sl, "evaluate_group",
+        lambda g, t, h, shots="", model=None: gorulen.append(model) or [])
+    sl.evaluate_all(criteria, "t", "")
+    assert all(m is None for m in gorulen)
+
+
+def test_oznel_kriter_listesi():
+    from app.services import model_routing
+
+    assert model_routing.is_subjective("Aktif Dinleme")
+    assert model_routing.is_subjective("Bilgi Doğruluğu")
+    assert not model_routing.is_subjective("KVKK / Aydınlatma")
+    assert not model_routing.is_subjective("Açılış")

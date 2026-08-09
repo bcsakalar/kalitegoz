@@ -283,6 +283,15 @@ kalibrasyon/itiraz/koçluk/alarm, lig & karne, PII maskeleme + audit log,
 **130 backend + 54 betik testi** + CI, satış dokümanları.
 
 **Bilerek yapılmayanlar (⬜ — sonraki iterasyon):**
+
+0. **Kriter bazlı varyans ölçümü (`make eval-variance`)** — FAZ 7'de ölçüldü ki
+   öznel kriterlerde koşumdan koşuma oynama var (Bilgi Doğruluğu 0.195 ↔ 0.350,
+   aynı model, sıcaklık 0). Mevcut `tekrarlanabilirlik_std` yalnızca **üç
+   senaryonun toplam puanını** ölçtüğü için bunu görmüyor. Yapılması gereken:
+   aynı 50 senaryoyu 2-3 kez koşup **kriter bazında** std üretmek.
+   *Neden şimdi yapılmadı:* koşum başına ~20 dk × tekrar sayısı; `make eval`'ın
+   rutin akışına eklenemez, ayrı hedef olmalı. **Bu ölçüm yapılmadan öznel
+   kriterlerdeki 0.05 altı kappa farkları yorumlanmamalıdır.**
 1. **Gerçek zamanlı agent assist** — bilinçli kapsam dışı; post-call mimarisi.
 2. **Vision** (görsel/ek dosya denetimi) — config hazır, pipeline yok.
    *Ek ~4.7 GB llava modeli indirmesi gerekir; uçtan uca doğrulanamayacağı için yazılmadı.*

@@ -13,9 +13,16 @@ bazen de düzenleyici kurumdan döner.
 **Her çağrının %100'ünü otomatik dinler, puanlar ve raporlar.** Sesli çağrılar ve
 yazışma (chat) kanalı aynı rubrikle denetlenir.
 
+> **Kapsamın anlamı — açıkça:** Uyum kriterlerinde (açılış, KVKK anonsu, kimlik
+> doğrulama, kapanış, yasaklı üslup) kapsam **%100'dür ve puan kesindir**;
+> bu kriterler kodla, tanımlı kuralla ölçülür. Yargı gerektiren kriterlerde
+> (aktif dinleme, ihtiyaç analizi, çözüm) sistem **kanıtlı bir öneri** üretir;
+> geçerli puan kalite uzmanının onayıyla oluşur. Bu ayrım ürünün zayıflığı
+> değil tasarımıdır — ölçülen güvenilirlik `docs/KALITE-METODOLOJISI.md` §4'te.
+
 | Elle denetim | KaliteGöz |
 |---|---|
-| Çağrıların %2–3'ü | **%100'ü** |
+| Çağrıların %2–3'ü | **%100'ü taranır** |
 | Çağrı başına 15–20 dk uzman zamanı | Otomatik, dakikalar içinde |
 | Denetçiden denetçiye değişen puan | Tutarlı, kanıta dayalı, kalibre edilebilir |
 | İhlal aylar sonra fark edilir | **Anında alarm** (kriz / KVKK / hakaret) |

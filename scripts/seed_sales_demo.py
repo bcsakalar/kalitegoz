@@ -41,6 +41,15 @@ from app.models import (  # noqa: E402
 from app.security import hash_password  # noqa: E402
 from app.services import alert_engine  # noqa: E402
 
+# Windows konsolu varsayilan olarak cp1254 kullanir ve "≥", "→" gibi
+# karakterlerde COKER (UnicodeEncodeError). Betigin ciktisi Turkce oldugu
+# icin bu kacinilmaz; cozum ciktiyi UTF-8'e sabitlemek.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+
 DEMO_SLUG = "demo"
 GUN = 30
 HEDEF_CAGRI = 220

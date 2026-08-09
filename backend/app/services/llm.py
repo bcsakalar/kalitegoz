@@ -188,6 +188,20 @@ def _generate_with(model_cls: type[T], system: str, user: str, cfg: AIResolved) 
     raise LLMError(f"LLM ciktisi {settings.llm_max_retries + 1} denemede dogrulanamadi: {last_error}")
 
 
+def generate_json_with(model_cls: type[T], system: str, user: str, cfg: AIResolved) -> T:
+    """Belirli bir model config'i ile JSON uret (S2c — kriter bazli yonlendirme).
+
+    Hata durumunda varsayilan modele DUSER: bir kurulumun buyuk modeli
+    indirmemis olmasi puanlamayi durdurmamali.
+    """
+    try:
+        return _generate_with(model_cls, system, user, cfg)
+    except LLMError:
+        logger.warning(
+            "Yonlendirilen model (%s) basarisiz; varsayilan modele dusuluyor.", cfg.model)
+        return generate_json(model_cls, system, user)
+
+
 def generate_json(model_cls: type[T], system: str, user: str) -> T:
     """LLM'den JSON iste. Birincil (bulut) saglayici erisim/anahtar hatasi verirse
     ve fallback aciksa yerel Ollama'ya duser — puanlama tek saglayiciya bagli kalmaz."""

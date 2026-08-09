@@ -15,11 +15,17 @@ Altı fazda yapıldı; her fazın raporu `docs/v2/FAZ-N-RAPOR.md` altında.
 | Kanıt doğrulanabilirlik | %56.1 | **%100** |
 | Tekrarlanabilirlik (std) | 1.95 | **0.00** |
 | Cohen's kappa (ortalama) | 0.32 | 0.51 |
-| Uyum kriterlerinde kappa | 0.32 | **0.90–1.00** |
-| Backend testi | 221 | **398** |
+| Çekirdek uyum kriterlerinde kappa* | 0.32 | **0.94–1.00** |
+| Backend testi | 221 | **422** |
+
+\* Açılış, KVKK / Aydınlatma, Kapanış, Yasaklı Kelime / Üslup. Diğer iki
+deterministik kriter (Kimlik Doğrulama 0.54, Script Uyumu 0.10) **tanım
+sorunu** taşıyor — kural %100 tekrarlanabilir, tartışma kuralın ne olması
+gerektiğinde. Öznel dört kriterde kappa 0.08–0.20 (14B ile 0.33).
+Ayrıntı: `docs/KALITE-METODOLOJISI.md` §4.
 
 ### FAZ 1 — Denetim ve doğruluk temeli
-- 50 senaryoluk altın set (uzman referanslı), sürüm kontrolünde
+- 50 senaryoluk altın set (**sentetik referans** — kaynağı §4.0'da açık), sürüm kontrolünde
 - `make eval` regresyon takımı: MAE, kappa, sıfırlayıcı FP/FN, kanıt
   doğrulanabilirlik, tekrarlanabilirlik
 - B1–B6 kök neden analizi **ölçümle**; 6 yeni hata bulundu (B27–B32)
@@ -68,6 +74,33 @@ Altı fazda yapıldı; her fazın raporu `docs/v2/FAZ-N-RAPOR.md` altında.
 - `docs/KALITE-METODOLOJISI.md` — satış dokümanı, ölçülmüş metriklerle
 - `docs/KVKK-UYUM.md` — veri yerleşimi, maskeleme, rol matrisi
 
+### FAZ 7 — Rio'nun kararları ve dürüstlük düzeltmeleri
+- **Altın setin kaynağı açıkça yazıldı**: "uzman referansı" değil
+  **sentetik referans**; nesnel kriterlerde *spesifikasyon*, öznel
+  kriterlerde **döngüsel** ve bağımsız doğruluk kanıtı sayılmaz
+- Metrikler **nesnel/öznel ayrı** raporlanıyor; "%100 kapsam" iddiası
+  yalnızca nesnel kriterler için kuruluyor
+- Öznel kriterlerde hedef **sabit değil**: insan-insan kappa × 0.85.
+  IRR ölçülmediği için şu an hedef **konulmuyor** — hedef uydurulmuyor
+- İnsan referansı altyapısı: 20 senaryoluk şablon + IRR karşılaştırması
+  (`scripts/golden/human_ref.py`)
+- **Kriter bazlı model yönlendirmesi** (ölçüldü): `qwen2.5:14b-instruct` ile
+  dört öznel kriterin **üçünde** gürültüyü aşan kazanç — İhtiyaç Analizi
+  0.11→0.46, Çözüm 0.20→0.45, Aktif Dinleme 0.08→0.23. Bilgi Doğruluğu'nda
+  ölçüm sonuçsuz. Varsayılan kapalı (9 GB, 3× yavaş)
+- OIDC/SSO **yönetim ekranından** yapılandırılıyor; sır asla geri dönmüyor
+- Şifreleme anahtarı **dosyadan** (ortam değişkenini ezer) + rotasyon
+  penceresi + KMS/Vault entegrasyon yolu (`docs/KVKK-UYUM.md` §3.1–3.2)
+- Rol bazlı açılış ekranı: kaliteci → inceleme kuyruğu, yönetici → kokpit,
+  temsilci → kendi karnesi
+- `docs/v2/SORULAR.md`: **17 sorunun tamamı kapatıldı**, açık soru yok
+
 ### Kapatılan hatalar
-B1–B26 (prompt dosyasında listelenen) + B27–B32 (denetimde bulunan) = **32 hata**.
+B1–B26 (prompt dosyasında listelenen) + B27–B32 (denetimde bulunan)
++ B33–B34 (kapanış turunda bulunan) = **34 hata**.
 Her biri için regresyon testi veya altın set senaryosu var.
+
+- **B33** — Temsilci karnesi, kaliteci onaylamamış AI puanını sayıyordu.
+- **B34** — Opt-in model yönlendirmesi, kapalıyken bile kriter gruplamasını
+  değiştiriyordu. Kusur birim testle kanıtlandı; ilk gösterdiğim kappa farkı
+  ise sonradan **gürültü aralığında** çıktı ve kanıt olarak geri çekildi.

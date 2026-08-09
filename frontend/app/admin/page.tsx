@@ -3,6 +3,7 @@
 import { useT } from "@/components/I18nProvider";
 import { useCallback, useEffect, useRef, useState } from "react";
 import AITab from "@/components/AITab";
+import SSOTab from "@/components/SSOTab";
 import { api, fmtDate, ROLE_LABEL_KEYS, VIOLATION_LABELS } from "@/lib/api";
 import type {
   BannedWord, Campaign, KnowledgeDoc, KnowledgeHit, ProcessingStatus, UserRow, CompliancePack, Challenge,
@@ -19,6 +20,7 @@ const TABS = [
   { id: "branding", key: "brand.title" },
   { id: "settings", key: "settings.title" },
   { id: "ai", key: "ai.title" },
+  { id: "sso", key: "sso.title" },
   { id: "audit", key: "audit.title" },
   { id: "demo", key: "admin.demo" },
 ];
@@ -46,6 +48,7 @@ export default function AdminPage() {
       {tab === "branding" && <BrandingTab />}
       {tab === "settings" && <SettingsTab />}
       {tab === "ai" && <AITab />}
+      {tab === "sso" && <SSOTab />}
       {tab === "audit" && <AuditTab />}
       {tab === "demo" && <DemoTab />}
     </div>
