@@ -26,6 +26,33 @@ jobs:
           JWT_SECRET: ci-test-secret-key-32-bytes-long-x
         run: python -m pytest -q
 
+  golden-set:
+    name: Altin set — tutarlilik denetimi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Senaryolari uret ve dogrula
+        run: python -m scripts.golden.build
+      - name: Senaryo sayisi ve kova dagilimi
+        run: |
+          python - <<'PY'
+          import json, sys
+          ix = json.load(open("data/golden/index.json", encoding="utf-8"))
+          assert ix["toplam"] >= 40, f"Altin set 40 senaryonun altina dustu: {ix['toplam']}"
+          for b in ("yuksek", "orta", "dusuk", "sifirlayici", "kriz", "tuzak", "ses_kalitesi"):
+              assert ix["kovalar"].get(b), f"'{b}' kovasi bos"
+          for hata in ("B1", "B2", "B3", "B4", "B5", "B6"):
+              assert hata in ix["regresyon_vakalari"], f"{hata} icin regresyon vakasi yok"
+          print(f"OK — {ix['toplam']} senaryo, {len(ix['regresyon_vakalari'])} regresyon vakasi")
+          PY
+
+  # NOT: `make eval` (gercek puanlama kosumu) LLM gerektirdigi icin CI'da
+  # calismaz — Ollama'li self-hosted runner'da veya elle kosulur. FAZ 2'de
+  # runner hazir oldugunda buraya eklenecek; esikler evaluate.py:GATES'te.
+
   frontend:
     name: Frontend — lint + build
     runs-on: ubuntu-latest
