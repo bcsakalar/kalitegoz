@@ -49,6 +49,20 @@ def validate() -> list[str]:
 
         if not s.turns:
             errors.append(f"{s.id}: replik yok")
+
+        # Sifirlama beklentisi, kritik kriter beklentileriyle TUTARLI olmali.
+        # (Rubrikte kritik olanlar: KVKK, Kimlik Dogrulama, Yasakli Kelime / Uslup)
+        kritik = ("KVKK / Aydinlatma", "Kimlik Dogrulama", "Yasakli Kelime / Uslup")
+        esik_alti = [c for c in kritik if s.expected.scores.get(c, 10) < 3]
+        if s.expected.zeroed and not esik_alti:
+            errors.append(
+                f"{s.id}: zeroed=True ama hicbir kritik kriter esik altinda degil "
+                f"({ {c: s.expected.scores.get(c) for c in kritik} })"
+            )
+        if not s.expected.zeroed and esik_alti:
+            errors.append(
+                f"{s.id}: zeroed=False ama kritik kriter(ler) esik altinda: {esik_alti}"
+            )
     return errors
 
 

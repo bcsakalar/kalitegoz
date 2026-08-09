@@ -241,8 +241,17 @@ class Call(Base):
     duration_sec: Mapped[float | None] = mapped_column(Float, nullable=True)
     category: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
     total_score: Mapped[float | None] = mapped_column(Float, nullable=True, index=True)
-    # Sifirlayici ihlal tetiklendiyse puan 0'a cekilir ve bu bayrak set edilir
+    # Sifirlayici ihlal tetiklendiyse puan 0'a cekilir ve bu bayrak set edilir.
+    # zeroed=True ise gerekce ve kanit ZORUNLUDUR — kanitsiz sifirlama sistem
+    # hatasi olarak firlatilir (B5). Onceden gerekce yalnizca alarm metninde
+    # yasiyordu; alarm silinince "neden 0?" sorusu cevapsiz kaliyordu.
     zeroed: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    zeroing_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    zeroing_evidence: Mapped[str | None] = mapped_column(Text, nullable=True)
+    zeroing_evidence_ts: Mapped[float | None] = mapped_column(Float, nullable=True)
+    zeroing_criterion_id: Mapped[int | None] = mapped_column(
+        ForeignKey("criteria.id", ondelete="SET NULL"), nullable=True
+    )
     is_crisis: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     predicted_csat: Mapped[float | None] = mapped_column(Float, nullable=True)  # 1-5 LLM tahmini
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -338,6 +347,16 @@ class Criterion(Base):
     # Kanal kapsami: voice | chat | all
     channel_scope: Mapped[str] = mapped_column(String(10), default="all")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # --- FAZ 2: uc katmanli puanlama ---
+    # deterministic : Katman A kodla cozer, LLM'e SORULMAZ
+    # llm_evidence  : Katman B kanit zorunlu LLM degerlendirmesi
+    # human_only    : oznel kriter, AI puanlamaz -> dogrudan kaliteciye
+    evaluation_mode: Mapped[str] = mapped_column(String(16), default="llm_evidence")
+    # evaluation_mode='deterministic' ise hangi kontrol (deterministic.CHECK_KEYS)
+    check_key: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # Mugak sifat yasak: "10 puan neye benzer / 0 puan neye benzer" capasi
+    anchor_10: Mapped[str] = mapped_column(Text, default="")
+    anchor_0: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -354,10 +373,24 @@ class Score(Base):
     criterion_name: Mapped[str] = mapped_column(String(256))
     criterion_group: Mapped[str] = mapped_column(String(64), default="")
     weight: Mapped[float] = mapped_column(Float, default=1.0)
-    score: Mapped[int] = mapped_column(Integer)  # 0-10 (AI puani)
+    # 0-10 AI puani. NULL = 'insufficient_evidence' — kanit bulunamadi, kriter
+    # puanlanmadi ve ORTALAMAYA KATILMAZ. Kanitsiz ceza vermek yasak (B28).
+    score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     rationale: Mapped[str] = mapped_column(Text, default="")
     evidence: Mapped[str] = mapped_column(Text, default="")
     evidence_ts: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # --- FAZ 2: kanit zorunlulugu ve izlenebilirlik ---
+    # met | partially_met | not_met | not_applicable | insufficient_evidence
+    decision: Mapped[str] = mapped_column(String(24), default="met")
+    confidence: Mapped[float] = mapped_column(Float, default=1.0)
+    # Katman C: alinti transkriptte GERCEKTEN bulundu mu?
+    evidence_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    # A = deterministik kod, B = kanit zorunlu LLM
+    source_layer: Mapped[str] = mapped_column(String(1), default="B")
+    # Puanin hangi rubrik surumuyle uretildigi (rubrik degisince gecmis bozulmaz)
+    rubric_version_id: Mapped[int | None] = mapped_column(
+        ForeignKey("rubric_versions.id", ondelete="SET NULL"), nullable=True
+    )
     # Insan override (kalite uzmani AI puanini degistirebilir)
     override_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     override_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -479,6 +512,10 @@ class Alert(Base):
     severity: Mapped[str] = mapped_column(String(16), default="orta")
     message: Mapped[str] = mapped_column(Text)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    # Cagri yeniden puanlandiginda onceki alarmlar GECERSIZLESIR (B31).
+    # Silinmez — denetim izi ve kalibrasyon sinyali olarak saklanir, ama
+    # kullaniciya gosterilmez. Onceden eski/hatali alarm ekranda asili kaliyordu.
+    is_stale: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
 
 

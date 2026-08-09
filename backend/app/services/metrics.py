@@ -11,6 +11,9 @@ Sonuc Call.metrics'e yazilir ve LLM prompt'una ipucu olarak eklenir
 """
 
 OVERLAP_TOLERANCE_SEC = 0.2  # bu kadarlik bindirme dogal kabul edilir
+# Kesilen replik en az bu kadar suredir devam ediyor olmali. Konusmaci
+# degisiminde olusan sinir artefaktlari "soz kesme" sayilmasin diye.
+MIN_INTERRUPTED_SEC = 1.0
 
 
 def compute_metrics(segments: list[dict], duration_sec: float) -> dict:
@@ -26,15 +29,21 @@ def compute_metrics(segments: list[dict], duration_sec: float) -> dict:
         talk[spk] += max(0.0, seg["end"] - seg["start"])
         words[spk] += len(seg["text"].split())
 
-    # Soz kesme: farkli konusmaci, onceki replik bitmeden giriyor
+    # Soz kesme: farkli konusmaci, onceki replik bitmeden giriyor.
+    #
+    # Iki ek sart (B3): kesilen replik en az MIN_INTERRUPTED_SEC suredir devam
+    # ediyor olmali VE bindirme gercek olmali. Aksi halde segment sinirindaki
+    # kucuk artefaktlar "soz kesme" sayiliyor ve temsilci yapmadigi kesmelerle
+    # cezalandiriliyordu. Sayac YALNIZ kesen tarafa yazilir — musterinin kesmesi
+    # temsilcinin Aktif Dinleme puanini etkileyemez.
     ordered = sorted(segments, key=lambda s: (s["start"], s["end"]))
     interruptions = {"temsilci": 0, "musteri": 0}
     for prev, cur in zip(ordered, ordered[1:]):
-        if (
-            cur["speaker"] != prev["speaker"]
-            and cur["speaker"] in interruptions
-            and cur["start"] < prev["end"] - OVERLAP_TOLERANCE_SEC
-        ):
+        if cur["speaker"] == prev["speaker"] or cur["speaker"] not in interruptions:
+            continue
+        overlap = prev["end"] - cur["start"]
+        already_speaking = cur["start"] - prev["start"]
+        if overlap > OVERLAP_TOLERANCE_SEC and already_speaking >= MIN_INTERRUPTED_SEC:
             interruptions[cur["speaker"]] += 1
 
     # Sessizlik: konusma araliklarinin birlesiminin disinda kalan sure

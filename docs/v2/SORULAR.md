@@ -96,3 +96,58 @@ mevcut durum `chore:` commit'i olarak dondurulup `v2/faz-1-denetim` branch'i aç
 ## FAZ 6 — Dil ve demo
 
 ⚪ Hazır rubrik şablonları hangi sektörler için olsun?
+
+---
+
+## FAZ 2 — Puanlama motoru
+
+### S6. Yasak vaat çağrıyı sıfırlamalı mı? 🟡
+
+**Varsayım:** Evet. `banned_words.severity` `orta`→`yuksek` çekildi ve
+"Yasaklı Kelime / Üslup" kriteri kritik yapıldı (eşik 3).
+
+**Gerekçe:** Prompt dosyasının altın set spesifikasyonu 6 sıfırlayıcı senaryodan
+birini "yasak vaat" olarak tanımlıyor. Sektör pratiğinde tutulamayan vaat,
+itiraz ve tüketici şikâyetinin bir numaralı kaynağıdır.
+
+**Rio hayır derse:** Panelden `banned_words` şiddeti `orta`ya çekilir; kriter
+kritikliği rubrik editöründen kapatılır. Kod değişikliği gerekmez.
+
+---
+
+### S7. "Script Uyumu" nasıl tanımlansın? 🟡
+
+**Varsayım:** Zorunlu akış = açılış + KVKK anonsu + kimlik doğrulama + kapanış.
+Kriter bu dördünün bileşimi; LLM'e ayrıca sorulmuyor.
+
+**Gerekçe:** Ölçüldü — 50 senaryonun 15'inde model bu kriter için kanıt
+bulamayıp "yetersiz kanıt" döndü. Muğlaklığın kaynağı kriterin kendisiydi;
+"script" hiçbir yerde tanımlı değildi.
+
+**Rio'nun yapması gereken:** Kurumun gerçek script'i bu dört adımdan farklıysa
+(örn. "işlem özeti tekrarı" veya "kampanya anonsu" da zorunluysa) kriterin
+tanımı ve `deterministic.check_script` genişletilmeli.
+
+---
+
+### S8. Sıfırlayıcı eşik 3/10 ölçüldü mü? 🟡
+
+**Varsayım:** 3/10 korundu.
+
+**Gerekçe:** FAZ 2 sonunda sıfırlayıcı yanlış-pozitif **%0** ve yanlış-negatif
+**%0** — yani mevcut eşik altın sette hatasız çalışıyor. Değiştirmek için bir
+sebep ölçülmedi.
+
+---
+
+### S9. Kimlik doğrulama geç yapılırsa kaç puan? 🟡
+
+**Varsayım:** 4/10 (`partially_met`) — yapılmış ama işlemden sonra.
+
+**Gerekçe:** Uyum açısından ciddi eksik, ama tamamen atlanmış değil; sıfırlama
+haksız olurdu. Bu kriterin kappa'sı 0.544 ile deterministik kriterler arasında
+en düşüğü — uzman beklentisiyle ayrıştığı yer burası.
+
+**Rio'nun yapması gereken:** Kurum politikası "işlem öncesi doğrulama zorunlu,
+sonrası geçersiz" ise puan 0-2 olmalı ve çağrı sıfırlanmalı. Bu bir **politika
+kararıdır**, teknik değil.

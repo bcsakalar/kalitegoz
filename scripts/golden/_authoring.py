@@ -97,6 +97,23 @@ def build_segments(turns: list[Turn]) -> list[dict]:
     return segs
 
 
+SCRIPT_PARTS = ("Acilis", "KVKK / Aydinlatma", "Kimlik Dogrulama", "Kapanis")
+
+
+def derive_script_uyumu(scores: dict) -> dict:
+    """"Script Uyumu" kriterini tanimindan TURET.
+
+    Bu kriter, zorunlu akisin dort adiminin (acilis, KVKK, kimlik, kapanis)
+    bilesimi olarak TANIMLANDI — ayri bir olgu degil. Dolayisiyla beklenen
+    puani da elle yazilmaz, tanimdan cikar. Elle yazmak iki kaynagin
+    birbirinden sapmasina yol acardi.
+    """
+    parts = [scores[c] for c in SCRIPT_PARTS if c in scores]
+    if not parts:
+        return scores
+    return {**scores, "Script Uyumu": round(sum(parts) / len(parts))}
+
+
 def write_scenario(root: Path, sc: Scenario) -> None:
     d = root / sc.id
     d.mkdir(parents=True, exist_ok=True)
