@@ -1,0 +1,628 @@
+{
+  "tarih": "2026-08-09T13:31:09",
+  "senaryo_sayisi": 25,
+  "ozet": {
+    "kriter_mae": 0.866,
+    "tam_isabet_orani": 0.585,
+    "band_isabet_orani": 0.755,
+    "kappa_ortalama": 0.4988,
+    "sifirlayici_yanlis_pozitif_orani": 0.0,
+    "sifirlayici_yanlis_negatif_orani": 0.0,
+    "kanit_dogrulanabilirlik": 1.0,
+    "tekrarlanabilirlik_std": null,
+    "must_not_penalize_ihlali": 1,
+    "yetersiz_kanit_orani": 0.056,
+    "puanlanan_kriter": 236,
+    "yetersiz_kanitli_kriter": 14
+  },
+  "kriter_bazli": {
+    "Acilis": {
+      "n": 24,
+      "mae": 0.042,
+      "tam_isabet": 0.958,
+      "band_isabet": 1.0,
+      "kappa": 1.0,
+      "ortalama_sapma": 0.042
+    },
+    "Aktif Dinleme": {
+      "n": 24,
+      "mae": 2.083,
+      "tam_isabet": 0.042,
+      "band_isabet": 0.5,
+      "kappa": 0.04,
+      "ortalama_sapma": 0.667
+    },
+    "Bilgi Dogrulugu": {
+      "n": 22,
+      "mae": 1.5,
+      "tam_isabet": 0.136,
+      "band_isabet": 0.591,
+      "kappa": 0.208,
+      "ortalama_sapma": 0.318
+    },
+    "Cozum / Yonlendirme": {
+      "n": 23,
+      "mae": 1.826,
+      "tam_isabet": 0.174,
+      "band_isabet": 0.522,
+      "kappa": 0.1336,
+      "ortalama_sapma": 0.783
+    },
+    "Ihtiyac Analizi": {
+      "n": 23,
+      "mae": 2.043,
+      "tam_isabet": 0.087,
+      "band_isabet": 0.478,
+      "kappa": 0.0282,
+      "ortalama_sapma": 0.913
+    },
+    "KVKK / Aydinlatma": {
+      "n": 24,
+      "mae": 0.0,
+      "tam_isabet": 1.0,
+      "band_isabet": 1.0,
+      "kappa": 1.0,
+      "ortalama_sapma": 0.0
+    },
+    "Kapanis": {
+      "n": 24,
+      "mae": 0.167,
+      "tam_isabet": 0.958,
+      "band_isabet": 0.958,
+      "kappa": 0.902,
+      "ortalama_sapma": 0.167
+    },
+    "Kimlik Dogrulama": {
+      "n": 24,
+      "mae": 0.583,
+      "tam_isabet": 0.833,
+      "band_isabet": 0.833,
+      "kappa": 0.4866,
+      "ortalama_sapma": -0.25
+    },
+    "Script Uyumu": {
+      "n": 24,
+      "mae": 0.417,
+      "tam_isabet": 0.667,
+      "band_isabet": 0.667,
+      "kappa": 0.1899,
+      "ortalama_sapma": -0.417
+    },
+    "Yasakli Kelime / Uslup": {
+      "n": 24,
+      "mae": 0.0,
+      "tam_isabet": 1.0,
+      "band_isabet": 1.0,
+      "kappa": 1.0,
+      "ortalama_sapma": 0.0
+    }
+  },
+  "yetersiz_kanit_kriter_bazli": {
+    "Aktif Dinleme": 1,
+    "Acilis": 1,
+    "KVKK / Aydinlatma": 1,
+    "Kimlik Dogrulama": 1,
+    "Cozum / Yonlendirme": 2,
+    "Yasakli Kelime / Uslup": 1,
+    "Kapanis": 1,
+    "Script Uyumu": 1,
+    "Bilgi Dogrulugu": 3,
+    "Ihtiyac Analizi": 2
+  },
+  "sifirlayici_yanlis_pozitif": [],
+  "sifirlayici_yanlis_negatif": [],
+  "kanitsiz_ceza_ihlalleri": [
+    {
+      "id": "ses-01-dusuk-kalite",
+      "kriter": "Bilgi Dogrulugu",
+      "puan": 7
+    }
+  ],
+  "kanit_icerigi_tutmayan": [],
+  "dogrulanamayan_alintilar": [],
+  "kacirilan_kriz": [],
+  "tekrarlanan_kriter_ureten_cagrilar": [],
+  "tekrarlanabilirlik": {},
+  "detay": [
+    {
+      "id": "dusuk-01-acilis-yok",
+      "bucket": "dusuk",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 73.3,
+      "kriterler": {
+        "Acilis": 1,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 1,
+        "Script Uyumu": 4,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "dusuk-03-yanlis-bilgi",
+      "bucket": "dusuk",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 85.2,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 4,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "dusuk-05-sozu-temsilci-kesiyor",
+      "bucket": "dusuk",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 65.2,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 1,
+        "Script Uyumu": 7,
+        "Cozum / Yonlendirme": 2,
+        "Bilgi Dogrulugu": 4,
+        "Aktif Dinleme": 5,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "dusuk-07-script-disi",
+      "bucket": "dusuk",
+      "regression_for": null,
+      "beklenen_zeroed": true,
+      "gelen_zeroed": true,
+      "toplam": 0.0,
+      "kriterler": {
+        "Acilis": 1,
+        "KVKK / Aydinlatma": 0,
+        "Kimlik Dogrulama": 0,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 1,
+        "Script Uyumu": 0,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": null,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "kriz-01-avukat",
+      "bucket": "kriz",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 91.1,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "kriz-03-iptal-tehdidi",
+      "bucket": "kriz",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 91.1,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "orta-01-kapanis-eksik",
+      "bucket": "orta",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 85.2,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 5,
+        "Script Uyumu": 7,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "orta-03-kimlik-gec",
+      "bucket": "orta",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 83.3,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 5,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 7,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "orta-05-monoton-uslup",
+      "bucket": "orta",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 91.1,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "orta-07-cozum-yonlendirme",
+      "bucket": "orta",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 91.1,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "reg-b1-acilis-tam",
+      "bucket": "regresyon",
+      "regression_for": "B1",
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 91.1,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "reg-b29-konusmaci-bilinmiyor",
+      "bucket": "regresyon",
+      "regression_for": "B29",
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 80.0,
+      "kriterler": {
+        "Acilis": null,
+        "KVKK / Aydinlatma": null,
+        "Kimlik Dogrulama": null,
+        "Yasakli Kelime / Uslup": null,
+        "Kapanis": null,
+        "Script Uyumu": null,
+        "Cozum / Yonlendirme": null,
+        "Bilgi Dogrulugu": null,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "reg-b30-uzun-cagri-orta-ihlal",
+      "bucket": "regresyon",
+      "regression_for": "B30",
+      "beklenen_zeroed": true,
+      "gelen_zeroed": true,
+      "toplam": 0.0,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 0,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 9,
+        "Bilgi Dogrulugu": null,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": null
+      }
+    },
+    {
+      "id": "reg-b4-kesinlikle-haklisiniz",
+      "bucket": "regresyon",
+      "regression_for": "B4",
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 91.1,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "reg-b6-ikiz-a",
+      "bucket": "regresyon",
+      "regression_for": "B6",
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 91.1,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "ses-01-dusuk-kalite",
+      "bucket": "ses_kalitesi",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 81.0,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 1,
+        "Script Uyumu": 7,
+        "Cozum / Yonlendirme": null,
+        "Bilgi Dogrulugu": 7,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": null
+      }
+    },
+    {
+      "id": "sifir-01-hakaret",
+      "bucket": "sifirlayici",
+      "regression_for": null,
+      "beklenen_zeroed": true,
+      "gelen_zeroed": true,
+      "toplam": 0.0,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 5,
+        "Yasakli Kelime / Uslup": 0,
+        "Kapanis": 1,
+        "Script Uyumu": 6,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": null,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "sifir-03-kimlik-atlandi",
+      "bucket": "sifirlayici",
+      "regression_for": null,
+      "beklenen_zeroed": true,
+      "gelen_zeroed": true,
+      "toplam": 0.0,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 0,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 7,
+        "Cozum / Yonlendirme": 9,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "sifir-05-agir-kufur",
+      "bucket": "sifirlayici",
+      "regression_for": null,
+      "beklenen_zeroed": true,
+      "gelen_zeroed": true,
+      "toplam": 0.0,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 5,
+        "Yasakli Kelime / Uslup": 0,
+        "Kapanis": 1,
+        "Script Uyumu": 6,
+        "Cozum / Yonlendirme": 2,
+        "Bilgi Dogrulugu": 2,
+        "Aktif Dinleme": 0,
+        "Ihtiyac Analizi": 1
+      }
+    },
+    {
+      "id": "tuzak-01-kurum-adi-cumle-ortasinda",
+      "bucket": "tuzak",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 92.6,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 9,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "tuzak-03-musteri-kufrediyor",
+      "bucket": "tuzak",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 91.1,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "yuksek-01-fatura-itiraz",
+      "bucket": "yuksek",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 91.1,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "yuksek-03-iptal-kazanim",
+      "bucket": "yuksek",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 92.6,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 9,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "yuksek-05-tasinma",
+      "bucket": "yuksek",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 91.1,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    },
+    {
+      "id": "yuksek-07-teknik-detay",
+      "bucket": "yuksek",
+      "regression_for": null,
+      "beklenen_zeroed": false,
+      "gelen_zeroed": false,
+      "toplam": 91.1,
+      "kriterler": {
+        "Acilis": 10,
+        "KVKK / Aydinlatma": 10,
+        "Kimlik Dogrulama": 10,
+        "Yasakli Kelime / Uslup": 10,
+        "Kapanis": 10,
+        "Script Uyumu": 10,
+        "Cozum / Yonlendirme": 8,
+        "Bilgi Dogrulugu": 8,
+        "Aktif Dinleme": 8,
+        "Ihtiyac Analizi": 8
+      }
+    }
+  ]
+}

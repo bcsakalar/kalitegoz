@@ -25,6 +25,7 @@ from ..models import AlertType, BannedWord, Call, Channel, Criterion, Score, Seg
 from ..schemas import LLMCagriAnalizi
 from . import acoustics, ai_config, calibration_scale, compliance, deterministic, etiquette, knowledge
 from . import alerts as alerts_svc
+from . import review_feedback
 from . import scoring_layers
 from .llm import generate_json
 
@@ -224,14 +225,15 @@ def _windows(segments: list[Segment], window_sec: int) -> list[list[Segment]]:
 
 
 def _evaluate_llm_criteria(
-    criteria: list[Criterion], segments: list[Segment], hint: str
+    criteria: list[Criterion], segments: list[Segment], hint: str, few_shot_for=None
 ) -> list[scoring_layers.CriterionDecision]:
     """Katman B + C. Uzun cagrida pencereleme, sonra karar birlestirme."""
     blob = " ".join(s.text for s in segments)
     windows = _windows(segments, settings.chunk_size_sec)
 
     if len(windows) == 1:
-        kararlar = scoring_layers.evaluate_all(criteria, format_transcript(segments), hint)
+        kararlar = scoring_layers.evaluate_all(
+            criteria, format_transcript(segments), hint, few_shot_for)
         return [scoring_layers.verify(k, blob) for k in kararlar]
 
     logger.info("Uzun cagri: %d pencere ile degerlendiriliyor", len(windows))
@@ -242,7 +244,8 @@ def _evaluate_llm_criteria(
             "bolumde GORDUGUN kanitlara dayan; gormedigin bir kriter icin "
             "'insufficient_evidence' de.\n"
         )
-        kararlar = scoring_layers.evaluate_all(criteria, format_transcript(win), hint + note)
+        kararlar = scoring_layers.evaluate_all(
+            criteria, format_transcript(win), hint + note, few_shot_for)
         for k in kararlar:
             d = scoring_layers.verify(k, blob)
             prev = best.get(d.criterion_id)
@@ -360,8 +363,17 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
             logger.warning("RAG baglami olusturulamadi: %s", exc)
 
     # ---------------- KATMAN B + C — kanit zorunlu LLM -------------------
+    # Kalite uzmaninin onceki duzeltmeleri few-shot ornek olarak enjekte edilir
+    # (FAZ 3.4 geri besleme dongusu). Ornek yoksa blok bos doner, davranis degismez.
     if llm_criteria:
-        decisions.extend(_evaluate_llm_criteria(llm_criteria, segments, hint))
+        def _few_shot(group: list[Criterion]) -> str:
+            try:
+                return review_feedback.build_block(db, call.tenant_id, group)
+            except Exception as exc:  # noqa: BLE001 — kalibrasyon puanlamayi dusurmez
+                logger.warning("Kalibrasyon ornekleri okunamadi: %s", exc)
+                return ""
+
+        decisions.extend(_evaluate_llm_criteria(llm_criteria, segments, hint, _few_shot))
 
     # ---------------- KATMAN C (devam) — skala kalibrasyonu --------------
     # LLM ile puanlanan kriterlerde olculmus, tek yonlu bir sapma var (altin
@@ -379,6 +391,32 @@ def _run_scoring_inner(db: Session, call: Call) -> ScoringOutcome:
                 _names.get(d.criterion_id, ""), d.score, source_layer=d.source_layer
             ),
         )
+
+    # Deterministik TAVAN: olculmus soz kesme sayisi Aktif Dinleme puanini
+    # sinirlar. LLM tavanin ALTINDA serbest — empati/teyit gibi olculemeyen
+    # kisim ona ait. Bkz. deterministic.listening_ceiling.
+    # Olculmus guvenilirlik: sistemin guvenilir OLMADIGINI bildigi kriterlerde
+    # guven skoru tavanlanir -> kuyruk kurali 3 devreye girer -> cagri insana
+    # gider. "AI %100 dogru" demek yerine sinirini bilip yonetmek.
+    for d in decisions:
+        cap = calibration_scale.confidence_cap(
+            _names.get(d.criterion_id, ""), d.source_layer
+        )
+        if cap is not None and d.confidence > cap:
+            d.confidence = cap
+
+    tavan, tavan_gerekce = deterministic.listening_ceiling(
+        call.metrics if isinstance(call.metrics, dict) else None
+    )
+    if tavan is not None:
+        for d in decisions:
+            ad = _names.get(d.criterion_id, "")
+            if "aktif dinleme" not in ad.lower() or d.score is None or d.score <= tavan:
+                continue
+            d.score = tavan
+            d.rationale = f"{d.rationale} {tavan_gerekce}".strip()
+            d.decision = "partially_met" if tavan >= 5 else "not_met"
+            d.source_layer = "A"  # karari kod verdi
 
     # ---------------- Puan ve sifirlama — hepsi KODDA --------------------
     base_total = scoring_layers.compute_total(decisions, criteria)

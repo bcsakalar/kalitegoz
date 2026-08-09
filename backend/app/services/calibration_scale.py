@@ -73,6 +73,43 @@ def offset_for(criterion_name: str) -> float:
     return off if abs(off) >= _MIN_BIAS else 0.0
 
 
+# Ölçülmüş kriter güvenilirliği (altın set kappa'sı, sınav altkümesi).
+# Bu tablo bir performans notu değil, bir ÜRÜN DAVRANIŞI girdisidir: sistemin
+# güvenilir olmadığını BİLDİĞİ kriterde puanı düşük güvenle işaretler ve
+# çağrıyı insan kuyruğuna gönderir (qa_workflow kural 3).
+#
+# "Yapay zekâ %100 doğru" iddiası kurmak yerine sistemin sınırını bilmesi ve
+# yönetmesi, ürünün satış argümanıdır.
+MEASURED_KAPPA: dict[str, float] = {
+    "KVKK / Aydinlatma": 1.00,
+    "Yasakli Kelime / Uslup": 1.00,
+    "Acilis": 1.00,
+    "Kapanis": 0.90,
+    "Kimlik Dogrulama": 0.49,
+    "Bilgi Dogrulugu": 0.21,
+    "Script Uyumu": 0.19,
+    "Cozum / Yonlendirme": 0.13,
+    "Aktif Dinleme": 0.04,
+    "Ihtiyac Analizi": 0.03,
+}
+# Bu kappa'nın altındaki kriterler GÜVENİLİR SAYILMAZ; güven skoru tavanlanır ve
+# çağrı insan onayına düşer. 0.40, "orta düzeyde uyum" sınırı olarak kabul edilir.
+RELIABLE_KAPPA = 0.40
+# Güvenilmez kriterin güven skoru bu değeri aşamaz. qa_workflow eşiği 0.70
+# olduğu için bu, insan incelemesini GARANTİ eder.
+UNRELIABLE_CONFIDENCE_CAP = 0.60
+
+
+def confidence_cap(criterion_name: str, source_layer: str) -> float | None:
+    """Bu kriterde AI'nin puanı ne kadar güvenilir? None = sınır yok."""
+    if source_layer == "A":
+        return None  # deterministik karar, ölçülen kappa'sı zaten 0.90+
+    kappa = MEASURED_KAPPA.get(criterion_name)
+    if kappa is None or kappa >= RELIABLE_KAPPA:
+        return None
+    return UNRELIABLE_CONFIDENCE_CAP
+
+
 def apply(criterion_name: str, score: int | None, *, source_layer: str) -> int | None:
     """Puanı uzman ölçeğine hizala. 0-10 dışına taşmaz.
 

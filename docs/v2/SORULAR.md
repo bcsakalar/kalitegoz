@@ -151,3 +151,53 @@ en düşüğü — uzman beklentisiyle ayrıştığı yer burası.
 **Rio'nun yapması gereken:** Kurum politikası "işlem öncesi doğrulama zorunlu,
 sonrası geçersiz" ise puan 0-2 olmalı ve çağrı sıfırlanmalı. Bu bir **politika
 kararıdır**, teknik değil.
+
+---
+
+## FAZ 3 — İki aşamalı kalite kontrol
+
+### S10. Öznel kriterler AI tarafından puanlansın mı? 🟡 ÖNEMLİ
+
+**Varsayım:** Evet, puanlansın — ama **düşük güvenle işaretlenip insana gönderilsin**.
+
+**Ölçüm (altın set sınav altkümesi, n=25, qwen2.5:7b-instruct):**
+
+| Kriter | kappa | AI güvenilir mi? |
+|---|---|---|
+| KVKK / Aydinlatma | 1.00 | evet |
+| Yasaklı Kelime / Üslup | 1.00 | evet |
+| Açılış | 1.00 | evet |
+| Kapanış | 0.90 | evet |
+| Kimlik Doğrulama | 0.49 | sınırda |
+| Bilgi Doğruluğu | 0.19 | **hayır** |
+| Script Uyumu | 0.19 | **hayır** |
+| Çözüm / Yönlendirme | 0.12 | **hayır** |
+| İhtiyaç Analizi | 0.03 | **hayır** |
+| Aktif Dinleme | 0.03 | **hayır** |
+
+Üç mekanizma denendi ve **ölçüldü**: few-shot geri besleme (+0.007), skala
+kalibrasyonu, deterministik tavan. Hiçbiri kappa'yı taşımadı.
+
+**Seçenekler:**
+- **(a) Mevcut varsayım** — puanlanır, güven 0.60 ile tavanlanır, çağrı insan
+  kuyruğuna düşer. Kapsam %100 kalır ama o kriterlerin puanı fiilen "insan
+  onayına kadar geçici"dir.
+- **(b) `evaluation_mode='human_only'`** — AI hiç puanlamaz, kriter doğrudan
+  kaliteciye gider. Prompt dosyasının kendi önerisi ("öznel sorular insana
+  işaretlensin"). Daha dürüst ama kapsam iddiası zayıflar.
+- **(c) Daha büyük model** — o dört kriter için 14B/32B ya da bulut modeli.
+  Maliyet ve gecikme artar; ölçüm tekrarlanmalı.
+
+**Rio'nun kararı gereken:** Satış hikâyesi "%100 kapsam" üzerine kurulu.
+(b) seçeneği kapsamı %60'a düşürür ama savunulabilirliği artırır. Bu bir
+konumlandırma kararıdır, teknik değil.
+
+---
+
+### S11. Yeni temsilci örneklem oranı %20 uygun mu? 🟡
+
+**Varsayım:** Evet, ve bu oran kiracının genel oranını **yalnızca yükseltir**.
+
+**Gerekçe:** İlk uygulamada yeni temsilci oranı genel oranın yerine geçiyordu;
+kiracı %50 ayarlasa bile yeni temsilciler %20'ye düşüyordu — "daha sıkı takip"
+ayarı yeni temsilciyi daha az denetler hale getiriyordu. Test ile kilitlendi.

@@ -55,7 +55,7 @@ def test_b27_tekrarlanan_kriter_elenir():
 def test_b27_evaluate_all_tekrarlanan_karari_elemeli(monkeypatch):
     """Katman B ayni kriter icin iki karar donerse ilki gecerli olmali."""
     criteria = [Crit(1, "Acilis")]
-    monkeypatch.setattr(sl, "evaluate_group", lambda g, t, h: [
+    monkeypatch.setattr(sl, "evaluate_group", lambda g, t, h, fs="": [
         LLMKriterKarari(kriter_id=1, karar="met", puan=9),
         LLMKriterKarari(kriter_id=1, karar="not_met", puan=2),
     ])
@@ -75,7 +75,7 @@ def test_b28_degerlendirilemeyen_kriter_uydurma_puan_almaz(monkeypatch):
     kuyruguna duser. Uydurulan 5 puan ortalamaya gercek puan gibi giriyordu.
     """
     criteria = [Crit(1, "Acilis"), Crit(2, "Kapanis")]
-    monkeypatch.setattr(sl, "evaluate_group", lambda g, t, h: [
+    monkeypatch.setattr(sl, "evaluate_group", lambda g, t, h, fs="": [
         LLMKriterKarari(kriter_id=1, karar="met", puan=8)
     ] if any(c.id == 1 for c in g) else [])
 

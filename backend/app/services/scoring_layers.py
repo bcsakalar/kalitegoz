@@ -208,10 +208,16 @@ def _resolve_letters(
     return out
 
 
-def evaluate_group(group: list, transcript: str, hint: str) -> list[LLMKriterKarari]:
-    """Bir kriter grubunu tek LLM cagrisiyla degerlendir (Katman B)."""
+def evaluate_group(
+    group: list, transcript: str, hint: str, few_shot: str = ""
+) -> list[LLMKriterKarari]:
+    """Bir kriter grubunu tek LLM cagrisiyla degerlendir (Katman B).
+
+    `few_shot`: kalite uzmaninin onceki duzeltmelerinden uretilmis ornek blogu
+    (review_feedback.build_block). Bos ise davranis degismez.
+    """
     block, mapping = _criteria_block(group)
-    prompt = _prompt(group, transcript, hint, block)
+    prompt = _prompt(group, transcript, hint + few_shot, block)
     try:
         result = generate_json(LLMKriterGrubu, SYSTEM_PROMPT, prompt)
     except Exception as exc:  # noqa: BLE001
@@ -220,15 +226,20 @@ def evaluate_group(group: list, transcript: str, hint: str) -> list[LLMKriterKar
     return _resolve_letters(result.kararlar, mapping, group)
 
 
-def evaluate_all(criteria: list, transcript: str, hint: str) -> list[LLMKriterKarari]:
+def evaluate_all(
+    criteria: list, transcript: str, hint: str, few_shot_for=None
+) -> list[LLMKriterKarari]:
     """Tum LLM kriterlerini gruplar halinde degerlendir.
 
     Degerlendirilemeyen kriter icin UYDURMA PUAN URETILMEZ (B28): eksik kalan
     kriter `insufficient_evidence` olarak isaretlenir ve insan kuyruguna duser.
+
+    `few_shot_for(group) -> str`: o gruba ait kalibrasyon orneklerini uretir.
     """
     got: dict[int, LLMKriterKarari] = {}
     for group in group_criteria(criteria):
-        for k in evaluate_group(group, transcript, hint):
+        shots = few_shot_for(group) if few_shot_for else ""
+        for k in evaluate_group(group, transcript, hint, shots):
             if k.kriter_id is not None and k.kriter_id not in got:
                 got[k.kriter_id] = k  # B27: ilk karar gecerli, tekrar elenir
 

@@ -491,6 +491,31 @@ def check_script(findings: dict[str, Finding]) -> Finding:
     )
 
 
+# Temsilcinin söz kesme sayısı → Aktif Dinleme için ÜST SINIR.
+# Ölçülmüş bir olgunun puanı sınırlaması, LLM'in "ikna olması"na bırakılamaz:
+# FAZ 2 ölçümünde model, prompt'ta kendisine verilen kesin söz kesme sayılarına
+# rağmen ortalama +0.86 cömert puanladı (kappa 0.06). Sayı zaten elimizdeyse
+# tavanı kodla koymak doğrudur; LLM tavanın ALTINDA serbestçe karar verir
+# (empati, teyit etme, özetleme gibi ölçülemeyen kısım hâlâ ona ait).
+INTERRUPTION_CEILING = ((0, 10), (2, 7), (4, 4), (99, 2))
+
+
+def listening_ceiling(metrics: dict | None) -> tuple[int | None, str]:
+    """Söz kesme sayısından Aktif Dinleme tavanı → (tavan, gerekçe)."""
+    if not metrics or "temsilci_kesinti" not in metrics:
+        return None, ""
+    kes = int(metrics.get("temsilci_kesinti") or 0)
+    for esik, tavan in INTERRUPTION_CEILING:
+        if kes <= esik:
+            if tavan >= 10:
+                return None, ""  # sınır yok
+            return tavan, (
+                f"Temsilci müşterinin sözünü {kes} kez kesti; bu kriterin puanı "
+                f"{tavan}/10 ile sınırlandı."
+            )
+    return None, ""
+
+
 def run_all(segments: list, *, brand_names: tuple[str, ...], banned: list) -> dict[str, Finding]:
     """Tüm deterministik kontrolleri koştur → {check_key: Finding}."""
     out = {
