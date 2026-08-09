@@ -11,9 +11,18 @@ Bu modül döngüyü kırar:
 
 1. **`select`** — insanın elle puanlayacağı 20 senaryoluk temsili alt küme
    seçer ve doldurulacak şablonu üretir.
-2. **`load`** — insan puanlarını okur, sentetik referanstan **ayrı** tutar.
-3. **`irr`** — iki bağımsız puanlama setini karşılaştırır, kriter bazında
-   Cohen's kappa üretir.
+2. **`compare`** — iki puanlama setini karşılaştırır. Her iki taraf da bir
+   JSON dosyası ya da `sentetik` (altın setin mevcut beklenen puanları)
+   olabilir. Aynı komut **farklı sorulara** cevap verir:
+
+       # İnsan referansı, sentetik referanstan ne kadar ayrışıyor?
+       python -m scripts.golden.human_ref compare --a sentetik --b rio.json
+
+       # İki insan birbirine ne kadar uyuyor? (IRR — öznel hedefi bu belirler)
+       python -m scripts.golden.human_ref compare --a rio.json --b uzman2.json
+
+   Çıktı kriter bazında Cohen's kappa, MAE ve bant isabetidir; nesnel ve
+   öznel kriterler **ayrı** raporlanır.
 
 ## Öznel kriterlerde hedef neden sabit 0.75 değil?
 
@@ -45,6 +54,15 @@ import json
 import statistics
 import sys
 from pathlib import Path
+
+# Windows konsolu varsayilan olarak cp1254 kullanir ve "≥", "→" gibi
+# karakterlerde COKER (UnicodeEncodeError). Betigin ciktisi Turkce oldugu
+# icin bu kacinilmaz; cozum ciktiyi UTF-8'e sabitlemek.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 
 GOLDEN_DIR = Path("data/golden")
 HUMAN_DIR = Path("data/human_ref")

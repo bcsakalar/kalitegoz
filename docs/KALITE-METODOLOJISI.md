@@ -24,10 +24,14 @@ AŞAMA 2 — KALİTE UZMANI DOĞRULAR  → risk bazlı kuyruk, onayla / düzelt 
     Her düzeltme kalibrasyon verisidir.
 ```
 
-Yapay zekânın tek başına yeterli olduğunu **iddia etmiyoruz.** Kalibre edilmiş
-otomatik puanlama yapısal kriterlerde uzman insanla %90-95 uyum yakalar;
-sarkazm, ağır aksan ve muğlak ton hâlâ insan gerektirir. Ürün bunu gizlemez,
-**yönetir**: güvenilir olmadığını bildiği kriteri insana yollar.
+Yapay zekânın tek başına yeterli olduğunu **iddia etmiyoruz.** Ölçtüğümüz şu:
+yapısal/nesnel kriterlerde (açılış, KVKK, kimlik, kapanış, üslup) sistem
+tanımlı kuralla **kappa 0.90–1.00** uyum yakalıyor. Yargı gerektiren
+kriterlerde — sarkazm, ağır aksan, muğlak ton, "yeterince dinledi mi" — hâlâ
+insan gerekiyor ve sistemin oradaki uyumu **düşük** (§4.1).
+
+Ürün bunu gizlemez, **yönetir**: güvenilir olmadığını bildiği kriteri insana
+yollar. Bu, ürünün zayıflığı değil tasarımıdır.
 
 ## 3. Puanlama nasıl çalışır — üç katman
 
@@ -218,7 +222,8 @@ Yedi kural; hepsi yapılandırılabilir:
   Öznel kriterlerde sistem **öneri** üretir; geçerli puan insan onayıyla oluşur
 - ✅ **Her puanın kanıtı var**: alıntı transkriptte doğrulanır (%100)
 - ✅ **Tekrarlanabilir**: aynı çağrı üç kez puanlandığında aynı sonuç (std 0.00)
-- ✅ **Uyum kriterlerinde uzman seviyesi**: kappa 0.90–1.00
+- ✅ **Nesnel kriterlerde kuralla tam mutabık**: kappa 0.90–1.00
+  *(karşılaştırma bir insan uzmanla değil, tanımlı kuralla yapıldı — §4.0)*
 - ✅ **Haksız sıfırlama yok**: yanlış-pozitif %0
 - ✅ **Sistem sınırını biliyor**: güvenilmediği kriteri insana yollar
 - ✅ **Veri kurumdan çıkmaz**: yerel model (Ollama) ile on-prem çalışır

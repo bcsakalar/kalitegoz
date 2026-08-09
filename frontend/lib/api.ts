@@ -77,6 +77,10 @@ import type {
   ReviewQueueStats,
   ReviewSubmit,
   SecurityChecks,
+  SSOConfig,
+  SSOConfigSave,
+  SSOSaveResult,
+  EncryptionStatus,
 } from "./types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -173,6 +177,12 @@ export const api = {
   reviewSubmit: (callId: number, body: ReviewSubmit) =>
     request<ReviewCall | null>(`/review-queue/${callId}/submit`, json(body)),
   securityChecks: () => request<SecurityChecks>("/enterprise/security-checks"),
+
+  // --- S12: kurumsal kimlik dogrulama + sifreleme anahtari ---
+  ssoConfig: () => request<SSOConfig>("/enterprise/sso/config"),
+  ssoConfigSave: (body: SSOConfigSave) =>
+    request<SSOSaveResult>("/enterprise/sso/config", { ...json(body), method: "PUT" }),
+  encryptionStatus: () => request<EncryptionStatus>("/enterprise/encryption/status"),
 
   // --- Auth ---
   login: async (email: string, password: string, tenantSlug = "demo") => {
