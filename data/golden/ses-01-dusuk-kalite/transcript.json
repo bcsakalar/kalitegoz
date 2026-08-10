@@ -1,0 +1,95 @@
+{
+  "id": "ses-01-dusuk-kalite",
+  "title": "Dusuk ses kalitesi — anlasilmayan bolumler isaretli",
+  "bucket": "ses_kalitesi",
+  "tags": [
+    "stt_guven_dusuk"
+  ],
+  "duration_sec": 35.85,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Doğan. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 10.5,
+      "text": "[anlaşılmadı] Yılmaz, [anlaşılmadı] 21."
+    },
+    {
+      "idx": 3,
+      "speaker": "temsilci",
+      "start": 10.85,
+      "end": 14.05,
+      "text": "Bağlantımız kopuk geliyor, müşteri numaranızı tekrar alabilir miyim?"
+    },
+    {
+      "idx": 4,
+      "speaker": "musteri",
+      "start": 14.4,
+      "end": 15.6,
+      "text": "447 [anlaşılmadı] 21."
+    },
+    {
+      "idx": 5,
+      "speaker": "temsilci",
+      "start": 15.95,
+      "end": 19.15,
+      "text": "Anlıyorum, hattımız zayıf. Adınıza kayıtlı numaradan doğrulayabilir miyim?"
+    },
+    {
+      "idx": 6,
+      "speaker": "musteri",
+      "start": 19.5,
+      "end": 20.7,
+      "text": "Evet, bu numaradan."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 21.05,
+      "end": 23.45,
+      "text": "Teşekkürler, kaydınızı buldum. Nasıl yardımcı olabilirim?"
+    },
+    {
+      "idx": 8,
+      "speaker": "musteri",
+      "start": 23.8,
+      "end": 25.0,
+      "text": "[anlaşılmadı] fatura [anlaşılmadı]"
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 25.35,
+      "end": 30.55,
+      "text": "Fatura konusunda yardımcı olayım. Sizi daha net duyabilmem için sizi geri arayabilir miyim?"
+    },
+    {
+      "idx": 10,
+      "speaker": "musteri",
+      "start": 30.9,
+      "end": 32.1,
+      "text": "Olur."
+    },
+    {
+      "idx": 11,
+      "speaker": "temsilci",
+      "start": 32.45,
+      "end": 34.85,
+      "text": "5 dakika içinde bu numaradan arayacağım."
+    }
+  ]
+}

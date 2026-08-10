@@ -206,7 +206,7 @@ export default function LoginPage() {
                 </button>
               ))}
             </div>
-            <p className="px-4 pb-3 text-center text-xs text-muted">{t("login.demoNote")} <code>demo1234</code></p>
+            <p className="px-4 pb-3 text-center text-xs text-muted">{t("login.demoNote")}</p>
           </details>
         )}
       </div>

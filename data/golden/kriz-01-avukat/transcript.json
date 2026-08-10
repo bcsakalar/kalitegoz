@@ -1,0 +1,103 @@
+{
+  "id": "kriz-01-avukat",
+  "title": "Musteri avukat tehdidi",
+  "bucket": "kriz",
+  "tags": [
+    "kriz",
+    "eskalasyon"
+  ],
+  "duration_sec": 41.8,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.0,
+      "text": "Netik İletişim'e hoş geldiniz, ben Nihan. Size nasıl yardımcı olabilirim?"
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 5.35,
+      "end": 9.35,
+      "text": "Görüşmemiz kayıt altına alınmaktadır ve kişisel verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 2,
+      "speaker": "temsilci",
+      "start": 9.7,
+      "end": 12.5,
+      "text": "Öncelikle adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 12.85,
+      "end": 14.85,
+      "text": "Ayşe Kaya, müşteri numaram 448120."
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 15.2,
+      "end": 17.6,
+      "text": "Teşekkür ederim Ayşe Hanım, kaydınızı görüyorum."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 17.95,
+      "end": 20.75,
+      "text": "Bu işi avukatıma vereceğim, hukuki süreç başlatacağım."
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 21.1,
+      "end": 23.5,
+      "text": "Sizi anlıyorum, bu noktaya gelmesini istemezdik."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 23.85,
+      "end": 27.85,
+      "text": "Konuyu yönetici seviyesine taşıyorum ve bugün içinde size dönüş yapılacak."
+    },
+    {
+      "idx": 8,
+      "speaker": "musteri",
+      "start": 28.2,
+      "end": 29.4,
+      "text": "Umarım."
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 29.75,
+      "end": 32.95,
+      "text": "Kayıt numaranızı SMS ile göndereceğim, takibini bizzat yapacağım."
+    },
+    {
+      "idx": 10,
+      "speaker": "temsilci",
+      "start": 33.3,
+      "end": 36.1,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 11,
+      "speaker": "musteri",
+      "start": 36.45,
+      "end": 37.65,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 12,
+      "speaker": "temsilci",
+      "start": 38.0,
+      "end": 40.8,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

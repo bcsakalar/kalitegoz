@@ -1,0 +1,60 @@
+{
+  "id": "sifir-05-agir-kufur",
+  "title": "Temsilci kufretti",
+  "bucket": "sifirlayici",
+  "tags": [
+    "sifirlayici"
+  ],
+  "duration_sec": 18.1,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Berk. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 10.1,
+      "text": "Filiz Ateş, 220990."
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 10.45,
+      "end": 11.65,
+      "text": "Bir saattir bekletiyorsunuz!"
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 12.0,
+      "end": 14.0,
+      "text": "Salak mısınız, sıra var burada."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 14.35,
+      "end": 15.55,
+      "text": "Şikayet edeceğim sizi."
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 15.9,
+      "end": 17.1,
+      "text": "Edin bakalım."
+    }
+  ]
+}

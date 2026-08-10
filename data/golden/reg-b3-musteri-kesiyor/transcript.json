@@ -1,0 +1,124 @@
+{
+  "id": "reg-b3-musteri-kesiyor",
+  "title": "B3: Sozu MUSTERI kesiyor, temsilci hic kesmiyor",
+  "bucket": "regresyon",
+  "tags": [
+    "aktif_dinleme",
+    "akustik"
+  ],
+  "duration_sec": 38.85,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Caner. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 10.1,
+      "text": "Hasan Yıldız, 447821."
+    },
+    {
+      "idx": 3,
+      "speaker": "temsilci",
+      "start": 10.45,
+      "end": 12.85,
+      "text": "Teşekkürler Hasan Bey. Kaydınıza bakıyorum, faturanızda"
+    },
+    {
+      "idx": 4,
+      "speaker": "musteri",
+      "start": 11.45,
+      "end": 13.05,
+      "text": "Ben zaten ödedim onu!"
+    },
+    {
+      "idx": 5,
+      "speaker": "temsilci",
+      "start": 13.4,
+      "end": 16.2,
+      "text": "Anlıyorum, ödemenizi kontrol ediyorum. Sistemde 12 Temmuz"
+    },
+    {
+      "idx": 6,
+      "speaker": "musteri",
+      "start": 14.6,
+      "end": 16.2,
+      "text": "Dekontu da var elimde!"
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 16.55,
+      "end": 19.75,
+      "text": "Elbette, dekontunuz varsa hemen eşleştirelim. Ödemeniz farklı bir"
+    },
+    {
+      "idx": 8,
+      "speaker": "musteri",
+      "start": 18.25,
+      "end": 19.85,
+      "text": "Yani sizin hatanız yine!"
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 20.2,
+      "end": 23.8,
+      "text": "Haklısınız, sistemsel bir eşleşme sorunu olmuş. Düzeltme kaydını açıyorum."
+    },
+    {
+      "idx": 10,
+      "speaker": "musteri",
+      "start": 22.5,
+      "end": 24.1,
+      "text": "Ne zaman düzelecek peki?"
+    },
+    {
+      "idx": 11,
+      "speaker": "temsilci",
+      "start": 24.45,
+      "end": 28.45,
+      "text": "24 saat içinde bakiyenize yansıyacak, size SMS ile bilgi vereceğim."
+    },
+    {
+      "idx": 12,
+      "speaker": "musteri",
+      "start": 28.8,
+      "end": 30.0,
+      "text": "Tamam, olur."
+    },
+    {
+      "idx": 13,
+      "speaker": "temsilci",
+      "start": 30.35,
+      "end": 33.15,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 14,
+      "speaker": "musteri",
+      "start": 33.5,
+      "end": 34.7,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 15,
+      "speaker": "temsilci",
+      "start": 35.05,
+      "end": 37.85,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

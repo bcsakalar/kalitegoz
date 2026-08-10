@@ -1,0 +1,81 @@
+{
+  "id": "sifir-02-kvkk-anons-yok",
+  "title": "KVKK anonsu hic yapilmadi",
+  "bucket": "sifirlayici",
+  "tags": [
+    "sifirlayici"
+  ],
+  "duration_sec": 23.55,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 3.0,
+      "text": "Netik İletişim, ben Rüya, buyurun."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 3.35,
+      "end": 5.75,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 6.1,
+      "end": 7.3,
+      "text": "Tarık Güneş, 990887."
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 7.65,
+      "end": 9.65,
+      "text": "Kredi kartımla ödeme yapmak istiyorum."
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 10.0,
+      "end": 11.6,
+      "text": "Tabii, kart bilgilerinizi alayım."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 11.95,
+      "end": 13.15,
+      "text": "Peki."
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 13.5,
+      "end": 14.7,
+      "text": "Ödemeniz alındı, teşekkürler."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 15.05,
+      "end": 17.85,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 8,
+      "speaker": "musteri",
+      "start": 18.2,
+      "end": 19.4,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 19.75,
+      "end": 22.55,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

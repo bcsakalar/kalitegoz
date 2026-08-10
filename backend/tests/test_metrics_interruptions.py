@@ -1,6 +1,6 @@
 """B3 regresyonu: soz kesme sayaci — kim kesti, kac kez?
 
-Kok neden: docs/v2/01-KOK-NEDEN.md §D. Sisen STT segment bitisleri her konusmaci
+Kok neden: docs/internal/01-KOK-NEDEN.md §D. Sisen STT segment bitisleri her konusmaci
 degisimini "bindirme" gosteriyordu; canli cagri #24'te temsilci_kesinti=4,
 musteri_kesinti=4 uretilmisti ve sekizinin de gercek karsiligi yoktu.
 """

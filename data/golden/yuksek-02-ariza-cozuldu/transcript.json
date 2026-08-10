@@ -1,0 +1,116 @@
+{
+  "id": "yuksek-02-ariza-cozuldu",
+  "title": "Ariza — ilk temasta cozum",
+  "bucket": "yuksek",
+  "tags": [
+    "temiz"
+  ],
+  "duration_sec": 50.1,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.0,
+      "text": "Netik İletişim'e hoş geldiniz, ben Kerem. Size nasıl yardımcı olabilirim?"
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 5.35,
+      "end": 9.35,
+      "text": "Görüşmemiz kayıt altına alınmaktadır ve kişisel verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 2,
+      "speaker": "temsilci",
+      "start": 9.7,
+      "end": 12.5,
+      "text": "Öncelikle adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 12.85,
+      "end": 14.85,
+      "text": "Ayşe Kaya, müşteri numaram 448120."
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 15.2,
+      "end": 17.6,
+      "text": "Teşekkür ederim Ayşe Hanım, kaydınızı görüyorum."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 17.95,
+      "end": 19.95,
+      "text": "İnternetim sabahtan beri çok yavaş."
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 20.3,
+      "end": 23.5,
+      "text": "Hattınızı test ediyorum. Hat senkron hızınız düşmüş görünüyor."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 23.85,
+      "end": 28.65,
+      "text": "Modeminizi 30 saniye prizden çeker misiniz? Ben bu sırada hattı yeniden profilliyorum."
+    },
+    {
+      "idx": 8,
+      "speaker": "musteri",
+      "start": 29.0,
+      "end": 30.2,
+      "text": "Taktım, ışıklar yandı."
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 30.55,
+      "end": 35.75,
+      "text": "Şu an 48 Mbps görüyorum, önceki 6 Mbps idi. Bir test yapar mısınız?"
+    },
+    {
+      "idx": 10,
+      "speaker": "musteri",
+      "start": 36.1,
+      "end": 37.3,
+      "text": "Evet, şimdi hızlı."
+    },
+    {
+      "idx": 11,
+      "speaker": "temsilci",
+      "start": 37.65,
+      "end": 41.25,
+      "text": "Sorunu kalıcı hale getirdim, bu profil kaydınızda sabit kalacak."
+    },
+    {
+      "idx": 12,
+      "speaker": "temsilci",
+      "start": 41.6,
+      "end": 44.4,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 13,
+      "speaker": "musteri",
+      "start": 44.75,
+      "end": 45.95,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 14,
+      "speaker": "temsilci",
+      "start": 46.3,
+      "end": 49.1,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

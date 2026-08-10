@@ -7,7 +7,7 @@ Ne yapar:
    Rubrik kriterleri ve yasakli kelimeler kaynak kiracidan birebir kopyalanir.
 2. Her senaryonun transkriptini Call + Segment olarak yazar ve GERCEK puanlama
    motorunu (`scoring.run_scoring`) calistirir — sahte katman yok.
-3. Metrikleri hesaplar ve docs/v2/eval/<tarih>.json olarak saklar.
+3. Metrikleri hesaplar ve docs/eval/<tarih>.json olarak saklar.
 4. Esikler saglanmazsa cikis kodu 1 doner (CI build'i kirar).
 
 Kullanim (container icinde):
@@ -35,7 +35,7 @@ from app.services.text_tr import contains_verbatim  # noqa: E402
 
 GOLDEN_TENANT = "__golden__"
 GOLDEN_DIR = Path("/data/golden")
-# ./data host'a bagli (compose volume). Makefile buradan docs/v2/eval/ altina kopyalar.
+# ./data host'a bagli (compose volume). Makefile buradan docs/eval/ altina kopyalar.
 OUT_DIR = Path("/data/eval")
 
 # Puan bantlari — Cohen's kappa ordinal 0-10 uzerinde anlamli calismaz.

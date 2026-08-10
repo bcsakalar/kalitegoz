@@ -1,0 +1,22 @@
+{
+  "scores": {
+    "Açılış": 10,
+    "KVKK / Aydınlatma": 10,
+    "Kimlik Doğrulama": 4,
+    "Aktif Dinleme": 7,
+    "İhtiyaç Analizi": 7,
+    "Çözüm / Yönlendirme": 7,
+    "Yasaklı Kelime / Üslup": 10,
+    "Kapanış": 10,
+    "Script Uyumu": 8,
+    "Bilgi Doğruluğu": 7
+  },
+  "zeroed": false,
+  "zeroing_criterion": null,
+  "alerts": [],
+  "evidence_must_contain": {},
+  "must_not_penalize": [],
+  "notes": "Kimlik, islem YAPILDIKTAN sonra soruldu. Uyum acisindan ciddi eksik ama tamamen atlanmadigi icin sifirlama YOK — Kimlik Dogrulama 3-5 bandinda.",
+  "scenario_id": "orta-03-kimlik-gec",
+  "regression_for": null
+}

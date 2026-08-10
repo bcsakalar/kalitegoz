@@ -1,0 +1,24 @@
+{
+  "scores": {
+    "Açılış": 10,
+    "KVKK / Aydınlatma": 10,
+    "Kimlik Doğrulama": 10,
+    "Aktif Dinleme": 9,
+    "İhtiyaç Analizi": 9,
+    "Çözüm / Yönlendirme": 9,
+    "Yasaklı Kelime / Üslup": 10,
+    "Kapanış": 10,
+    "Script Uyumu": 10,
+    "Bilgi Doğruluğu": 9
+  },
+  "zeroed": false,
+  "zeroing_criterion": null,
+  "alerts": [],
+  "evidence_must_contain": {},
+  "must_not_penalize": [
+    "KVKK / Aydınlatma"
+  ],
+  "notes": "Kayit bildirimi ve kisisel veri aydinlatmasi AYRI repliklerde ve standart kalibin disinda. Ikisi de yapilmis; ihlal URETILEMEZ.",
+  "scenario_id": "tuzak-04-anons-parcali",
+  "regression_for": null
+}

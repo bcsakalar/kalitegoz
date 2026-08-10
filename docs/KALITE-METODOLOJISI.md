@@ -87,7 +87,7 @@ Bu setin nasıl üretildiği, sayıların ne anlama geldiğini belirler:
 Bu yüzden metrikler ikiye ayrılarak raporlanır (§4.1 ve §4.2) ve insan
 referansı hazır olduğunda ikisi yan yana yayımlanır (§4.3).
 
-Ölçüm yöntemi ve ham çıktılar: `docs/v2/eval/`. Yeniden üretim: `make eval`.
+Ölçüm yöntemi ve ham çıktılar: `docs/eval/`. Yeniden üretim: `make eval`.
 
 ### 4.1 Kriterler iki gruba ayrılır — ve ayrı raporlanır
 
@@ -329,4 +329,4 @@ Yedi kural; hepsi yapılandırılabilir:
 ---
 
 *Bu dokümandaki metrikler `make eval` ile yeniden üretilebilir.
-Ham ölçüm çıktıları: `docs/v2/eval/`.*
+Ham ölçüm çıktıları: `docs/eval/`.*

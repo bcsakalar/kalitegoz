@@ -21,6 +21,7 @@
 
 import { chromium } from "playwright";
 import { mkdir, writeFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 
 const arg = (ad, varsayilan) => {
@@ -32,7 +33,16 @@ const BASE = arg("base", "http://localhost:3000");
 const API = arg("api", "http://localhost:8000");
 const OUT = arg("out", "docs/screens");
 const ONLY = arg("only", "");
-const PAROLA = arg("password", "demo1234");
+// Parola .env'den okunur; sabit varsayilan YOK (acik kaynak depoda sabit
+// parola, herkesin bildigi parola demektir).
+function envParola() {
+  try {
+    const t = readFileSync(new URL("../.env", import.meta.url), "utf-8");
+    const m = t.match(/^ADMIN_PASSWORD=(.*)$/m);
+    return m ? m[1].trim() : "";
+  } catch { return ""; }
+}
+const PAROLA = arg("password", envParola());
 
 /** Sayfa listesi: [dosya adı, yol, giriş yapılacak rol, bekleme ipucu] */
 const SAYFALAR = [

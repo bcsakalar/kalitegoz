@@ -1,0 +1,74 @@
+{
+  "id": "dusuk-07-script-disi",
+  "title": "Script tamamen atlandi",
+  "bucket": "dusuk",
+  "tags": [
+    "agir_eksik"
+  ],
+  "duration_sec": 16.4,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 2.2,
+      "text": "Efendim?"
+    },
+    {
+      "idx": 1,
+      "speaker": "musteri",
+      "start": 2.55,
+      "end": 4.15,
+      "text": "İyi günler, hattımla ilgili."
+    },
+    {
+      "idx": 2,
+      "speaker": "temsilci",
+      "start": 4.5,
+      "end": 5.7,
+      "text": "Ne olmuş hattınıza?"
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 6.05,
+      "end": 7.25,
+      "text": "Sinyal çekmiyor."
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 7.6,
+      "end": 8.8,
+      "text": "Telefonu kapatıp açın."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 9.15,
+      "end": 10.35,
+      "text": "Denedim, olmadı."
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 10.7,
+      "end": 12.3,
+      "text": "O zaman arıza vardır."
+    },
+    {
+      "idx": 7,
+      "speaker": "musteri",
+      "start": 12.65,
+      "end": 13.85,
+      "text": "Kayıt açar mısınız?"
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 14.2,
+      "end": 15.4,
+      "text": "Açtım."
+    }
+  ]
+}

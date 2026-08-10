@@ -1,0 +1,24 @@
+{
+  "scores": {
+    "Açılış": 1,
+    "KVKK / Aydınlatma": 10,
+    "Kimlik Doğrulama": 7,
+    "Aktif Dinleme": 4,
+    "İhtiyaç Analizi": 3,
+    "Çözüm / Yönlendirme": 3,
+    "Yasaklı Kelime / Üslup": 10,
+    "Kapanış": 1,
+    "Script Uyumu": 5,
+    "Bilgi Doğruluğu": 4
+  },
+  "zeroed": false,
+  "zeroing_criterion": null,
+  "alerts": [
+    "low_score"
+  ],
+  "evidence_must_contain": {},
+  "must_not_penalize": [],
+  "notes": "Kurum adi da temsilci adi da YOK. Acilis 0-2. Kapanis kalibi da yok.",
+  "scenario_id": "dusuk-01-acilis-yok",
+  "regression_for": null
+}

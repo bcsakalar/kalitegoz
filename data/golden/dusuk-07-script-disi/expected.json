@@ -1,0 +1,24 @@
+{
+  "scores": {
+    "Açılış": 0,
+    "KVKK / Aydınlatma": 0,
+    "Kimlik Doğrulama": 0,
+    "Aktif Dinleme": 3,
+    "İhtiyaç Analizi": 3,
+    "Çözüm / Yönlendirme": 3,
+    "Yasaklı Kelime / Üslup": 10,
+    "Kapanış": 1,
+    "Script Uyumu": 0,
+    "Bilgi Doğruluğu": 3
+  },
+  "zeroed": true,
+  "zeroing_criterion": "KVKK / Aydınlatma",
+  "alerts": [
+    "zeroing"
+  ],
+  "evidence_must_contain": {},
+  "must_not_penalize": [],
+  "notes": "Acilis yok, KVKK yok, kimlik yok, kapanis yok. Iki kritik kriter esik altinda -> SIFIRLANIR.",
+  "scenario_id": "dusuk-07-script-disi",
+  "regression_for": null
+}

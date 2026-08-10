@@ -54,8 +54,8 @@ eval-build:
 eval: eval-build
 	@docker compose cp scripts/golden/evaluate.py api:/tmp/evaluate.py
 	@docker compose exec -T api python /tmp/evaluate.py $(EVAL_ARGS)
-	@mkdir -p docs/v2/eval && cp -f data/eval/*.json docs/v2/eval/ 2>/dev/null || true
-	@echo "Rapor: docs/v2/eval/"
+	@mkdir -p docs/eval && cp -f data/eval/*.json docs/eval/ 2>/dev/null || true
+	@echo "Rapor: docs/eval/"
 
 eval-baseline:
 	@$(MAKE) eval EVAL_ARGS="--no-gate"

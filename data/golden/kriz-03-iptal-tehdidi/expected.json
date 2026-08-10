@@ -1,0 +1,27 @@
+{
+  "scores": {
+    "Açılış": 10,
+    "KVKK / Aydınlatma": 10,
+    "Kimlik Doğrulama": 10,
+    "Aktif Dinleme": 9,
+    "İhtiyaç Analizi": 8,
+    "Çözüm / Yönlendirme": 8,
+    "Yasaklı Kelime / Üslup": 10,
+    "Kapanış": 10,
+    "Script Uyumu": 10,
+    "Bilgi Doğruluğu": 8
+  },
+  "zeroed": false,
+  "zeroing_criterion": null,
+  "alerts": [
+    "crisis"
+  ],
+  "evidence_must_contain": {},
+  "must_not_penalize": [
+    "Yasaklı Kelime / Üslup",
+    "Aktif Dinleme"
+  ],
+  "notes": "Kriz sinyali ('iptal') MUSTERI kaynakli. Kriz alarmi URETILMELI ama temsilci sakin ve cozum odakli davrandigi icin PUANI DUSMEMELI. Musterinin davranisi temsilciyi cezalandirmaz.",
+  "scenario_id": "kriz-03-iptal-tehdidi",
+  "regression_for": null
+}

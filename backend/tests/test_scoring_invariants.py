@@ -4,7 +4,7 @@ Bu uc hata transkript seviyesinde ifade edilemez (altin set senaryosu olamaz):
 motorun kendi ic davranisidir. Bu yuzden birim/entegrasyon testiyle korunurlar.
 
 FAZ 2'de UCU DE DUZELTILDI; testler artik yesil ve kalici koruma gorevi goruyor.
-Kaynak: docs/v2/00-MEVCUT-DURUM.md §9, docs/v2/01-KOK-NEDEN.md
+Kaynak: docs/internal/00-MEVCUT-DURUM.md §9, docs/internal/01-KOK-NEDEN.md
 """
 
 from __future__ import annotations

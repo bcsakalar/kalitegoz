@@ -1,0 +1,103 @@
+{
+  "id": "tuzak-03-musteri-kufrediyor",
+  "title": "Musteri kufrediyor, temsilci sakin kaliyor",
+  "bucket": "tuzak",
+  "tags": [
+    "yasakli_kelime",
+    "tuzak"
+  ],
+  "duration_sec": 41.8,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Cansu. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 11.3,
+      "text": "Ne adı be, saçmalamayın, aptal sistem!"
+    },
+    {
+      "idx": 3,
+      "speaker": "temsilci",
+      "start": 11.65,
+      "end": 15.25,
+      "text": "Sizi anlıyorum, sinirlenmenizde haklısınız. İsminizi alabilirsem hemen yardımcı olacağım."
+    },
+    {
+      "idx": 4,
+      "speaker": "musteri",
+      "start": 15.6,
+      "end": 18.4,
+      "text": "Ferhat Uçar, 118004. Bu ne rezalet böyle."
+    },
+    {
+      "idx": 5,
+      "speaker": "temsilci",
+      "start": 18.75,
+      "end": 21.15,
+      "text": "Teşekkür ederim Ferhat Bey. Kaydınıza bakıyorum."
+    },
+    {
+      "idx": 6,
+      "speaker": "musteri",
+      "start": 21.5,
+      "end": 23.5,
+      "text": "Üç haftadır bekliyorum, salaklık bu."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 23.85,
+      "end": 27.45,
+      "text": "Üç hafta gerçekten çok uzun, bunun için özür dilerim."
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 27.8,
+      "end": 31.4,
+      "text": "Kaydınızı yönetici takibine aldım, bugün içinde size dönüş yapılacak."
+    },
+    {
+      "idx": 9,
+      "speaker": "musteri",
+      "start": 31.75,
+      "end": 32.95,
+      "text": "Tamam."
+    },
+    {
+      "idx": 10,
+      "speaker": "temsilci",
+      "start": 33.3,
+      "end": 36.1,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 11,
+      "speaker": "musteri",
+      "start": 36.45,
+      "end": 37.65,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 12,
+      "speaker": "temsilci",
+      "start": 38.0,
+      "end": 40.8,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

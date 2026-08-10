@@ -1,0 +1,691 @@
+{
+  "id": "reg-b30-uzun-cagri-orta-ihlal",
+  "title": "B30: Uzun cagrida ihlal ORTADA — kirpma yuzunden kacirilmamali",
+  "bucket": "regresyon",
+  "tags": [
+    "uzun_cagri",
+    "pencereleme"
+  ],
+  "duration_sec": 603.2,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Gamze. Görüşmemiz kayıt altına alınmaktadır, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 10.1,
+      "text": "Ahmet Korkmaz, 118445."
+    },
+    {
+      "idx": 3,
+      "speaker": "temsilci",
+      "start": 10.45,
+      "end": 12.45,
+      "text": "Teşekkürler Ahmet Bey, kaydınızı görüyorum."
+    },
+    {
+      "idx": 4,
+      "speaker": "musteri",
+      "start": 12.8,
+      "end": 17.6,
+      "text": "Peki 1. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 5,
+      "speaker": "temsilci",
+      "start": 17.95,
+      "end": 27.15,
+      "text": "Elbette. 1. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 6,
+      "speaker": "musteri",
+      "start": 27.5,
+      "end": 32.3,
+      "text": "Peki 2. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 32.65,
+      "end": 41.85,
+      "text": "Elbette. 2. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 8,
+      "speaker": "musteri",
+      "start": 42.2,
+      "end": 47.0,
+      "text": "Peki 3. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 47.35,
+      "end": 56.55,
+      "text": "Elbette. 3. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 10,
+      "speaker": "musteri",
+      "start": 56.9,
+      "end": 61.7,
+      "text": "Peki 4. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 11,
+      "speaker": "temsilci",
+      "start": 62.05,
+      "end": 71.25,
+      "text": "Elbette. 4. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 12,
+      "speaker": "musteri",
+      "start": 71.6,
+      "end": 76.4,
+      "text": "Peki 5. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 13,
+      "speaker": "temsilci",
+      "start": 76.75,
+      "end": 85.95,
+      "text": "Elbette. 5. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 14,
+      "speaker": "musteri",
+      "start": 86.3,
+      "end": 91.1,
+      "text": "Peki 6. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 15,
+      "speaker": "temsilci",
+      "start": 91.45,
+      "end": 100.65,
+      "text": "Elbette. 6. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 16,
+      "speaker": "musteri",
+      "start": 101.0,
+      "end": 105.8,
+      "text": "Peki 7. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 17,
+      "speaker": "temsilci",
+      "start": 106.15,
+      "end": 115.35,
+      "text": "Elbette. 7. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 18,
+      "speaker": "musteri",
+      "start": 115.7,
+      "end": 120.5,
+      "text": "Peki 8. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 19,
+      "speaker": "temsilci",
+      "start": 120.85,
+      "end": 130.05,
+      "text": "Elbette. 8. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 20,
+      "speaker": "musteri",
+      "start": 130.4,
+      "end": 135.2,
+      "text": "Peki 9. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 21,
+      "speaker": "temsilci",
+      "start": 135.55,
+      "end": 144.75,
+      "text": "Elbette. 9. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 22,
+      "speaker": "musteri",
+      "start": 145.1,
+      "end": 149.9,
+      "text": "Peki 10. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 23,
+      "speaker": "temsilci",
+      "start": 150.25,
+      "end": 159.45,
+      "text": "Elbette. 10. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 24,
+      "speaker": "musteri",
+      "start": 159.8,
+      "end": 164.6,
+      "text": "Peki 11. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 25,
+      "speaker": "temsilci",
+      "start": 164.95,
+      "end": 174.15,
+      "text": "Elbette. 11. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 26,
+      "speaker": "musteri",
+      "start": 174.5,
+      "end": 179.3,
+      "text": "Peki 12. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 27,
+      "speaker": "temsilci",
+      "start": 179.65,
+      "end": 188.85,
+      "text": "Elbette. 12. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 28,
+      "speaker": "musteri",
+      "start": 189.2,
+      "end": 194.0,
+      "text": "Peki 13. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 29,
+      "speaker": "temsilci",
+      "start": 194.35,
+      "end": 203.55,
+      "text": "Elbette. 13. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 30,
+      "speaker": "musteri",
+      "start": 203.9,
+      "end": 208.7,
+      "text": "Peki 14. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 31,
+      "speaker": "temsilci",
+      "start": 209.05,
+      "end": 218.25,
+      "text": "Elbette. 14. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 32,
+      "speaker": "musteri",
+      "start": 218.6,
+      "end": 223.4,
+      "text": "Peki 15. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 33,
+      "speaker": "temsilci",
+      "start": 223.75,
+      "end": 232.95,
+      "text": "Elbette. 15. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 34,
+      "speaker": "musteri",
+      "start": 233.3,
+      "end": 238.1,
+      "text": "Peki 16. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 35,
+      "speaker": "temsilci",
+      "start": 238.45,
+      "end": 247.65,
+      "text": "Elbette. 16. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 36,
+      "speaker": "musteri",
+      "start": 248.0,
+      "end": 252.8,
+      "text": "Peki 17. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 37,
+      "speaker": "temsilci",
+      "start": 253.15,
+      "end": 262.35,
+      "text": "Elbette. 17. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 38,
+      "speaker": "musteri",
+      "start": 262.7,
+      "end": 267.5,
+      "text": "Peki 18. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 39,
+      "speaker": "temsilci",
+      "start": 267.85,
+      "end": 277.05,
+      "text": "Elbette. 18. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 40,
+      "speaker": "musteri",
+      "start": 277.4,
+      "end": 282.2,
+      "text": "Peki 19. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 41,
+      "speaker": "temsilci",
+      "start": 282.55,
+      "end": 291.75,
+      "text": "Elbette. 19. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 42,
+      "speaker": "musteri",
+      "start": 292.1,
+      "end": 296.9,
+      "text": "Peki 20. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 43,
+      "speaker": "temsilci",
+      "start": 297.25,
+      "end": 306.45,
+      "text": "Elbette. 20. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 44,
+      "speaker": "musteri",
+      "start": 306.8,
+      "end": 311.6,
+      "text": "Peki 21. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 45,
+      "speaker": "temsilci",
+      "start": 311.95,
+      "end": 321.15,
+      "text": "Elbette. 21. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 46,
+      "speaker": "musteri",
+      "start": 321.5,
+      "end": 326.3,
+      "text": "Peki 22. faturamdaki kalemleri de tek tek açıklar mısınız, hangisi ne için?"
+    },
+    {
+      "idx": 47,
+      "speaker": "temsilci",
+      "start": 326.65,
+      "end": 335.85,
+      "text": "Elbette. 22. dönemde sabit ücret, kullanım bedeli ve vergi kalemleri var; sabit ücret paket bedeliniz, kullanım bedeli kota aşımı, vergiler ise yasal kesintiler."
+    },
+    {
+      "idx": 48,
+      "speaker": "temsilci",
+      "start": 336.2,
+      "end": 339.8,
+      "text": "Ya yeter artık, saçmalamayın, bir saattir aynı şeyi anlatıyorum."
+    },
+    {
+      "idx": 49,
+      "speaker": "musteri",
+      "start": 340.15,
+      "end": 341.35,
+      "text": "Nasıl konuşuyorsunuz siz?"
+    },
+    {
+      "idx": 50,
+      "speaker": "musteri",
+      "start": 341.7,
+      "end": 345.3,
+      "text": "Peki 23. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 51,
+      "speaker": "temsilci",
+      "start": 345.65,
+      "end": 352.85,
+      "text": "23. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 52,
+      "speaker": "musteri",
+      "start": 353.2,
+      "end": 356.8,
+      "text": "Peki 24. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 53,
+      "speaker": "temsilci",
+      "start": 357.15,
+      "end": 364.35,
+      "text": "24. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 54,
+      "speaker": "musteri",
+      "start": 364.7,
+      "end": 368.3,
+      "text": "Peki 25. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 55,
+      "speaker": "temsilci",
+      "start": 368.65,
+      "end": 375.85,
+      "text": "25. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 56,
+      "speaker": "musteri",
+      "start": 376.2,
+      "end": 379.8,
+      "text": "Peki 26. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 57,
+      "speaker": "temsilci",
+      "start": 380.15,
+      "end": 387.35,
+      "text": "26. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 58,
+      "speaker": "musteri",
+      "start": 387.7,
+      "end": 391.3,
+      "text": "Peki 27. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 59,
+      "speaker": "temsilci",
+      "start": 391.65,
+      "end": 398.85,
+      "text": "27. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 60,
+      "speaker": "musteri",
+      "start": 399.2,
+      "end": 402.8,
+      "text": "Peki 28. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 61,
+      "speaker": "temsilci",
+      "start": 403.15,
+      "end": 410.35,
+      "text": "28. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 62,
+      "speaker": "musteri",
+      "start": 410.7,
+      "end": 414.3,
+      "text": "Peki 29. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 63,
+      "speaker": "temsilci",
+      "start": 414.65,
+      "end": 421.85,
+      "text": "29. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 64,
+      "speaker": "musteri",
+      "start": 422.2,
+      "end": 425.8,
+      "text": "Peki 30. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 65,
+      "speaker": "temsilci",
+      "start": 426.15,
+      "end": 433.35,
+      "text": "30. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 66,
+      "speaker": "musteri",
+      "start": 433.7,
+      "end": 437.3,
+      "text": "Peki 31. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 67,
+      "speaker": "temsilci",
+      "start": 437.65,
+      "end": 444.85,
+      "text": "31. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 68,
+      "speaker": "musteri",
+      "start": 445.2,
+      "end": 448.8,
+      "text": "Peki 32. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 69,
+      "speaker": "temsilci",
+      "start": 449.15,
+      "end": 456.35,
+      "text": "32. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 70,
+      "speaker": "musteri",
+      "start": 456.7,
+      "end": 460.3,
+      "text": "Peki 33. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 71,
+      "speaker": "temsilci",
+      "start": 460.65,
+      "end": 467.85,
+      "text": "33. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 72,
+      "speaker": "musteri",
+      "start": 468.2,
+      "end": 471.8,
+      "text": "Peki 34. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 73,
+      "speaker": "temsilci",
+      "start": 472.15,
+      "end": 479.35,
+      "text": "34. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 74,
+      "speaker": "musteri",
+      "start": 479.7,
+      "end": 483.3,
+      "text": "Peki 35. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 75,
+      "speaker": "temsilci",
+      "start": 483.65,
+      "end": 490.85,
+      "text": "35. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 76,
+      "speaker": "musteri",
+      "start": 491.2,
+      "end": 494.8,
+      "text": "Peki 36. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 77,
+      "speaker": "temsilci",
+      "start": 495.15,
+      "end": 502.35,
+      "text": "36. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 78,
+      "speaker": "musteri",
+      "start": 502.7,
+      "end": 506.3,
+      "text": "Peki 37. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 79,
+      "speaker": "temsilci",
+      "start": 506.65,
+      "end": 513.85,
+      "text": "37. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 80,
+      "speaker": "musteri",
+      "start": 514.2,
+      "end": 517.8,
+      "text": "Peki 38. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 81,
+      "speaker": "temsilci",
+      "start": 518.15,
+      "end": 525.35,
+      "text": "38. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 82,
+      "speaker": "musteri",
+      "start": 525.7,
+      "end": 529.3,
+      "text": "Peki 39. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 83,
+      "speaker": "temsilci",
+      "start": 529.65,
+      "end": 536.85,
+      "text": "39. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 84,
+      "speaker": "musteri",
+      "start": 537.2,
+      "end": 540.8,
+      "text": "Peki 40. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 85,
+      "speaker": "temsilci",
+      "start": 541.15,
+      "end": 548.35,
+      "text": "40. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 86,
+      "speaker": "musteri",
+      "start": 548.7,
+      "end": 552.3,
+      "text": "Peki 41. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 87,
+      "speaker": "temsilci",
+      "start": 552.65,
+      "end": 559.85,
+      "text": "41. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 88,
+      "speaker": "musteri",
+      "start": 560.2,
+      "end": 563.8,
+      "text": "Peki 42. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 89,
+      "speaker": "temsilci",
+      "start": 564.15,
+      "end": 571.35,
+      "text": "42. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 90,
+      "speaker": "musteri",
+      "start": 571.7,
+      "end": 575.3,
+      "text": "Peki 43. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 91,
+      "speaker": "temsilci",
+      "start": 575.65,
+      "end": 582.85,
+      "text": "43. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 92,
+      "speaker": "musteri",
+      "start": 583.2,
+      "end": 586.8,
+      "text": "Peki 44. dönem için de aynı dökümü alabilir miyim?"
+    },
+    {
+      "idx": 93,
+      "speaker": "temsilci",
+      "start": 587.15,
+      "end": 594.35,
+      "text": "44. dönem için de sabit ücret, kullanım bedeli ve vergi kalemleri aynı şekilde hesaplanıyor, tutarlar kullanımınıza göre değişiyor."
+    },
+    {
+      "idx": 94,
+      "speaker": "temsilci",
+      "start": 594.7,
+      "end": 597.5,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 95,
+      "speaker": "musteri",
+      "start": 597.85,
+      "end": 599.05,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 96,
+      "speaker": "temsilci",
+      "start": 599.4,
+      "end": 602.2,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

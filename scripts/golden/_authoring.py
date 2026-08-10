@@ -5,7 +5,7 @@ Senaryolar transkript seviyesinde yazilir (ses degil). Gerekce:
 1. Puanlama motorunun dogrulugunu olcmek istiyoruz. Ses hattini (Whisper + kanal
    ayrimi) karistirirsak, olculen sapmanin ne kadarinin STT'den ne kadarinin
    yargidan geldigini ayirt edemeyiz. Bunlar AYRI olculmesi gereken iki sey.
-2. docs/v2/01-KOK-NEDEN.md §D'de olculdugu gibi mevcut stereo hatti zaman
+2. docs/internal/01-KOK-NEDEN.md §D'de olculdugu gibi mevcut stereo hatti zaman
    damgalarini bozuyor. Bozuk ciktiyi referans almak, hatayi altin sete
    gomerdi.
 3. Hiz: 46 senaryo x 3 tekrar bir de STT bekleyemez.

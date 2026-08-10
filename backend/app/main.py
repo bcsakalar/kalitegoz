@@ -74,8 +74,13 @@ def _check_production_readiness() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from . import models  # noqa: F401 — tablolarin kaydolmasi icin
+    from .config import zorunlu_ayarlari_dogrula
     from .migrations import run_light_migrations
     from .seed import seed_all
+
+    # Zorunlu ayar eksikse BURADA dur. Yarim yapilandirmayla ayaga kalkip
+    # sonra sessizce guvensiz calismaktansa, acik bir mesajla durmak dogru.
+    zorunlu_ayarlari_dogrula(settings)
 
     Base.metadata.create_all(bind=engine)
     run_light_migrations(engine)  # mevcut tablolara eksik kolonlari idempotent ekle

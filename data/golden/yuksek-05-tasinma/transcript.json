@@ -1,0 +1,116 @@
+{
+  "id": "yuksek-05-tasinma",
+  "title": "Tasinma talebi — proaktif yonlendirme",
+  "bucket": "yuksek",
+  "tags": [
+    "temiz"
+  ],
+  "duration_sec": 48.9,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.0,
+      "text": "Netik İletişim'e hoş geldiniz, ben Burcu. Size nasıl yardımcı olabilirim?"
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 5.35,
+      "end": 9.35,
+      "text": "Görüşmemiz kayıt altına alınmaktadır ve kişisel verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 2,
+      "speaker": "temsilci",
+      "start": 9.7,
+      "end": 12.5,
+      "text": "Öncelikle adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 12.85,
+      "end": 14.85,
+      "text": "Ayşe Kaya, müşteri numaram 448120."
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 15.2,
+      "end": 17.6,
+      "text": "Teşekkür ederim Ayşe Hanım, kaydınızı görüyorum."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 17.95,
+      "end": 20.75,
+      "text": "Başka bir eve taşınıyorum, hattımı taşıtmak istiyorum."
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 21.1,
+      "end": 24.3,
+      "text": "Yeni adresinizin ilçesini alabilir miyim? Altyapı uygunluğuna bakacağım."
+    },
+    {
+      "idx": 7,
+      "speaker": "musteri",
+      "start": 24.65,
+      "end": 25.85,
+      "text": "Kadıköy, Caferağa."
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 26.2,
+      "end": 30.2,
+      "text": "O bölgede fiber altyapımız mevcut, mevcut hızınızdan daha yükseğine çıkabilirsiniz."
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 30.55,
+      "end": 34.95,
+      "text": "Taşıma işlemi ücretsiz, 3 iş günü sürüyor. Taşınma tarihinizi öğrenebilir miyim?"
+    },
+    {
+      "idx": 10,
+      "speaker": "musteri",
+      "start": 35.3,
+      "end": 36.5,
+      "text": "20 Ağustos."
+    },
+    {
+      "idx": 11,
+      "speaker": "temsilci",
+      "start": 36.85,
+      "end": 40.05,
+      "text": "18 Ağustos'a randevu oluşturdum, teknisyen 09.00-13.00 arası gelecek."
+    },
+    {
+      "idx": 12,
+      "speaker": "temsilci",
+      "start": 40.4,
+      "end": 43.2,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 13,
+      "speaker": "musteri",
+      "start": 43.55,
+      "end": 44.75,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 14,
+      "speaker": "temsilci",
+      "start": 45.1,
+      "end": 47.9,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

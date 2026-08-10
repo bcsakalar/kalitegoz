@@ -37,7 +37,7 @@ def get_model():
 
 
 # Turkce dogal konusma ~2.5 kelime/sn. Bu esigin altina duesen bir segment,
-# icine sessizlik katmis demektir (bkz. docs/v2/01-KOK-NEDEN.md §D).
+# icine sessizlik katmis demektir (bkz. docs/internal/01-KOK-NEDEN.md §D).
 MIN_WORDS_PER_SEC = 0.7
 # Kelime zaman damgasi gelmeyen segmentleri kirparken kullanilan tahmini hiz.
 ASSUMED_WORDS_PER_SEC = 2.5
