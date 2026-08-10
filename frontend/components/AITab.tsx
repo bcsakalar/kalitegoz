@@ -198,7 +198,7 @@ export default function AITab() {
                     <span className="mt-2 inline-block text-xs" style={{ color: "var(--status-good)" }}>✓ {t("ai.installedTag")}</span>
                   ) : p && !p.done ? (
                     <div className="mt-2">
-                      <div className="h-1.5 overflow-hidden rounded-full bg-grid">
+                      <div className="h-1.5 overflow-hidden bg-grid">
                         <div className="h-full bg-series" style={{ width: `${p.percent}%` }} />
                       </div>
                       <span className="text-[10px] text-muted">{p.status} {p.percent > 0 ? `%${p.percent}` : ""}</span>
@@ -230,10 +230,10 @@ function UsagePanel({ t }: { t: (k: string) => string }) {
       <h2 className="text-sm font-semibold text-ink2">📊 {t("aiusage.title")}</h2>
       <p className="text-xs text-muted">{t("aiusage.desc")}</p>
       <div className="grid grid-cols-2 gap-3 text-center lg:grid-cols-4">
-        <div className="rounded-lg bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">{u.total_calls}</div><div className="text-[10px] text-muted">{t("aiusage.calls")}</div></div>
-        <div className="rounded-lg bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">{u.total_tokens.toLocaleString()}</div><div className="text-[10px] text-muted">token</div></div>
-        <div className="rounded-lg bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">${u.total_cost_usd.toFixed(2)}</div><div className="text-[10px] text-muted">{t("aiusage.cost")}</div></div>
-        <div className="rounded-lg bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">%{u.ok_rate}</div><div className="text-[10px] text-muted">{t("aiusage.okRate")}</div></div>
+        <div className="bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">{u.total_calls}</div><div className="text-[10px] text-muted">{t("aiusage.calls")}</div></div>
+        <div className="bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">{u.total_tokens.toLocaleString()}</div><div className="text-[10px] text-muted">token</div></div>
+        <div className="bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">${u.total_cost_usd.toFixed(2)}</div><div className="text-[10px] text-muted">{t("aiusage.cost")}</div></div>
+        <div className="bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">%{u.ok_rate}</div><div className="text-[10px] text-muted">{t("aiusage.okRate")}</div></div>
       </div>
       {u.by_kind.length > 0 && (
         <div className="overflow-x-auto">
@@ -300,7 +300,7 @@ function ProviderRow({ providers, value, onChange, t }: {
     <div className="flex flex-wrap gap-1">
       {providers.map((p) => (
         <button key={p} onClick={() => onChange(p)}
-          className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${value === p ? "bg-series text-white" : "bg-surface-2 text-ink2"}`}>
+          className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium ${value === p ? "bg-series text-white" : "bg-surface-2 text-ink2"}`}>
           <span aria-hidden>{PROVIDER_META[p]?.icon}</span> {PROVIDER_META[p]?.label}
         </button>
       ))}

@@ -17,7 +17,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
             Beklenmeyen bir hata oluştu. Sayfayı yenileyin; sorun sürerse yöneticinizle iletişime geçin.
           </p>
           <button onClick={() => reset()} style={{
-            padding: "8px 16px", borderRadius: 8, border: "1px solid #374151",
+            padding: "8px 16px", borderRadius: 0, border: "1px solid #374151",
             background: "#2563eb", color: "#fff", cursor: "pointer", fontSize: 14,
           }}>Tekrar dene</button>
         </div>

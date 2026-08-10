@@ -15,7 +15,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         ana sayfaya dönebilirsiniz.
       </p>
       {error?.message && (
-        <p className="max-w-full truncate rounded-lg bg-grid/50 px-3 py-1.5 text-xs text-muted">
+        <p className="max-w-full truncate bg-grid/50 px-3 py-1.5 text-xs text-muted">
           {error.message}
         </p>
       )}

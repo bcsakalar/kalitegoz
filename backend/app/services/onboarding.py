@@ -21,6 +21,36 @@ from ..seed import DEFAULT_BADGES, DEFAULT_BANNED_WORDS, DEFAULT_CRITERIA
 
 DEMO_SLUG = "demo"
 
+# IC KIRACILAR — kullaniciya ASLA kurum olarak sunulmaz.
+#
+# `make eval` izole bir `__golden__` kiracisi, performans olcumu de `__perf__`
+# kiracisi kurar. Bunlar olcum araclarinin calisma alanidir, birer musteri
+# degil. Ayirt edilmedikleri icin giris ekrani kurumu "__golden__" diye
+# gosteriyor ve tarayici `tenant_slug=golden` gonderiyordu — kullanicilar
+# `demo` kiracisinda oldugu icin HER GIRIS 401 aliyordu. (B35, bizzat yasandi:
+# make eval kosulan bir makinede arayuze hic girilemiyordu.)
+#
+# Isimlendirme kurali: cift alt cizgiyle baslayan kiraci adi = ic kiraci.
+IC_KIRACI_ADLARI = {"__golden__", "__perf__"}
+IC_KIRACI_SLUGLARI = {"golden", "perf"}
+
+
+def _gercek_kurum_sorgusu(db: Session):
+    """Demo ve IC kiracilar disindaki aktif kurumlar."""
+    return (
+        db.query(Tenant)
+        .filter(
+            Tenant.slug != DEMO_SLUG,
+            Tenant.slug.notin_(IC_KIRACI_SLUGLARI),
+            Tenant.name.notin_(IC_KIRACI_ADLARI),
+            # autoescape ZORUNLU: SQL LIKE'da "_" tek karakter jokeridir.
+            # autoescape olmadan "__%" deseni ADI 2+ karakter olan HER kurumu
+            # eler ve primary_tenant None doner (testler yakaladi).
+            ~Tenant.name.startswith("__", autoescape=True),
+            Tenant.is_active.is_(True),
+        )
+    )
+
 
 class OnboardingError(ValueError):
     pass
@@ -44,22 +74,12 @@ def unique_slug(db: Session, name: str) -> str:
 
 def has_real_org(db: Session) -> bool:
     """Demo disi (gercek) aktif bir kurum var mi? Kurulum ekranini bunun tersinde gosteririz."""
-    return (
-        db.query(Tenant)
-        .filter(Tenant.slug != DEMO_SLUG, Tenant.is_active.is_(True))
-        .first()
-        is not None
-    )
+    return _gercek_kurum_sorgusu(db).first() is not None
 
 
 def primary_tenant(db: Session) -> Tenant | None:
     """Girisin varsayilan hedefi: varsa ilk gercek kurum, yoksa demo (on-prem tek kurum)."""
-    real = (
-        db.query(Tenant)
-        .filter(Tenant.slug != DEMO_SLUG, Tenant.is_active.is_(True))
-        .order_by(Tenant.id)
-        .first()
-    )
+    real = _gercek_kurum_sorgusu(db).order_by(Tenant.id).first()
     return real or db.query(Tenant).filter(Tenant.slug == DEMO_SLUG).first()
 
 

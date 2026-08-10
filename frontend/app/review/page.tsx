@@ -230,7 +230,7 @@ export default function ReviewQueuePage() {
         <span className="text-sm text-[var(--ink-2)]">{cagri.temsilci ?? "—"}</span>
         {cagri.sifirlandi ? (
           <span
-            className="rounded px-2 py-0.5 text-xs font-semibold text-white"
+            className="px-2 py-0.5 text-xs font-semibold text-white"
             style={{ background: "var(--status-critical)" }}
             title={cagri.sifirlama_gerekcesi ?? undefined}
           >
@@ -243,7 +243,7 @@ export default function ReviewQueuePage() {
         )}
         <div className="flex flex-wrap gap-1">
           {cagri.kuyruk_sebepleri.map((s) => (
-            <span key={s} className="rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[11px] text-[var(--ink-2)]">
+            <span key={s} className="bg-[var(--surface-2)] px-1.5 py-0.5 text-[11px] text-[var(--ink-2)]">
               {SEBEP_ETIKET[s] ?? s}
             </span>
           ))}
@@ -283,7 +283,7 @@ export default function ReviewQueuePage() {
                 data-transcript-sec={Math.round(g.saniye)}
                 tabIndex={-1}
                 onClick={() => seekToSecond(g.saniye)}
-                className="mb-1 scroll-mt-16 rounded px-2 py-1 transition-colors data-[active=true]:bg-[var(--series-1-soft)] data-[active=true]:ring-1 data-[active=true]:ring-[var(--series-1)]"
+                className="mb-1 scroll-mt-16 px-2 py-1 transition-colors data-[active=true]:bg-[var(--series-1-soft)] data-[active=true]:ring-1 data-[active=true]:ring-[var(--series-1)]"
               >
                 <span className="mr-2 tabular-nums text-[11px] text-[var(--muted)]">
                   {String(Math.floor(g.saniye / 60)).padStart(2, "0")}:
@@ -303,7 +303,7 @@ export default function ReviewQueuePage() {
         {/* SAG: kriter kartlari */}
         <section className="min-h-0 overflow-y-auto p-3" aria-label="Kriter kartları">
           {cagri.sifirlandi && cagri.sifirlama_gerekcesi && (
-            <div className="mb-3 rounded-md border border-[var(--status-critical)] bg-[var(--surface-2)] p-3">
+            <div className="mb-3 border border-[var(--status-critical)] bg-[var(--surface-2)] p-3">
               <p className="text-sm font-semibold text-[var(--status-critical)]">
                 Sıfırlayıcı ihlal
               </p>
@@ -373,16 +373,16 @@ const KriterKartiGorunum = forwardRef<HTMLDivElement, {
       tabIndex={0}
       onFocus={onSec}
       data-active={aktif}
-      className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-3 transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--series-1)] data-[active=true]:border-[var(--series-1)] data-[active=true]:ring-1 data-[active=true]:ring-[var(--series-1)]"
+      className="border border-[var(--border)] bg-[var(--surface)] p-3 transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--series-1)] data-[active=true]:border-[var(--series-1)] data-[active=true]:ring-1 data-[active=true]:ring-[var(--series-1)]"
     >
       <div className="flex items-start gap-2">
-        <span className="h-2 w-2 shrink-0 translate-y-1.5 rounded-full" style={{ background: renk }} aria-hidden="true" />
+        <span className="h-2 w-2 shrink-0 translate-y-1.5" style={{ background: renk }} aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline gap-2">
             <h3 className="text-sm font-semibold">{kriter.ad}</h3>
             <span className="text-[11px] text-[var(--muted)]">ağırlık {kriter.agirlik}</span>
             {kriter.katman === "A" && (
-              <span className="rounded bg-[var(--surface-2)] px-1 text-[10px] text-[var(--muted)]" title="Kod tarafından belirlendi">
+              <span className="bg-[var(--surface-2)] px-1 text-[10px] text-[var(--muted)]" title="Kod tarafından belirlendi">
                 deterministik
               </span>
             )}
@@ -424,7 +424,7 @@ const KriterKartiGorunum = forwardRef<HTMLDivElement, {
       </div>
 
       {acik && karar === undefined && (
-        <div className="mt-2 space-y-2 rounded-md bg-[var(--surface-2)] p-2" onClick={(e) => e.stopPropagation()}>
+        <div className="mt-2 space-y-2 bg-[var(--surface-2)] p-2" onClick={(e) => e.stopPropagation()}>
           <label className="block text-xs">
             <span className="mb-1 block font-medium">Yeni puan</span>
             <input

@@ -88,11 +88,11 @@ function MyPerformance() {
     <div className="card p-4">
       <h2 className="mb-3 text-sm font-semibold text-ink2">⭐ {t("gam.title")}</h2>
       <div className="flex flex-wrap gap-4">
-        <div className="rounded-lg bg-series/10 px-4 py-2 text-center">
+        <div className="bg-series/10 px-4 py-2 text-center">
           <div className="text-2xl font-bold text-series">{g.points}</div>
           <div className="text-[10px] text-muted">{t("gam.points")}</div>
         </div>
-        <div className="rounded-lg bg-grid/40 px-4 py-2 text-center">
+        <div className="bg-grid/40 px-4 py-2 text-center">
           <div className="text-2xl font-bold">🔥 {g.streak}</div>
           <div className="text-[10px] text-muted">{t("gam.streak")} · {t("gam.streakUnit")}</div>
         </div>
@@ -106,7 +106,7 @@ function MyPerformance() {
                 <span>{c.completed ? "✅" : "⏳"} {c.title}</span>
                 <span className="text-muted">{c.progress}/{c.target} · +{c.reward_points} {t("gam.reward")}</span>
               </div>
-              <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-grid/40">
+              <div className="mt-0.5 h-1.5 overflow-hidden bg-grid/40">
                 <div className="h-full bg-series" style={{ width: `${Math.min(100, (c.progress / c.target) * 100)}%` }} />
               </div>
             </div>

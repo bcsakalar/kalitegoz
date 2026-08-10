@@ -1,0 +1,12 @@
+{
+  "name": "kalitegoz-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Gelistirme araclari — arayuz ekran goruntusu alici. Uygulamanin bagimliligi DEGILDIR; kok dizini sade tutmak icin buraya konuldu.",
+  "scripts": {
+    "shots": "node shots.mjs --out ../docs/screens"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

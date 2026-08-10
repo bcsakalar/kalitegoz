@@ -1,0 +1,70 @@
+[
+  {
+    "sayfa": "03-kokpit",
+    "yol": "/cockpit",
+    "tema": "light",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\03-kokpit-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/cockpit",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "04-inceleme-kuyrugu",
+    "yol": "/review",
+    "tema": "light",
+    "rol": "quality",
+    "dosya": "..\\docs\\screens\\04-inceleme-kuyrugu-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/review",
+    "konsol_hatalari": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ]
+  },
+  {
+    "sayfa": "08-yonetim",
+    "yol": "/admin",
+    "tema": "light",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\08-yonetim-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/admin",
+    "konsol_hatalari": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ]
+  },
+  {
+    "sayfa": "03-kokpit",
+    "yol": "/cockpit",
+    "tema": "dark",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\03-kokpit-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/cockpit",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "04-inceleme-kuyrugu",
+    "yol": "/review",
+    "tema": "dark",
+    "rol": "quality",
+    "dosya": "..\\docs\\screens\\04-inceleme-kuyrugu-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/review",
+    "konsol_hatalari": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ]
+  },
+  {
+    "sayfa": "08-yonetim",
+    "yol": "/admin",
+    "tema": "dark",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\08-yonetim-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/admin",
+    "konsol_hatalari": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ]
+  }
+]

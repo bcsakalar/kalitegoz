@@ -8,7 +8,7 @@ MODEL := $(if $(MODEL),$(MODEL),qwen2.5:7b)
 EMBED := $(shell grep -E '^EMBED_MODEL=' .env 2>/dev/null | cut -d= -f2)
 EMBED := $(if $(EMBED),$(EMBED),nomic-embed-text)
 
-.PHONY: help demo up down clean logs test test-scripts seed-history pull-model wait-api demo-data rebuild eval eval-build eval-baseline demo-reset tr-audit perf
+.PHONY: help demo up down clean logs test test-scripts seed-history pull-model wait-api demo-data rebuild eval eval-build eval-baseline demo-reset tr-audit ui-audit audit perf
 
 help:
 	@echo "KaliteGoz komutlari:"
@@ -70,6 +70,13 @@ demo-reset:
 
 tr-audit:
 	python scripts/tr_audit.py
+
+# Keskin kose kurali: border-radius her yerde 0, tek tokendan yonetilir.
+ui-audit:
+	python scripts/ui_audit.py
+
+# Tum statik denetimler tek komutta (CI bunu kosar)
+audit: tr-audit ui-audit
 
 perf:
 	@docker compose cp scripts/perf_check.py api:/tmp/perf_check.py

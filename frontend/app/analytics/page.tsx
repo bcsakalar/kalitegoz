@@ -65,7 +65,7 @@ export default function AnalyticsPage() {
             {ts.map((p) => (
               <div key={p.date} className="flex min-w-[14px] flex-1 flex-col items-center justify-end gap-1"
                 title={`${p.date}: ${p.avg ?? "—"} (${p.count})`}>
-                <div className="w-full rounded-t bg-series" style={{ height: `${((p.avg ?? 0) / maxTs) * 100}%` }} />
+                <div className="w-full bg-series" style={{ height: `${((p.avg ?? 0) / maxTs) * 100}%` }} />
                 <span className="text-[9px] text-muted">{p.date.slice(5)}</span>
               </div>
             ))}
@@ -95,7 +95,7 @@ export default function AnalyticsPage() {
                     </td>
                     <td className="tabular-nums">{v.recent}</td>
                     <td className="tabular-nums text-muted">{v.prior}</td>
-                    <td className={`tabular-nums font-semibold ${v.change_pct > 0 ? "text-[var(--status-warn)]" : v.change_pct < 0 ? "text-[var(--status-ok)]" : "text-muted"}`}>
+                    <td className={`tabular-nums font-semibold ${v.change_pct > 0 ? "text-[var(--status-warning)]" : v.change_pct < 0 ? "text-[var(--status-good)]" : "text-muted"}`}>
                       {v.change_pct > 0 ? "▲" : v.change_pct < 0 ? "▼" : ""} {v.change_pct > 0 ? "+" : ""}{v.change_pct}%
                     </td>
                   </tr>
@@ -114,7 +114,7 @@ export default function AnalyticsPage() {
             {EMOTION_KEYS.filter((e) => emotions[e]).map((e) => (
               <div key={e} className="flex items-center gap-2 text-xs">
                 <span className="w-28 shrink-0">{t(`emotion.${e}`)}</span>
-                <div className="h-3 flex-1 overflow-hidden rounded bg-grid/40">
+                <div className="h-3 flex-1 overflow-hidden bg-grid/40">
                   <div className="h-full bg-series" style={{ width: `${(emotions[e] / totalEmotion) * 100}%` }} />
                 </div>
                 <span className="w-8 text-right tabular-nums text-muted">{emotions[e]}</span>
@@ -125,8 +125,8 @@ export default function AnalyticsPage() {
           <h3 className="mb-2 mt-4 text-xs font-semibold text-ink2">{t("analytics.churn.title")}</h3>
           <div className="flex gap-2">
             {(["dusuk", "orta", "yuksek"] as const).map((r) => (
-              <div key={r} className="flex-1 rounded-lg bg-grid/40 p-2 text-center">
-                <div className={`text-lg font-bold ${r === "yuksek" ? "text-[var(--status-critical)]" : r === "orta" ? "text-[var(--status-warn)]" : ""}`}>{churn[r] ?? 0}</div>
+              <div key={r} className="flex-1 bg-grid/40 p-2 text-center">
+                <div className={`text-lg font-bold ${r === "yuksek" ? "text-[var(--status-critical)]" : r === "orta" ? "text-[var(--status-warning)]" : ""}`}>{churn[r] ?? 0}</div>
                 <div className="text-[10px] text-muted">{t(`risk.${r}`)}</div>
               </div>
             ))}

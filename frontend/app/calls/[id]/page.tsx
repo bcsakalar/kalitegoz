@@ -192,26 +192,26 @@ export default function CallDetailPage() {
         <div className="card p-4">
           <h2 className="text-sm font-semibold text-ink2">{t("call.acoustic")}</h2>
           <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div className="rounded-lg bg-grid/40 p-3">
+            <div className="bg-grid/40 p-3">
               <div className="text-xs text-ink2">{t("metric.pitch")}</div>
               <div className="text-xl font-semibold">{m.temsilci_pitch_hz ?? "—"} <span className="text-xs font-normal text-muted">Hz</span></div>
               <div className="mt-0.5 text-xs text-muted">
                 {m.temsilci_monoton ? t("metric.monotone") : t("metric.lively")}
               </div>
             </div>
-            <div className="rounded-lg bg-grid/40 p-3">
+            <div className="bg-grid/40 p-3">
               <div className="text-xs text-ink2">{t("metric.agentShouting")}</div>
               <div className={`text-xl font-semibold ${(m.temsilci_bagirma_sayisi ?? 0) > 0 ? "text-[var(--status-critical)]" : ""}`}>
                 {m.temsilci_bagirma_sayisi ?? 0}
               </div>
               
             </div>
-            <div className="rounded-lg bg-grid/40 p-3">
+            <div className="bg-grid/40 p-3">
               <div className="text-xs text-ink2">{t("metric.customerShouting")}</div>
               <div className="text-xl font-semibold">{m.musteri_bagirma_sayisi ?? 0}</div>
               
             </div>
-            <div className="rounded-lg bg-grid/40 p-3">
+            <div className="bg-grid/40 p-3">
               <div className="text-xs text-ink2">{t("metric.pitchVariety")}</div>
               <div className="text-xl font-semibold">{m.temsilci_tonlama_sapmasi ?? "—"} <span className="text-xs font-normal text-muted">Hz</span></div>
               
@@ -276,7 +276,7 @@ export default function CallDetailPage() {
           </div>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {call.emotion && (
-              <div className="rounded-lg bg-grid/40 p-3">
+              <div className="bg-grid/40 p-3">
                 <div className="text-xs text-ink2">{t("analytics.emotion")}</div>
                 <div className="text-lg font-semibold">{t(`emotion.${call.emotion}`)}</div>
                 {call.sentiment_trajectory && (
@@ -285,29 +285,29 @@ export default function CallDetailPage() {
               </div>
             )}
             {call.churn_risk && (
-              <div className="rounded-lg bg-grid/40 p-3">
+              <div className="bg-grid/40 p-3">
                 <div className="text-xs text-ink2">{t("analytics.churn")}</div>
                 <div className={`text-lg font-semibold ${
                   call.churn_risk === "yuksek" ? "text-[var(--status-critical)]"
-                  : call.churn_risk === "orta" ? "text-[var(--status-warn)]" : ""
+                  : call.churn_risk === "orta" ? "text-[var(--status-warning)]" : ""
                 }`}>{t(`risk.${call.churn_risk}`)}</div>
               </div>
             )}
             {call.customer_effort != null && (
-              <div className="rounded-lg bg-grid/40 p-3" title={t("analytics.ces.hint")}>
+              <div className="bg-grid/40 p-3" title={t("analytics.ces.hint")}>
                 <div className="text-xs text-ink2">{t("analytics.ces")}</div>
                 <div className="text-lg font-semibold">{call.customer_effort}<span className="text-xs font-normal text-muted">/5</span></div>
               </div>
             )}
             {call.predicted_csat != null && (
-              <div className="rounded-lg bg-grid/40 p-3">
+              <div className="bg-grid/40 p-3">
                 <div className="text-xs text-ink2">CSAT</div>
                 <div className="text-lg font-semibold">{call.predicted_csat}<span className="text-xs font-normal text-muted">/5</span></div>
               </div>
             )}
           </div>
           {call.next_action && (
-            <p className="flex items-start gap-2 rounded-lg bg-series/10 p-3 text-sm leading-relaxed">
+            <p className="flex items-start gap-2 bg-series/10 p-3 text-sm leading-relaxed">
               <span aria-hidden>🎯</span>
               <span><span className="font-semibold text-ink2">{t("analytics.next_action")}: </span>{call.next_action}</span>
             </p>
@@ -364,7 +364,7 @@ export default function CallDetailPage() {
             onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)} />
         )}
         {!isChat && !audioSrc && (
-          <p className="rounded-lg bg-grid/50 p-3 text-sm text-ink2">
+          <p className="bg-grid/50 p-3 text-sm text-ink2">
             {audioError ? `🔇 ${t("call.noAudio")}: ${audioError}` : `⏳ ${t("call.loadingAudio")}`}
           </p>
         )}
@@ -395,7 +395,7 @@ export default function CallDetailPage() {
           {call.segments.map((seg, i) => (
             <button key={seg.idx} ref={i === activeIdx ? activeRef : undefined}
               onClick={() => !isChat && seek(seg.start_sec)}
-              className={`block w-full rounded-lg px-3 py-1.5 text-left text-sm ${i === activeIdx ? "bg-grid" : "hover:bg-grid/50"} ${isChat ? "cursor-default" : ""}`}>
+              className={`block w-full px-3 py-1.5 text-left text-sm ${i === activeIdx ? "bg-grid" : "hover:bg-grid/50"} ${isChat ? "cursor-default" : ""}`}>
               {!isChat && <span className="mr-2 text-xs tabular-nums text-muted">{fmtTs(seg.start_sec)}</span>}
               <span className={`mr-2 text-xs font-semibold ${seg.speaker === "temsilci" ? "text-series" : "text-ink2"}`}>
                 {t(SPEAKER_KEYS[seg.speaker] ?? "speaker.unknown")}
@@ -466,7 +466,7 @@ function ScoreCard({ score: s, canOverride, seek, onSaved }: {
       <p className="mt-0.5 text-xs text-muted">ağırlık ×{s.weight}</p>
       {s.rationale && <p className="mt-2 text-sm leading-relaxed text-ink2">{s.rationale}</p>}
       {s.evidence && (
-        <blockquote className="mt-2 flex items-start gap-2 rounded-lg bg-grid/50 p-2.5 text-sm italic">
+        <blockquote className="mt-2 flex items-start gap-2 bg-grid/50 p-2.5 text-sm italic">
           {s.evidence_ts != null && seek && (
             <button className="btn shrink-0 !px-2 !py-0.5 text-xs not-italic tabular-nums" onClick={() => seek(s.evidence_ts!)}>▶ {fmtTs(s.evidence_ts)}</button>
           )}
@@ -481,7 +481,7 @@ function ScoreCard({ score: s, canOverride, seek, onSaved }: {
         </button>
       )}
       {canOverride && editing && (
-        <div className="mt-3 space-y-2 rounded-lg bg-grid/40 p-3">
+        <div className="mt-3 space-y-2 bg-grid/40 p-3">
           <label className="flex items-center gap-2 text-sm">
             Yeni puan
             <input type="number" min={0} max={10} className="input w-20" value={val}
@@ -526,7 +526,7 @@ function CoachingTasksPanel({ callId, isAgent, onChanged }: {
     <div className="card space-y-3 p-4">
       <h2 className="text-sm font-semibold text-ink2">🎯 {t("coachtask.title")}</h2>
       {tasks.map((tk) => (
-        <div key={tk.id} className="rounded-lg border border-hairline p-3 text-sm">
+        <div key={tk.id} className="border border-hairline p-3 text-sm">
           <div className="flex items-center gap-2">
             <span className={`badge ${tk.status === "done" ? "badge-good" : "badge-warn"}`}>
               <span className="dot" aria-hidden />{tk.status === "done" ? t("coachtask.done") : t("coachtask.open")}
@@ -534,7 +534,7 @@ function CoachingTasksPanel({ callId, isAgent, onChanged }: {
             <span className="text-ink2">{tk.note}</span>
           </div>
           {tk.status === "done" && tk.agent_comment && (
-            <p className="mt-2 rounded-lg bg-grid/40 p-2 text-xs text-ink2">
+            <p className="mt-2 bg-grid/40 p-2 text-xs text-ink2">
               <b>{t("coachtask.agentNote")}:</b> {tk.agent_comment}
             </p>
           )}
@@ -565,10 +565,10 @@ function SimilarCalls({ callId }: { callId: number }) {
       <p className="mb-2 text-xs text-muted">{t("similar.desc")}</p>
       <div className="space-y-1">
         {rows.map((c) => (
-          <a key={c.id} href={`/calls/${c.id}`} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-grid/50">
+          <a key={c.id} href={`/calls/${c.id}`} className="flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-grid/50">
             <span className="w-10 text-right font-semibold tabular-nums text-series">%{Math.round(c.similarity * 100)}</span>
             <span className="flex-1 truncate">{c.agent_name ?? "—"} · {c.filename}</span>
-            {c.shared_tags.slice(0, 2).map((tg) => <span key={tg} className="rounded bg-grid px-1.5 py-0.5 text-[10px] text-ink2">{tg}</span>)}
+            {c.shared_tags.slice(0, 2).map((tg) => <span key={tg} className="bg-grid px-1.5 py-0.5 text-[10px] text-ink2">{tg}</span>)}
             <span className="tabular-nums text-muted">{c.total_score ?? "—"}</span>
           </a>
         ))}
@@ -658,10 +658,10 @@ function SelfAssessmentCard({ callId }: { callId: number }) {
             <label className="text-xs">
               <span className="block text-muted">{t("self.score")}</span>
               <input type="number" min={0} max={100} value={score} onChange={(e) => setScore(Number(e.target.value))}
-                className="mt-0.5 w-24 rounded-lg border border-hairline bg-surface2 px-2 py-1 text-sm" />
+                className="mt-0.5 w-24 border border-hairline bg-surface2 px-2 py-1 text-sm" />
             </label>
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="not (opsiyonel)"
-              className="flex-1 rounded-lg border border-hairline bg-surface2 px-2 py-1 text-sm" />
+              className="flex-1 border border-hairline bg-surface2 px-2 py-1 text-sm" />
             <button className="btn btn-primary !py-1 text-xs" disabled={busy} onClick={save}>{t("self.save")}</button>
           </div>
         </>

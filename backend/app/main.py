@@ -19,6 +19,7 @@ from .api import (
     calibration,
     calls,
     chats,
+    csat_api,
     criteria,
     enterprise,
     events,
@@ -230,15 +231,23 @@ app.include_router(enterprise.router)
 app.include_router(ingest_api.router)
 app.include_router(ai_admin.router)
 app.include_router(targets.router)
+app.include_router(csat_api.router)
 app.include_router(notifications.router)
 
 
+# Kisa yollar (/health, /ready) VE /api/* altindaki karsiliklari birlikte
+# sunuluyor. Sebep: yuk dengeleyicilerin ve orkestratorlerin cogu kok
+# seviyede /health bekler; ters vekil (reverse proxy) arkasinda ise yalniz
+# /api/* yolu iletiliyor olabilir. Ikisini de vermek, kurulum sirasinda
+# "saglik ucu neden 404 veriyor" sorusunu tamamen ortadan kaldirir.
+@app.get("/health", tags=["health"])
 @app.get("/api/health", tags=["health"])
 def health():
     """Liveness — surec ayakta mi (bagimlilik kontrolu yok, hizli)."""
     return {"status": "ok", "app": settings.app_name, "version": "2.0.0"}
 
 
+@app.get("/ready", tags=["health"])
 @app.get("/api/health/ready", tags=["health"])
 def readiness():
     """Readiness — DB ve Redis erisilebilir mi. Yuk dengeleyici/orkestrator icin."""

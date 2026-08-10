@@ -79,7 +79,7 @@ export default function AgentScorecardPage() {
         </div>
         {planError && <p className="text-xs text-danger">{t("common.error")}: {planError}</p>}
         {plan && (
-          <div className="rounded-lg border border-hairline bg-grid/40 p-3 text-sm">
+          <div className="border border-hairline bg-grid/40 p-3 text-sm">
             <p className="mb-2 text-xs text-muted">{t("coach.basedOn").replace("{n}", String(plan.call_count))}</p>
             <div className="mb-2 flex flex-wrap gap-1.5">
               {plan.focus.map((f) => (

@@ -104,21 +104,21 @@ export default function RubricPage() {
         {sim && (
           <div className="mt-3 space-y-3">
             <div className="grid grid-cols-2 gap-3 text-center lg:grid-cols-4">
-              <div className="rounded-lg bg-grid/40 p-2">
+              <div className="bg-grid/40 p-2">
                 <div className="text-lg font-bold tabular-nums">{sim.call_count}</div>
                 <div className="text-[10px] text-muted">{t("sim.calls")}</div>
               </div>
-              <div className="rounded-lg bg-grid/40 p-2">
+              <div className="bg-grid/40 p-2">
                 <div className="text-lg font-bold tabular-nums">{sim.avg_before} → {sim.avg_after}</div>
                 <div className="text-[10px] text-muted">{t("sim.avg")}</div>
               </div>
-              <div className="rounded-lg bg-grid/40 p-2">
-                <div className={`text-lg font-bold tabular-nums ${sim.avg_after - sim.avg_before >= 0 ? "text-[var(--status-ok)]" : "text-[var(--status-critical)]"}`}>
+              <div className="bg-grid/40 p-2">
+                <div className={`text-lg font-bold tabular-nums ${sim.avg_after - sim.avg_before >= 0 ? "text-[var(--status-good)]" : "text-[var(--status-critical)]"}`}>
                   {sim.avg_after - sim.avg_before > 0 ? "+" : ""}{(sim.avg_after - sim.avg_before).toFixed(1)}
                 </div>
                 <div className="text-[10px] text-muted">{t("sim.delta")}</div>
               </div>
-              <div className="rounded-lg bg-grid/40 p-2">
+              <div className="bg-grid/40 p-2">
                 <div className="text-lg font-bold tabular-nums">{sim.zeroed_before} → {sim.zeroed_after}</div>
                 <div className="text-[10px] text-muted">{t("sim.zeroed")}</div>
               </div>
@@ -130,7 +130,7 @@ export default function RubricPage() {
                   <div key={ch.id} className="flex items-center gap-2 text-xs">
                     <Link href={`/calls/${ch.id}`} className="flex-1 truncate text-series hover:underline">#{ch.id} {ch.filename}</Link>
                     <span className="tabular-nums text-muted">{ch.before} → {ch.after}</span>
-                    <span className={`font-semibold tabular-nums ${ch.delta >= 0 ? "text-[var(--status-ok)]" : "text-[var(--status-critical)]"}`}>
+                    <span className={`font-semibold tabular-nums ${ch.delta >= 0 ? "text-[var(--status-good)]" : "text-[var(--status-critical)]"}`}>
                       {ch.delta > 0 ? "+" : ""}{ch.delta}
                     </span>
                   </div>
@@ -263,7 +263,7 @@ function RubricVersions({ reload, t }: { reload: () => void; t: (k: string) => s
       {versions && versions.length > 0 && (
         <div className="mt-3 max-h-56 space-y-1 overflow-y-auto">
           {versions.map((v) => (
-            <div key={v.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-grid/40">
+            <div key={v.id} className="flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-grid/40">
               <span className="text-muted">{fmtDate(v.created_at)}</span>
               <span className="flex-1 truncate">{v.note || t("rver.noNote")} · {v.criteria_count} {t("rver.criteria")}</span>
               <button className="btn !py-0.5 text-xs" disabled={busy} onClick={() => restore(v.id)}>↩ {t("rver.restore")}</button>

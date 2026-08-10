@@ -86,13 +86,13 @@ export default function OnboardingPage() {
           <span className="font-medium">{t("wiz.progress")}</span>
           <span className="text-ink2">{doneCount} / {STEPS.length}</span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-grid">
-          <div className="h-full rounded-full bg-series transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${(doneCount / STEPS.length) * 100}%` }} />
+        <div className="h-2 overflow-hidden bg-grid">
+          <div className="h-full bg-series transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${(doneCount / STEPS.length) * 100}%` }} />
         </div>
         <div className="mt-3 flex flex-wrap gap-1">
           {STEPS.map((s, i) => (
             <button key={s} onClick={() => setStep(i)}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${i === step ? "bg-series text-white" : "bg-surface-2 text-ink2"}`}>
+              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium ${i === step ? "bg-series text-white" : "bg-surface-2 text-ink2"}`}>
               <span>{done[i] ? "✓" : i + 1}</span> {t(`wiz.step.${s}`)}
             </button>
           ))}

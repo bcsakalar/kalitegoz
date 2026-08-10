@@ -82,7 +82,7 @@ export default function RoiPage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="card p-5" style={{ borderLeft: "4px solid var(--status-ok)" }}>
+            <div className="card p-5" style={{ borderLeft: "4px solid var(--status-good)" }}>
               <p className="text-xs uppercase tracking-wide text-muted">{t("roi.annualSaving")}</p>
               <p className="mt-1 text-3xl font-bold tabular-nums">₺{fmt(res.est_annual_saving)}</p>
               <p className="mt-1 text-sm text-ink2">{t("roi.monthlySaving")}: ₺{fmt(res.est_monthly_saving)} {t("roi.perMonth")}</p>
@@ -107,7 +107,7 @@ function Stat({ label, value, sub, accent }: { label: string; value: string; sub
   return (
     <div className="card p-4">
       <p className="text-xs uppercase tracking-wide text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums" style={accent === "ok" ? { color: "var(--status-ok)" } : undefined}>
+      <p className="mt-1 text-2xl font-bold tabular-nums" style={accent === "ok" ? { color: "var(--status-good)" } : undefined}>
         {value} {sub && <span className="text-sm font-normal text-muted">{sub}</span>}
       </p>
     </div>

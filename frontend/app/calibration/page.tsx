@@ -211,7 +211,7 @@ function ReportView({ report: r, onClose }: { report: CalibrationReport; onClose
           </div>
 
           {r.most_divergent && (
-            <p className="mt-2 rounded-lg bg-grid/50 p-2.5 text-sm">
+            <p className="mt-2 bg-grid/50 p-2.5 text-sm">
               ⚠️ {t("cal.mostDivergent")}: <b>{r.most_divergent}</b> — {t("cal.divergentHint")}
             </p>
           )}

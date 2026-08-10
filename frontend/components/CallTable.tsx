@@ -73,7 +73,7 @@ export default function CallTable({ calls, selectable, selected, onToggle, onTog
                 {c.tags && c.tags.length > 0 && (
                   <span className="mt-0.5 inline-flex flex-wrap gap-1 align-middle">
                     {c.tags.slice(0, 3).map((tg) => (
-                      <span key={tg} className="rounded bg-grid px-1.5 py-0.5 text-[10px] text-ink2">{tg}</span>
+                      <span key={tg} className="bg-grid px-1.5 py-0.5 text-[10px] text-ink2">{tg}</span>
                     ))}
                   </span>
                 )}

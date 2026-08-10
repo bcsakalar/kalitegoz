@@ -75,7 +75,7 @@ function MetadataImportCard() {
     <div className="card space-y-3 p-4">
       <h2 className="text-sm font-semibold text-ink2">{t("meta.title")}</h2>
       <p className="text-sm text-ink2">{t("meta.body")}</p>
-      <pre className="overflow-x-auto rounded-lg bg-grid/50 p-2.5 text-xs">
+      <pre className="overflow-x-auto bg-grid/50 p-2.5 text-xs">
 {`dosya;temsilci;kampanya;musteri_ref
 ayse.yilmaz_01.wav;ayse.yilmaz;Satış Hattı;MUS-1024`}
       </pre>
@@ -131,19 +131,19 @@ function ProcessingTab() {
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <div className="rounded-lg bg-grid/40 p-3">
+          <div className="bg-grid/40 p-3">
             <div className="text-xs text-ink2">{t("proc.pending")}</div>
             <div className="text-2xl font-semibold">{st.pending_calls}</div>
           </div>
-          <div className="rounded-lg bg-grid/40 p-3">
+          <div className="bg-grid/40 p-3">
             <div className="text-xs text-ink2">{t("proc.running")}</div>
             <div className="text-2xl font-semibold">{st.running_calls}</div>
           </div>
-          <div className="rounded-lg bg-grid/40 p-3">
+          <div className="bg-grid/40 p-3">
             <div className="text-xs text-ink2">{t("proc.failed")}</div>
             <div className="text-2xl font-semibold">{st.failed_calls}</div>
           </div>
-          <div className="rounded-lg bg-grid/40 p-3">
+          <div className="bg-grid/40 p-3">
             <div className="text-xs text-ink2">{t("proc.completed")}</div>
             <div className="text-2xl font-semibold">{st.done_calls}</div>
           </div>
@@ -272,7 +272,7 @@ function KnowledgeTab() {
           <div className="mt-3 space-y-2">
             {hits.length === 0 && <p className="text-sm text-muted">{t("kb.noMatch")}</p>}
             {hits.map((h, i) => (
-              <div key={i} className="rounded-lg bg-grid/40 p-2.5 text-sm">
+              <div key={i} className="bg-grid/40 p-2.5 text-sm">
                 <div className="text-xs text-muted">{h.doc_title} #{h.idx} · {t("kb.similarity")} {h.similarity}</div>
                 <p className="mt-1 whitespace-pre-wrap">{h.content}</p>
               </div>
@@ -753,7 +753,7 @@ function ScorecardTab() {
           <p className="text-xs text-muted">{draft.note}</p>
           <div className="space-y-2">
             {draft.criteria.map((c, i) => (
-              <div key={i} className="rounded-lg bg-grid/40 p-3">
+              <div key={i} className="bg-grid/40 p-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <input className="input flex-1 !py-1 text-sm font-semibold" value={c.name}
                     onChange={(e) => edit(i, { name: e.target.value })} />
@@ -828,7 +828,7 @@ function BrandingTab() {
         </label>
         <label className="block">
           <span className="mb-1 block text-xs text-ink2">{t("brand.color")}</span>
-          <input type="color" className="h-10 w-20 rounded border border-hairline" value={b.brand_color}
+          <input type="color" className="h-10 w-20 border border-hairline" value={b.brand_color}
             onChange={(e) => setB({ ...b, brand_color: e.target.value })} />
         </label>
       </div>
@@ -916,7 +916,7 @@ function CompliancePacksCard() {
       </div>
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {packs.map((p) => (
-          <div key={p.key} className="rounded-lg bg-grid/40 p-3">
+          <div key={p.key} className="bg-grid/40 p-3">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm">{p.name}</span>
               <span className="badge badge-neutral text-[10px]">{p.rules.length} {t("compliance.rules")}</span>
@@ -925,7 +925,7 @@ function CompliancePacksCard() {
             <ul className="mt-2 space-y-1">
               {p.rules.map((r) => (
                 <li key={r.key} className="text-xs">
-                  <span className={r.kind === "forbidden" ? "text-[var(--status-critical)]" : "text-[var(--status-ok)]"}>
+                  <span className={r.kind === "forbidden" ? "text-[var(--status-critical)]" : "text-[var(--status-good)]"}>
                     {r.kind === "forbidden" ? "⛔" : "✓"}
                   </span> {r.description}
                 </li>
@@ -972,24 +972,24 @@ function ChallengeAdminCard() {
         <label className="text-xs">
           <span className="block text-muted">{t("challenge.title")}</span>
           <input value={title} onChange={(e) => setTitle(e.target.value)}
-            className="mt-0.5 w-56 rounded-lg border border-hairline bg-surface2 px-2 py-1 text-sm" />
+            className="mt-0.5 w-56 border border-hairline bg-surface2 px-2 py-1 text-sm" />
         </label>
         <label className="text-xs">
           <span className="block text-muted">{t("challenge.metric")}</span>
           <select value={metric} onChange={(e) => setMetric(e.target.value)}
-            className="mt-0.5 rounded-lg border border-hairline bg-surface2 px-2 py-1 text-sm">
+            className="mt-0.5 border border-hairline bg-surface2 px-2 py-1 text-sm">
             {Object.entries(METRICS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </label>
         <label className="text-xs">
           <span className="block text-muted">{t("challenge.target")}</span>
           <input type="number" min={1} value={target} onChange={(e) => setTarget(Number(e.target.value))}
-            className="mt-0.5 w-16 rounded-lg border border-hairline bg-surface2 px-2 py-1 text-sm" />
+            className="mt-0.5 w-16 border border-hairline bg-surface2 px-2 py-1 text-sm" />
         </label>
         <label className="text-xs">
           <span className="block text-muted">{t("challenge.reward")}</span>
           <input type="number" min={0} value={reward} onChange={(e) => setReward(Number(e.target.value))}
-            className="mt-0.5 w-20 rounded-lg border border-hairline bg-surface2 px-2 py-1 text-sm" />
+            className="mt-0.5 w-20 border border-hairline bg-surface2 px-2 py-1 text-sm" />
         </label>
         <button className="btn btn-primary !py-1 text-xs" disabled={busy || title.trim().length < 2} onClick={create}>
           {t("challenge.add")}
