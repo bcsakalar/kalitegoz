@@ -239,6 +239,12 @@ _STATEMENTS: list[tuple[str, str]] = [
      "ALTER TABLE calls ADD COLUMN IF NOT EXISTS csat_at TIMESTAMP"),
     ("ix_calls_actual_csat",
      "CREATE INDEX IF NOT EXISTS ix_calls_actual_csat ON calls (actual_csat)"),
+
+    # --- Kurulumla gelen ornek cagri bayragi ---
+    ("calls.is_demo",
+     "ALTER TABLE calls ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT FALSE"),
+    ("ix_calls_is_demo",
+     "CREATE INDEX IF NOT EXISTS ix_calls_is_demo ON calls (is_demo)"),
 ]
 
 

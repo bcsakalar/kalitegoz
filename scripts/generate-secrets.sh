@@ -8,8 +8,8 @@
 #     ./scripts/generate-secrets.sh
 #
 # Ne yapar:
-#   1. .env.example'ı şablon alır
-#   2. Her sırrı kriptografik olarak güvenli şekilde üretir
+#   1. .env.example'ı şablon alır (satır sonlarını LF'e çevirerek)
+#   2. Her sırrı kriptografik olarak güvenli şekilde üretir ve DOĞRULAR
 #   3. Şifreleme ana anahtarını AYRI BİR DOSYAYA yazar (.env'e değil)
 #   4. .env'i 0600 izniyle oluşturur
 #
@@ -28,6 +28,8 @@ ORNEK="$KOK/.env.example"
 SECRET_DIZIN="$KOK/secrets"
 ANAHTAR_DOSYA="$SECRET_DIZIN/kg_master_key"
 
+CR=$'\r'
+
 ZORLA=0
 [[ "${1:-}" == "--force" ]] && ZORLA=1
 
@@ -36,18 +38,41 @@ ZORLA=0
 hata() { printf '\n  HATA: %s\n\n' "$1" >&2; exit 1; }
 bilgi() { printf '  %s\n' "$1"; }
 
-# Rastgele, URL-güvenli sır. openssl yoksa Python'a düşer — ikisi de yoksa durur.
+# Rastgele, URL-güvenli sır.
+#
+# Satır sonu temizliğinde \r ZORUNLU: Git Bash altında çalışan Windows
+# openssl.exe çıktıyı CRLF ile verebiliyor. Yalnızca \n silinirse parolanın
+# sonuna görünmez bir satır başı karakteri yapışır ve DATABASE_URL şu hale
+# gelir:
+#
+#     postgresql://kalitegoz:PAROLA<CR>@postgres:5432/kalitegoz
+#
+# Postgres bunu farklı bir parola sayar, kimlik doğrulama başarısız olur ve
+# hata mesajının hiçbir yerinde "\r" geçmez. Bizzat yaşandı: temiz kurulumda
+# API "password authentication failed for user kalitegoz" ile ayağa kalkmadı
+# ve sebebi ancak `cat -A` ile görüldü.
 uret() {
   local uzunluk="${1:-48}"
   if command -v openssl >/dev/null 2>&1; then
-    openssl rand -base64 "$uzunluk" | tr -d '\n=' | tr '+/' '-_'
+    openssl rand -base64 "$uzunluk" | tr -d "${CR}"'\n=' | tr '+/' '-_'
   elif command -v python3 >/dev/null 2>&1; then
-    python3 -c "import secrets;print(secrets.token_urlsafe($uzunluk))"
+    python3 -c "import secrets;print(secrets.token_urlsafe($uzunluk))" | tr -d "${CR}"'\n'
   elif command -v python >/dev/null 2>&1; then
-    python -c "import secrets;print(secrets.token_urlsafe($uzunluk))"
+    python -c "import secrets;print(secrets.token_urlsafe($uzunluk))" | tr -d "${CR}"'\n'
   else
     hata "openssl veya python bulunamadı — sır üretilemiyor."
   fi
+}
+
+# Üretilen sırda görünmez karakter kalmadığını DOĞRULA.
+# Sessizce bozuk bir sırla devam etmektense burada durmak doğru: bozuk sır,
+# saatler sonra alakasız görünen bir hata olarak geri döner.
+dogrula_sir() {
+  local ad="$1" deger="$2"
+  case "$deger" in
+    *[![:print:]]*) hata "$ad içinde yazdırılamayan karakter var — üretim bozuk." ;;
+  esac
+  [[ ${#deger} -ge 12 ]] || hata "$ad çok kısa (${#deger} karakter)."
 }
 
 # .env içinde bir anahtarın değerini değiştirir (yoksa ekler).
@@ -81,7 +106,10 @@ fi
 
 # ---------------------------------------------------------------- üret
 
-cp "$ORNEK" "$ENV_DOSYA"
+# Şablon CRLF ile saklanıyor olabilir (Windows / git autocrlf). CRLF'li bir
+# .env, HER değerin sonuna görünmez bir CR bırakır — Docker bunu değerin
+# parçası sayar ve parolalar, URL'ler, bayraklar sessizce bozulur.
+tr -d "${CR}" < "$ORNEK" > "$ENV_DOSYA"
 
 DB_PAROLA="$(uret 24)"
 JWT="$(uret 48)"
@@ -89,6 +117,13 @@ SESSION="$(uret 48)"
 ADMIN_PAROLA="$(uret 12)"
 ANA_ANAHTAR="$(uret 48)"
 INGEST="$(uret 24)"
+
+dogrula_sir "POSTGRES_PASSWORD" "$DB_PAROLA"
+dogrula_sir "JWT_SECRET" "$JWT"
+dogrula_sir "SESSION_SECRET" "$SESSION"
+dogrula_sir "ADMIN_PASSWORD" "$ADMIN_PAROLA"
+dogrula_sir "KG_MASTER_KEY" "$ANA_ANAHTAR"
+dogrula_sir "INGEST_API_KEY" "$INGEST"
 
 ayarla "POSTGRES_PASSWORD" "$DB_PAROLA" "$ENV_DOSYA"
 ayarla "DATABASE_URL" "postgresql+psycopg://kalitegoz:${DB_PAROLA}@postgres:5432/kalitegoz" "$ENV_DOSYA"
@@ -107,6 +142,11 @@ ayarla "ENCRYPTION_AT_REST" "true" "$ENV_DOSYA"
 
 chmod 600 "$ENV_DOSYA" 2>/dev/null || true
 
+# Son denetim: yazılan dosyada CR kalmadığını doğrula.
+if grep -q "${CR}" "$ENV_DOSYA"; then
+  hata ".env içinde satır başı (CR) karakteri kaldı — değerler bozulmuş olabilir."
+fi
+
 # ---------------------------------------------------------------- özet
 
 cat <<BILGI
@@ -121,7 +161,7 @@ cat <<BILGI
 
   GİRİŞ BİLGİSİ — bir kez gösteriliyor
   ------------------------------------
-  E-posta : admin@kalitegoz.local
+  E-posta : admin@demo.local
   Parola  : ${ADMIN_PAROLA}
 
   Bu parola .env içinde ADMIN_PASSWORD olarak da duruyor.

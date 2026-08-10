@@ -1,5 +1,25 @@
 [
   {
+    "sayfa": "01-giris",
+    "yol": "/login",
+    "tema": "light",
+    "rol": null,
+    "dosya": "..\\docs\\screens\\01-giris-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/login",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "02-cagrilar",
+    "yol": "/",
+    "tema": "light",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\02-cagrilar-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/",
+    "konsol_hatalari": []
+  },
+  {
     "sayfa": "03-kokpit",
     "yol": "/cockpit",
     "tema": "light",
@@ -22,6 +42,40 @@
     ]
   },
   {
+    "sayfa": "05-kalibrasyon",
+    "yol": "/calibration",
+    "tema": "light",
+    "rol": "quality",
+    "dosya": "..\\docs\\screens\\05-kalibrasyon-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/calibration",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "06-analitik",
+    "yol": "/analytics",
+    "tema": "light",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\06-analitik-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/analytics",
+    "konsol_hatalari": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "TypeError: d.map is not a function\n    at d (http://localhost:3000/_next/static/chunks/app/analytics/page-5debaa9ebbad8294.js:1:978)\n    at rE (http://localhost:3000/_next/static/chunks/fd9d1056-c8e08",
+      "Route error: TypeError: d.map is not a function\n    at d (http://localhost:3000/_next/static/chunks/app/analytics/page-5debaa9ebbad8294.js:1:978)\n    at rE (http://localhost:3000/_next/static/chunks/f"
+    ]
+  },
+  {
+    "sayfa": "07-rubrik",
+    "yol": "/rubric",
+    "tema": "light",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\07-rubrik-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/rubric",
+    "konsol_hatalari": []
+  },
+  {
     "sayfa": "08-yonetim",
     "yol": "/admin",
     "tema": "light",
@@ -29,9 +83,111 @@
     "dosya": "..\\docs\\screens\\08-yonetim-light.png",
     "durum": "ok",
     "url": "http://localhost:3000/admin",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "09-guvenlik",
+    "yol": "/security",
+    "tema": "light",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\09-guvenlik-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/security",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "10-roi",
+    "yol": "/roi",
+    "tema": "light",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\10-roi-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/roi",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "11-liderlik",
+    "yol": "/leaderboard",
+    "tema": "light",
+    "rol": "supervisor",
+    "dosya": "..\\docs\\screens\\11-liderlik-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/leaderboard",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "12-arama",
+    "yol": "/search",
+    "tema": "light",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\12-arama-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/search",
     "konsol_hatalari": [
-      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      "Failed to load resource: the server responded with a status of 403 (Forbidden)"
     ]
+  },
+  {
+    "sayfa": "13-is-akisi",
+    "yol": "/workflow",
+    "tema": "light",
+    "rol": "supervisor",
+    "dosya": "..\\docs\\screens\\13-is-akisi-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/workflow",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "14-temsilciler",
+    "yol": "/agents",
+    "tema": "light",
+    "rol": "supervisor",
+    "dosya": "..\\docs\\screens\\14-temsilciler-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/agents",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "15-hesap",
+    "yol": "/account",
+    "tema": "light",
+    "rol": "agent",
+    "dosya": "..\\docs\\screens\\15-hesap-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/account",
+    "konsol_hatalari": [
+      "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+    ]
+  },
+  {
+    "sayfa": "16-asistan",
+    "yol": "/assist",
+    "tema": "light",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\16-asistan-light.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/assist",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "01-giris",
+    "yol": "/login",
+    "tema": "dark",
+    "rol": null,
+    "dosya": "..\\docs\\screens\\01-giris-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/login",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "02-cagrilar",
+    "yol": "/",
+    "tema": "dark",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\02-cagrilar-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/",
+    "konsol_hatalari": []
   },
   {
     "sayfa": "03-kokpit",
@@ -56,6 +212,40 @@
     ]
   },
   {
+    "sayfa": "05-kalibrasyon",
+    "yol": "/calibration",
+    "tema": "dark",
+    "rol": "quality",
+    "dosya": "..\\docs\\screens\\05-kalibrasyon-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/calibration",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "06-analitik",
+    "yol": "/analytics",
+    "tema": "dark",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\06-analitik-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/analytics",
+    "konsol_hatalari": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "TypeError: d.map is not a function\n    at d (http://localhost:3000/_next/static/chunks/app/analytics/page-5debaa9ebbad8294.js:1:978)\n    at rE (http://localhost:3000/_next/static/chunks/fd9d1056-c8e08",
+      "Route error: TypeError: d.map is not a function\n    at d (http://localhost:3000/_next/static/chunks/app/analytics/page-5debaa9ebbad8294.js:1:978)\n    at rE (http://localhost:3000/_next/static/chunks/f"
+    ]
+  },
+  {
+    "sayfa": "07-rubrik",
+    "yol": "/rubric",
+    "tema": "dark",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\07-rubrik-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/rubric",
+    "konsol_hatalari": []
+  },
+  {
     "sayfa": "08-yonetim",
     "yol": "/admin",
     "tema": "dark",
@@ -63,8 +253,90 @@
     "dosya": "..\\docs\\screens\\08-yonetim-dark.png",
     "durum": "ok",
     "url": "http://localhost:3000/admin",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "09-guvenlik",
+    "yol": "/security",
+    "tema": "dark",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\09-guvenlik-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/security",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "10-roi",
+    "yol": "/roi",
+    "tema": "dark",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\10-roi-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/roi",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "11-liderlik",
+    "yol": "/leaderboard",
+    "tema": "dark",
+    "rol": "supervisor",
+    "dosya": "..\\docs\\screens\\11-liderlik-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/leaderboard",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "12-arama",
+    "yol": "/search",
+    "tema": "dark",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\12-arama-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/search",
     "konsol_hatalari": [
-      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      "Failed to load resource: the server responded with a status of 403 (Forbidden)"
     ]
+  },
+  {
+    "sayfa": "13-is-akisi",
+    "yol": "/workflow",
+    "tema": "dark",
+    "rol": "supervisor",
+    "dosya": "..\\docs\\screens\\13-is-akisi-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/workflow",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "14-temsilciler",
+    "yol": "/agents",
+    "tema": "dark",
+    "rol": "supervisor",
+    "dosya": "..\\docs\\screens\\14-temsilciler-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/agents",
+    "konsol_hatalari": []
+  },
+  {
+    "sayfa": "15-hesap",
+    "yol": "/account",
+    "tema": "dark",
+    "rol": "agent",
+    "dosya": "..\\docs\\screens\\15-hesap-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/account",
+    "konsol_hatalari": [
+      "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+    ]
+  },
+  {
+    "sayfa": "16-asistan",
+    "yol": "/assist",
+    "tema": "dark",
+    "rol": "admin",
+    "dosya": "..\\docs\\screens\\16-asistan-dark.png",
+    "durum": "ok",
+    "url": "http://localhost:3000/assist",
+    "konsol_hatalari": []
   }
 ]

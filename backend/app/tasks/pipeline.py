@@ -58,10 +58,34 @@ def _apply_outcome(db, call: Call, outcome: ScoringOutcome) -> None:
         tenant = db.get(Tenant, call.tenant_id)
         decision = qa_workflow.route_after_scoring(db, call, tenant=tenant)
         if decision.should_queue:
-            outcome.alerts.append((
-                AlertType.low_score, "dusuk",
-                "Kalite uzmani onayi bekliyor — tetiklenen kural: "
-                + ", ".join(decision.reasons),
+            # B36: burada ESKI (tuple) alarm bicimi kullaniliyordu. Alarm motoru
+            # FAZ 4'te AlertDraft'a gecti ama bu uretici guncellenmemisti; sonuc
+            # olarak `draft.validate()` bir tuple uzerinde cagriliyor ve
+            # AttributeError firlatiyordu.
+            #
+            # Etkisi buyuktu: bu dal YALNIZCA cagri insan kuyruguna dustugunde
+            # calisir. Yani "kalite uzmani onayi gereken her cagri" isleme
+            # sirasinda FAILED oluyordu — puanlama basariyla bitmis olsa bile.
+            # Altin set kosumu bunu yakalayamaz cunku eval pipeline gorevini
+            # degil, dogrudan puanlama motorunu cagirir.
+            kurallar = ", ".join(decision.reasons) or "risk kurali"
+            outcome.alerts.append(alert_engine.AlertDraft(
+                type=AlertType.low_score,
+                # "bilgi" — kritik/yuksek DEGIL: bu bir ihlal degil, is akisi
+                # bildirimi. (Eski tuple bicimi "dusuk" kullaniyordu; oyle bir
+                # siddet degeri hic olmadi, yani alarm zaten uretilemezdi.)
+                severity="bilgi",
+                rule_id="qa_kuyruk_yonlendirme",
+                title_tr="Kalite uzmanı onayı bekliyor",
+                explanation_tr=(
+                    f"Çağrı otomatik puanlandı ancak şu kural(lar) tetiklendiği "
+                    f"için insan onayına alındı: {kurallar}."
+                ),
+                suggested_action_tr=(
+                    "İnceleme kuyruğundan çağrıyı açıp puanı onaylayın ya da düzeltin."
+                ),
+                call_id=call.id,
+                extra={"kurallar": decision.reasons},
             ))
     except Exception as exc:  # noqa: BLE001 — yonlendirme puanlamayi dusurmez
         logger.warning("QA yonlendirmesi basarisiz (call %s): %s", call.id, exc)

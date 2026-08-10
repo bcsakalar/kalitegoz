@@ -80,6 +80,15 @@ def ingest_audio(
     if resolved:
         agent = get_or_create_agent(db, tenant_id, resolved)
 
+    # Kurulumla gelen ornek cagrilar "demo-" onekiyle birakilir
+    # (scripts/seed_demo_calls.py). Bayrak, demo verisini gercek trafikten
+    # ayirir: raporlarda haric tutulabilir ve tek komutla temizlenebilir.
+    # Adlandirma kuralini ingest'e koymak, watcher/API/elle yukleme yollarinin
+    # hepsinde ayni davranisi garanti eder.
+    # "demo-" dosya adinin BASINDA olmak zorunda degil: adlandirma kurali
+    # temsilci adini basa aliyor (ayse.yilmaz_demo-01-....wav).
+    demo_mu = "demo-" in original_name.lower()
+
     call = Call(
         tenant_id=tenant_id,
         filename=original_name,
@@ -89,6 +98,7 @@ def ingest_audio(
         campaign_id=campaign_id,
         customer_ref=(customer_ref or "").strip() or None,
         status=CallStatus.pending,
+        is_demo=demo_mu,
     )
     db.add(call)
     db.commit()
