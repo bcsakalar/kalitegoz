@@ -23,9 +23,20 @@ Temsilci cinsiyeti kadrodan, müşterininki metindeki hitaptan ("Fatma Hanım")
 müşteri, SAĞ kanal temsilci. Bu, konuşmacı ayrımını (diarization) bedavaya
 getirir; mono kayıtta HF_TOKEN'lı pyannote gerekir.
 
+## Tekrar çalıştırılabilir mi?
+
+`--sifirla` ile evet. Sesler değiştiğinde (ör. bir senaryo düzeltildiğinde)
+dosya hash'i de değişir; sistem bunu **yeni bir çağrı** sayar ve eskiler
+kalır. Yani `--temizle` tek başına yetmez: inbox temizlenir ama veritabanı
+kayıtları durur ve 20 çağrı 40 olur.
+
+`--sifirla` veritabanındaki demo çağrılarını da siler. `is_demo` bayrağı tam
+bu ayrımı yapabilmek için var — gerçek trafiğe dokunulmaz.
+
 Kullanım:
     python scripts/seed_demo_calls.py                 # data/inbox'a yazar
-    python scripts/seed_demo_calls.py --temizle       # once mevcut demo sesleri siler
+    python scripts/seed_demo_calls.py --sifirla       # DB'deki demo cagrilari + sesleri sil, yeniden uret
+    python scripts/seed_demo_calls.py --temizle       # yalnizca inbox'taki sesleri sil
     python scripts/seed_demo_calls.py --tts-engine piper   # cevrimdisi
 """
 
@@ -69,12 +80,48 @@ def _cinsiyetler(d: dict, rng: random.Random) -> dict[str, str]:
     return {"t": t, "m": customer_gender(d["turns"], rng)}
 
 
+def demo_cagrilari_sil() -> int:
+    """Veritabanindaki demo cagrilarini ve depodaki seslerini sil.
+
+    Yalnizca `is_demo=True` olanlar silinir — gercek trafige dokunulmaz.
+    Bu, betigin tekrar calistirilabilir olmasini saglar.
+    """
+    import subprocess
+
+    kod = (
+        "import sys; sys.path.insert(0,'/srv');"
+        "from app.db import SessionLocal;"
+        "from app.models import Call, Score, Segment, Alert, Violation;"
+        "db=SessionLocal();"
+        "ids=[c.id for c in db.query(Call).filter(Call.is_demo.is_(True)).all()];"
+        "[db.query(m).filter(m.call_id.in_(ids)).delete(synchronize_session=False) "
+        "for m in (Score, Violation, Alert, Segment)] if ids else None;"
+        "n=db.query(Call).filter(Call.is_demo.is_(True)).delete(synchronize_session=False);"
+        "db.commit(); print(n)"
+    )
+    try:
+        r = subprocess.run(
+            ["docker", "compose", "exec", "-T", "api", "python", "-c", kod],
+            capture_output=True, text=True, cwd=str(KOK.parent), timeout=120,
+        )
+        n = int((r.stdout or "0").strip().splitlines()[-1])
+    except Exception as exc:  # noqa: BLE001 — servis kapaliysa yalnizca sesleri sil
+        print(f"  (veritabani temizlenemedi: {str(exc)[:60]})")
+        n = 0
+
+    depo = VERI / "storage" / "audio"
+    if depo.exists():
+        for f in depo.glob("*.wav"):
+            f.unlink()
+    return n
+
+
 def uret(motor_adi: str, temizle: bool) -> int:
     INBOX.mkdir(parents=True, exist_ok=True)
 
     if temizle:
         silinen = 0
-        for p in INBOX.glob("demo-*.wav"):
+        for p in list(INBOX.glob("*demo-*.wav")):
             p.unlink()
             silinen += 1
         if silinen:
@@ -120,8 +167,18 @@ def main() -> int:
     ap.add_argument("--tts-engine", default="auto",
                     help="auto | edge | piper — piper cevrimdisi calisir")
     ap.add_argument("--temizle", action="store_true",
-                    help="Once data/inbox icindeki demo-*.wav dosyalarini sil")
+                    help="Once data/inbox icindeki demo seslerini sil")
+    ap.add_argument("--sifirla", action="store_true",
+                    help="VERITABANINDAKI demo cagrilarini ve depodaki sesleri de sil "
+                         "(betigi tekrar calistirmak icin dogru secenek)")
+    ap.add_argument("--api", default="http://localhost:8000",
+                    help="Sifirlama icin API adresi")
     args = ap.parse_args()
+
+    if args.sifirla:
+        silinen = demo_cagrilari_sil()
+        print(f"  veritabanindan {silinen} demo cagrisi silindi")
+        args.temizle = True
 
     print()
     print("=" * 64)

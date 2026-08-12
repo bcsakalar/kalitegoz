@@ -68,14 +68,27 @@ _MUSTERI_ADI = re.compile(
     r"^\s*([A-ZÇĞİÖŞÜ][a-zçğıöşü]+)\s+([A-ZÇĞİÖŞÜ][a-zçğıöşü]+)\s*[,\.]"
 )
 
+# SOYAD yerinde duramayacak kelimeler. "Ayse Hanim, faturamda sorun var."
+# diyen MUSTERI kendini tanitmiyor, TEMSILCIYE hitap ediyor — o replikten
+# musterinin cinsiyeti cikarilamaz.
+#
+# Bu ayrimi ilk surumde atlamistim ve mevcut bir test yakaladi
+# (test_customer_addressing_agent_is_ignored): "Ayse Hanim" deyen musteriye
+# deterministik olarak KADIN sesi atanmaya baslamisti.
+_UNVANLAR = {"hanım", "hanim", "bey", "beyefendi", "hanımefendi", "hanimefendi"}
+
 
 def _musteri_adi(turns: list[dict]) -> str:
-    """Musterinin repliklerinde kendini tanittigi ad (yoksa bos)."""
+    """Musterinin repliklerinde KENDINI tanittigi ad (yoksa bos).
+
+    Yalnizca "Ad Soyad," bicimi kabul edilir. "Ad Unvan," bicimi bir
+    HITAPTIR ve atlanir.
+    """
     for t in turns:
         if t["k"] != "m":
             continue
         m = _MUSTERI_ADI.match(t["m"])
-        if m:
+        if m and m.group(2).lower() not in _UNVANLAR:
             return m.group(1)
     return ""
 

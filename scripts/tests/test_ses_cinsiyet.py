@@ -159,3 +159,29 @@ def test_ses_karisimi_TEK_TARAFLI_degil():
     m = {customer_gender(d["turns"], rng) for d in DEMO_CALLS}
     assert t == {"kadin", "erkek"}, f"Temsilci sesleri tek taraflı: {t}"
     assert m == {"kadin", "erkek"}, f"Müşteri sesleri tek taraflı: {m}"
+
+
+def test_musteri_TEMSILCIYE_hitap_ederse_kendi_adi_sayilmaz():
+    """"Ayşe Hanım, faturamda sorun var." diyen müşteri KENDİNİ tanıtmıyor.
+
+    İlk düzeltmemde bu ayrımı atlamıştım: "Ad Soyad," deseni "Ad Unvan,"
+    biçimini de yakalıyordu ve temsilciye hitap eden müşteriye deterministik
+    olarak o unvanın cinsiyeti atanıyordu.
+
+    Mevcut bir test (`test_demo_voices.py`) bunu yakaladı — yeni bir kural
+    eklerken eski testleri koşmanın karşılığı budur.
+    """
+    turns = [
+        {"k": "t", "m": "Merhaba, ben Ayşe."},
+        {"k": "m", "m": "Ayşe Hanım, faturamda sorun var."},
+    ]
+    assert _musteri_adi(turns) == "", "Hitap, müşterinin kendi adı sanıldı"
+
+
+def test_musteri_gercekten_tanitirsa_ad_ALINIR():
+    """Kontrol testi: filtre fazla geniş olmasın."""
+    turns = [
+        {"k": "t", "m": "Adınızı alabilir miyim?"},
+        {"k": "m", "m": "Serkan Aydın, müşteri numaram dört beş altı."},
+    ]
+    assert _musteri_adi(turns) == "Serkan"
