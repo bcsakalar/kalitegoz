@@ -4,6 +4,10 @@
 .env
 .env.local
 .env.*.local
+# generate-secrets.sh mevcut .env'i yedekler — o yedek de SIR ICERIR
+.env.yedek
+.env.bak
+.env.backup
 !.env.example
 *.key
 *.pem

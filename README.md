@@ -46,8 +46,8 @@ alıntı koyar**, ve güvenilir olmadığını bildiği kriteri insana yollar.
 | Sıfırlayıcı ihlal yanlış-negatif | %18.2 | **%0.0** |
 | Kriter bazlı ortalama hata (MAE, 0-10) | 2.16 | **0.78** |
 | Kanıt doğrulanabilirlik | %56.1 | **%100** |
-| Tekrarlanabilirlik (3 koşum, std) | 1.95 | **0.00** |
-| Tam isabet oranı | %21.4 | **%60.5** |
+| Tekrarlanabilirlik (3 koşum, std) | 1.95 | **0.46** |
+| Tam isabet oranı | %21.4 | **%64.9** |
 
 ### Kriter türüne göre — çünkü tek ortalama yanıltıyor
 
@@ -199,7 +199,7 @@ human reviewer.
 | Zeroing-violation false positives | 38.5% | **0.0%** |
 | Mean absolute error (0-10 scale) | 2.16 | **0.78** |
 | Evidence verifiability | 56.1% | **100%** |
-| Repeatability (3 runs, std dev) | 1.95 | **0.00** |
+| Repeatability (3 runs, std dev) | 1.95 | **0.46** |
 
 Cohen's kappa is **0.94–1.00** on the four core objective criteria and
 **0.18** on subjective ones. We publish both numbers: on subjective criteria

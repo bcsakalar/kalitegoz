@@ -13,7 +13,7 @@ Altı fazda yapıldı; her fazın raporu `docs/internal/FAZ-N-RAPOR.md` altında
 | Sıfırlayıcı ihlal yanlış-negatif | %18.2 | **%0.0** |
 | Kriter bazlı MAE (0-10) | 2.16 | **0.82** |
 | Kanıt doğrulanabilirlik | %56.1 | **%100** |
-| Tekrarlanabilirlik (std) | 1.95 | **0.00** |
+| Tekrarlanabilirlik (std) | 1.95 | **0.46** |
 | Cohen's kappa (ortalama) | 0.32 | 0.51 |
 | Çekirdek uyum kriterlerinde kappa* | 0.32 | **0.94–1.00** |
 | Backend testi | 221 | **422** |

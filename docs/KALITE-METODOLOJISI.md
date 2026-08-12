@@ -141,7 +141,7 @@ kriterler raporlanır ama build'i kırmaz. IRR ölçümü için altyapı hazır:
 | Sıfırlayıcı ihlal yanlış-negatif | %18.2 | **%0.0** | — |
 | Kriter bazlı ortalama hata (MAE, 0-10) | 2.16 | **0.82** | ≤1.0 |
 | Kanıt doğrulanabilirlik | %56.1 | **%100** | ≥%95 |
-| Tekrarlanabilirlik (3 koşum, std) | 1.95 | **0.00** | ≤1.5 |
+| Tekrarlanabilirlik (3 koşum, std) | 1.95 | **0.46** | ≤1.5 |
 | Tam isabet oranı | %21.4 | **%60.2** | — |
 
 ### Kriter bazlı uyum (Cohen's kappa)
@@ -319,7 +319,9 @@ Yedi kural; hepsi yapılandırılabilir:
   kimlik doğrulaması, kapanışı ve üslubu denetlenir — hiçbiri atlanmaz.
   Öznel kriterlerde sistem **öneri** üretir; geçerli puan insan onayıyla oluşur
 - ✅ **Her puanın kanıtı var**: alıntı transkriptte doğrulanır (%100)
-- ✅ **Tekrarlanabilir**: aynı çağrı üç kez puanlandığında aynı sonuç (std 0.00)
+- ✅ **Tekrarlanabilir**: aynı çağrı üç kez puanlandığında toplam puan
+  **1 puandan az** oynar (std 0.46, 100'lük ölçekte). Nesnel kriterler hiç
+  oynamaz; oynama öznel kriterlerden gelir
 - ✅ **Nesnel kriterlerde kuralla tam mutabık**: kappa 0.90–1.00
   *(karşılaştırma bir insan uzmanla değil, tanımlı kuralla yapıldı — §4.0)*
 - ✅ **Haksız sıfırlama yok**: yanlış-pozitif %0
