@@ -25,6 +25,7 @@ Varsayilan seslendirme edge-tts ile yapilir (internet ister, model indirmez).
 import argparse
 import json
 import random
+import re
 import sys
 import urllib.request
 import uuid
@@ -34,7 +35,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from tr_gender import gender_from_name, infer_speaker_gender  # noqa: E402
+from tr_gender import gender_from_honorific, gender_from_name, infer_speaker_gender  # noqa: E402
 from tts_engines import make_engine, speaker_variant  # noqa: E402
 
 TARGET_SR = 8000  # telefon hatti
@@ -60,21 +61,47 @@ def agent_gender(name: str) -> str:
     return gender_from_name(name) or "erkek"
 
 
+# Musterinin kendini tanittigi replik: "Serkan Aydin, musteri numaram bir iki."
+# Ilk iki Buyuk-harfli kelime + virgul/nokta. Kimlik dogrulama adimi neredeyse
+# her cagrida oldugu icin bu desen guvenilir bir kaynak.
+_MUSTERI_ADI = re.compile(
+    r"^\s*([A-ZÇĞİÖŞÜ][a-zçğıöşü]+)\s+([A-ZÇĞİÖŞÜ][a-zçğıöşü]+)\s*[,\.]"
+)
+
+
+def _musteri_adi(turns: list[dict]) -> str:
+    """Musterinin repliklerinde kendini tanittigi ad (yoksa bos)."""
+    for t in turns:
+        if t["k"] != "m":
+            continue
+        m = _MUSTERI_ADI.match(t["m"])
+        if m:
+            return m.group(1)
+    return ""
+
+
 def customer_gender(turns: list[dict], rng: random.Random) -> str:
-    """Musterinin ses cinsiyeti — TEMSILCININ ona nasil HITAP ettigine gore.
+    """Musterinin ses cinsiyeti. Sirasiyla: HITAP > KENDI ADI > rastgele.
 
     Onceki surumde musteri "temsilcinin ziddi" olarak atanirdi; bu kural 12
     cagrinin 7'sinde sesi metinle celiskiye dusuruyordu ("Fatma Hanim" erkek
-    sesiyle konusuyordu). Hitap yoksa rastgele atanir — cinsiyet karisimini
-    rastgelelik saglar, zorlama bir kural degil.
+    sesiyle konusuyordu).
 
-    Yalnizca temsilcinin replikleri taranir: "X Hanim" diyen MUSTERI ise
-    hitap TEMSILCIYE gidiyordur ve musterinin cinsiyeti hakkinda hicbir sey
-    soylemez. (Gomulu diyaloglarda hepsi temsilci repliginde, ama --use-llm
-    ile uretilen diyaloglarda musteri de temsilciye hitap edebilir.)
+    Ikinci basamak (kendi adi) SONRADAN eklendi ve gercek bir hatayi kapatti:
+    temsilci hic "X Hanim/Bey" demediginde cinsiyet RASTGELE atantyordu, oysa
+    musteri kimlik dogrulamada adini soyluyordu. `13-dusuk-yanlis-bilgi`
+    senaryosunda "Gizem Celik" diyen musteriye ERKEK sesi verilmisti.
+
+    Yalnizca hitap icin temsilcinin replikleri taranir: "X Hanim" diyen MUSTERI
+    ise hitap TEMSILCIYE gidiyordur ve musterinin cinsiyeti hakkinda hicbir sey
+    soylemez. Ad icin ise yalnizca MUSTERININ replikleri taranir.
     """
     agent_text = " ".join(t["m"] for t in turns if t["k"] == "t")
-    return infer_speaker_gender(text=agent_text) or rng.choice(["kadin", "erkek"])
+    return (
+        gender_from_honorific(agent_text)
+        or gender_from_name(_musteri_adi(turns))
+        or rng.choice(["kadin", "erkek"])
+    )
 
 # =====================================================================
 # Gomulu diyaloglar — LLM erisimi olmadan da demo uretilebilsin diye.

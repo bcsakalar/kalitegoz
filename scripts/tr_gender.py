@@ -114,12 +114,27 @@ def gender_from_name(name: str) -> str | None:
 _HONORIFIC = re.compile(r"\b([A-Za-zÇĞİÖŞÜçğıöşü]{2,})\s+(Bey|Hanım|Hanim)\b")
 
 
+# Adsiz (yalin) hitaplar: "Beyefendi buyurun", "Hanimefendi bir dakika".
+# Bunlar _HONORIFIC desenine TAKILMAZ cunku o desen "AD + unvan" arar.
+# Gozden kacmisti: "Beyefendi sacmalamayin" diyen bir cagrida musteriye
+# KADIN sesi atanmisti (18-sifirlayici-hakaret senaryosu).
+_YALIN_HITAP = re.compile(r"\b(Beyefendi|Hanımefendi|Hanimefendi)\b", re.IGNORECASE)
+
+
 def gender_from_honorific(text: str) -> str | None:
-    """Metindeki ilk 'X Bey' / 'X Hanım' hitabindan cinsiyet cikarir."""
+    """Metindeki hitaptan cinsiyet cikarir.
+
+    Iki bicim taninir:
+      1. "Serkan Bey" / "Fatma Hanım"  -> ad + unvan
+      2. "Beyefendi" / "Hanımefendi"   -> yalin unvan (ad yok)
+    """
     m = _HONORIFIC.search(text or "")
-    if not m:
-        return None
-    return "erkek" if _normalize(m.group(2)) == "bey" else "kadin"
+    if m:
+        return "erkek" if _normalize(m.group(2)) == "bey" else "kadin"
+    y = _YALIN_HITAP.search(text or "")
+    if y:
+        return "erkek" if _normalize(y.group(1)).startswith("bey") else "kadin"
+    return None
 
 
 def infer_speaker_gender(
