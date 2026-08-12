@@ -8,7 +8,7 @@ MODEL := $(if $(MODEL),$(MODEL),qwen2.5:7b)
 EMBED := $(shell grep -E '^EMBED_MODEL=' .env 2>/dev/null | cut -d= -f2)
 EMBED := $(if $(EMBED),$(EMBED),nomic-embed-text)
 
-.PHONY: help demo up down clean logs test test-scripts seed-history pull-model wait-api demo-data rebuild eval eval-build eval-baseline demo-reset tr-audit ui-audit audit perf
+.PHONY: help demo up down clean logs test test-scripts seed-history pull-model wait-api demo-data rebuild eval eval-build eval-baseline demo-reset tr-audit ui-audit api-audit audit perf
 
 help:
 	@echo "KaliteGoz komutlari:"
@@ -74,6 +74,12 @@ tr-audit:
 # Keskin kose kurali: border-radius her yerde 0, tek tokendan yonetilir.
 ui-audit:
 	python scripts/ui_audit.py
+
+# API sozlesme denetimi: frontend'in bekledigi sekil ile API'nin donderdigi
+# uyusuyor mu? SERVISLER AYAKTA olmali (canli yanit karsilastirilir).
+# Statik denetim degil, o yuzden `audit` hedefine dahil DEGIL.
+api-audit:
+	python scripts/api_contract_audit.py
 
 # Tum statik denetimler tek komutta (CI bunu kosar)
 audit: tr-audit ui-audit

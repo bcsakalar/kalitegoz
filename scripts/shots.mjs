@@ -164,6 +164,20 @@ async function main() {
         await page.waitForLoadState("load", { timeout: 10000 }).catch(() => {});
         await page.waitForTimeout(2200);
 
+        // HATA SINIRI KONTROLU — bu olmadan cokmus bir sayfa "basarili"
+        // sayiliyordu: ekran goruntusu alinir, dosya yazilir, rapor yesil
+        // gorunur. Analitik sayfasi tam boyle gozden kacti (B37).
+        const hataSiniri = await page.evaluate(() => {
+          const t = document.body?.innerText || "";
+          if (/Bir şeyler ters gitti|Something went wrong/i.test(t)) {
+            const satirlar = t.split("\n").map((x) => x.trim()).filter(Boolean);
+            const ipucu = satirlar.find((x) =>
+              /is not a function|undefined|is not iterable|Cannot read|null/.test(x));
+            return (ipucu || "hata siniri devrede").slice(0, 120);
+          }
+          return null;
+        }).catch(() => null);
+
         const dosya = path.join(OUT, `${ad}-${tema}.png`);
         // fullPage cok uzun sayfalarda headless shell'i cokerttigi icin yukseklik
         // sinirlaniyor: 3200px hem tum ekrani gosteriyor hem guvenli.
@@ -175,11 +189,14 @@ async function main() {
         await page.setViewportSize({ width: 1440, height: 900 });
         rapor.push({
           sayfa: ad, yol, tema, rol, dosya,
-          durum: "ok",
+          durum: hataSiniri ? "COKTU" : "ok",
+          hata_siniri: hataSiniri,
           url: page.url(),
           konsol_hatalari: konsolHatalari.slice(oncekiHataSayisi),
         });
-        console.log(`  ✓ ${ad} (${tema})`);
+        console.log(hataSiniri
+          ? `  ✗ ${ad} (${tema}) SAYFA COKTU: ${hataSiniri}`
+          : `  ✓ ${ad} (${tema})`);
       } catch (e) {
         rapor.push({ sayfa: ad, yol, tema, rol, durum: "hata", hata: String(e).slice(0, 300) });
         console.log(`  ✗ ${ad} (${tema}): ${String(e).slice(0, 120)}`);
@@ -192,6 +209,7 @@ async function main() {
   await writeFile(path.join(OUT, "_rapor.json"),
     JSON.stringify(rapor, null, 2), "utf-8");
 
+  const coken = rapor.filter((r) => r.durum === "COKTU");
   const ok = rapor.filter((r) => r.durum === "ok").length;
   const hata = rapor.length - ok;
   const konsol = rapor.reduce((n, r) => n + (r.konsol_hatalari?.length || 0), 0);

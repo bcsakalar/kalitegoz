@@ -26,6 +26,8 @@ import type {
   TranscriptSearchResult,
   UserRow,
   TimeseriesPoint,
+  TimeseriesResponse,
+  VocResponse,
   VocTrend,
   CohortRow,
   ReviewStats,
@@ -410,8 +412,8 @@ export const api = {
 
   // --- Analitik (Dalga 3a VoC + 3b dashboard) ---
   analyticsTimeseries: (metric = "score", days = 30, bucket = "day") =>
-    request<TimeseriesPoint[]>(`/analytics/timeseries?metric=${metric}&days=${days}&bucket=${bucket}`),
-  analyticsVoc: (days = 14) => request<VocTrend[]>(`/analytics/voc?days=${days}`),
+    request<TimeseriesResponse>(`/analytics/timeseries?metric=${metric}&days=${days}&bucket=${bucket}`),
+  analyticsVoc: (days = 14) => request<VocResponse>(`/analytics/voc?days=${days}`),
   analyticsEmotions: (days = 30) =>
     request<{ emotions: Record<string, number>; churn: Record<string, number> }>(`/analytics/emotions?days=${days}`),
   analyticsCohort: (dimension = "team", days = 30) =>

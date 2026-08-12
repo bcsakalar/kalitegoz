@@ -4,14 +4,17 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useT } from "@/components/I18nProvider";
 import PageHeader from "@/components/PageHeader";
-import type { TimeseriesPoint, VocTrend, CohortRow } from "@/lib/types";
+import type { TimeseriesResponse, VocTrend, CohortRow } from "@/lib/types";
 
 const EMOTION_KEYS = ["ofke", "hayal_kirikligi", "endise", "memnuniyet", "notr", "saskinlik", "minnettarlik", "uzuntu"];
 
 export default function AnalyticsPage() {
   const t = useT();
   const [metric, setMetric] = useState("score");
-  const [ts, setTs] = useState<TimeseriesPoint[]>([]);
+  // API duz dizi DEGIL, durustluk bilgisi tasiyan bir nesne donduruyor:
+  // tek noktayla cizgi grafik cizmek bir "degisim" iddiasidir ve yanilticidir.
+  // Tip duz dizi kaldigi icin sayfa `d.map is not a function` ile cokuyordu (B37).
+  const [ts, setTs] = useState<TimeseriesResponse | null>(null);
   const [voc, setVoc] = useState<VocTrend[]>([]);
   const [emotions, setEmotions] = useState<Record<string, number>>({});
   const [churn, setChurn] = useState<Record<string, number>>({});
@@ -28,7 +31,13 @@ export default function AnalyticsPage() {
         api.analyticsCohort(dimension, 30),
       ]);
       setTs(tsData);
-      setVoc(vocData.filter((v) => v.recent > 0 || v.prior > 0).slice(0, 12));
+      // Kategori ve etiket AYRI taksonomilerdir ama bu tablo ikisini birlikte
+      // gosteriyor; `kind` sutunu hangisi oldugunu belli ediyor.
+      const vocSatirlar = [
+        ...(vocData?.kategoriler?.satirlar ?? []),
+        ...(vocData?.etiketler?.satirlar ?? []),
+      ];
+      setVoc(vocSatirlar.filter((v) => v.recent > 0 || v.prior > 0).slice(0, 12));
       setEmotions(emoData.emotions);
       setChurn(emoData.churn);
       setCohort(cohortData);
@@ -37,7 +46,8 @@ export default function AnalyticsPage() {
   }, [metric, dimension]);
   useEffect(() => { load(); }, [load]);
 
-  const maxTs = Math.max(1, ...ts.map((p) => p.avg ?? 0));
+  const noktalar = ts?.noktalar ?? [];
+  const maxTs = Math.max(1, ...noktalar.map((p) => p.avg ?? 0));
   const totalEmotion = Math.max(1, Object.values(emotions).reduce((a, b) => a + b, 0));
 
   return (
@@ -58,11 +68,22 @@ export default function AnalyticsPage() {
             ))}
           </div>
         </div>
-        {ts.length === 0 ? (
+        {noktalar.length === 0 ? (
           <p className="text-sm text-muted">{t("analytics.noData")}</p>
+        ) : !ts?.grafik_cizilebilir ? (
+          /* Tek noktayla cizgi grafik cizilmez — API bunu soyluyor, biz de
+             tekil metrik karti gosteriyoruz. Bos bir grafik cizmek, olmayan
+             bir egilim varmis izlenimi verir. */
+          <div className="border-l-2 border-hairline pl-3">
+            <div className="text-3xl font-bold tabular-nums">
+              {ts?.tekil_deger ?? "—"}
+            </div>
+            <p className="mt-1 text-sm text-ink2">{ts?.aciklama}</p>
+            <p className="mt-1 text-xs text-muted">{ts?.toplam_cagri ?? 0} çağrı</p>
+          </div>
         ) : (
           <div className="flex h-40 items-end gap-1 overflow-x-auto">
-            {ts.map((p) => (
+            {noktalar.map((p) => (
               <div key={p.date} className="flex min-w-[14px] flex-1 flex-col items-center justify-end gap-1"
                 title={`${p.date}: ${p.avg ?? "—"} (${p.count})`}>
                 <div className="w-full bg-series" style={{ height: `${((p.avg ?? 0) / maxTs) * 100}%` }} />

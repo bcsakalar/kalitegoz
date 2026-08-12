@@ -6,6 +6,7 @@
     "rol": null,
     "dosya": "..\\docs\\screens\\01-giris-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/login",
     "konsol_hatalari": []
   },
@@ -16,6 +17,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\02-cagrilar-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/",
     "konsol_hatalari": []
   },
@@ -26,6 +28,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\03-kokpit-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/cockpit",
     "konsol_hatalari": []
   },
@@ -36,6 +39,7 @@
     "rol": "quality",
     "dosya": "..\\docs\\screens\\04-inceleme-kuyrugu-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/review",
     "konsol_hatalari": []
   },
@@ -46,6 +50,7 @@
     "rol": "quality",
     "dosya": "..\\docs\\screens\\05-kalibrasyon-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/calibration",
     "konsol_hatalari": []
   },
@@ -56,11 +61,9 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\06-analitik-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/analytics",
-    "konsol_hatalari": [
-      "TypeError: d.map is not a function\n    at d (http://localhost:3000/_next/static/chunks/app/analytics/page-5debaa9ebbad8294.js:1:978)\n    at rE (http://localhost:3000/_next/static/chunks/fd9d1056-c8e08",
-      "Route error: TypeError: d.map is not a function\n    at d (http://localhost:3000/_next/static/chunks/app/analytics/page-5debaa9ebbad8294.js:1:978)\n    at rE (http://localhost:3000/_next/static/chunks/f"
-    ]
+    "konsol_hatalari": []
   },
   {
     "sayfa": "07-rubrik",
@@ -69,6 +72,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\07-rubrik-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/rubric",
     "konsol_hatalari": []
   },
@@ -79,6 +83,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\08-yonetim-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/admin",
     "konsol_hatalari": []
   },
@@ -89,6 +94,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\09-guvenlik-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/security",
     "konsol_hatalari": []
   },
@@ -99,6 +105,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\10-roi-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/roi",
     "konsol_hatalari": []
   },
@@ -109,6 +116,7 @@
     "rol": "supervisor",
     "dosya": "..\\docs\\screens\\11-liderlik-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/leaderboard",
     "konsol_hatalari": []
   },
@@ -119,6 +127,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\12-arama-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/search",
     "konsol_hatalari": [
       "Failed to load resource: the server responded with a status of 403 (Forbidden)"
@@ -131,6 +140,7 @@
     "rol": "supervisor",
     "dosya": "..\\docs\\screens\\13-is-akisi-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/workflow",
     "konsol_hatalari": []
   },
@@ -141,6 +151,7 @@
     "rol": "supervisor",
     "dosya": "..\\docs\\screens\\14-temsilciler-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/agents",
     "konsol_hatalari": []
   },
@@ -151,6 +162,7 @@
     "rol": "agent",
     "dosya": "..\\docs\\screens\\15-hesap-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/account",
     "konsol_hatalari": [
       "Failed to load resource: the server responded with a status of 403 (Forbidden)"
@@ -163,6 +175,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\16-asistan-light.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/assist",
     "konsol_hatalari": []
   },
@@ -173,6 +186,7 @@
     "rol": null,
     "dosya": "..\\docs\\screens\\01-giris-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/login",
     "konsol_hatalari": []
   },
@@ -183,6 +197,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\02-cagrilar-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/",
     "konsol_hatalari": []
   },
@@ -193,6 +208,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\03-kokpit-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/cockpit",
     "konsol_hatalari": []
   },
@@ -203,6 +219,7 @@
     "rol": "quality",
     "dosya": "..\\docs\\screens\\04-inceleme-kuyrugu-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/review",
     "konsol_hatalari": []
   },
@@ -213,6 +230,7 @@
     "rol": "quality",
     "dosya": "..\\docs\\screens\\05-kalibrasyon-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/calibration",
     "konsol_hatalari": []
   },
@@ -223,11 +241,9 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\06-analitik-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/analytics",
-    "konsol_hatalari": [
-      "TypeError: d.map is not a function\n    at d (http://localhost:3000/_next/static/chunks/app/analytics/page-5debaa9ebbad8294.js:1:978)\n    at rE (http://localhost:3000/_next/static/chunks/fd9d1056-c8e08",
-      "Route error: TypeError: d.map is not a function\n    at d (http://localhost:3000/_next/static/chunks/app/analytics/page-5debaa9ebbad8294.js:1:978)\n    at rE (http://localhost:3000/_next/static/chunks/f"
-    ]
+    "konsol_hatalari": []
   },
   {
     "sayfa": "07-rubrik",
@@ -236,6 +252,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\07-rubrik-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/rubric",
     "konsol_hatalari": []
   },
@@ -246,6 +263,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\08-yonetim-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/admin",
     "konsol_hatalari": []
   },
@@ -256,6 +274,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\09-guvenlik-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/security",
     "konsol_hatalari": []
   },
@@ -266,6 +285,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\10-roi-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/roi",
     "konsol_hatalari": []
   },
@@ -276,6 +296,7 @@
     "rol": "supervisor",
     "dosya": "..\\docs\\screens\\11-liderlik-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/leaderboard",
     "konsol_hatalari": []
   },
@@ -286,6 +307,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\12-arama-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/search",
     "konsol_hatalari": [
       "Failed to load resource: the server responded with a status of 403 (Forbidden)"
@@ -298,6 +320,7 @@
     "rol": "supervisor",
     "dosya": "..\\docs\\screens\\13-is-akisi-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/workflow",
     "konsol_hatalari": []
   },
@@ -308,6 +331,7 @@
     "rol": "supervisor",
     "dosya": "..\\docs\\screens\\14-temsilciler-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/agents",
     "konsol_hatalari": []
   },
@@ -318,6 +342,7 @@
     "rol": "agent",
     "dosya": "..\\docs\\screens\\15-hesap-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/account",
     "konsol_hatalari": [
       "Failed to load resource: the server responded with a status of 403 (Forbidden)"
@@ -330,6 +355,7 @@
     "rol": "admin",
     "dosya": "..\\docs\\screens\\16-asistan-dark.png",
     "durum": "ok",
+    "hata_siniri": null,
     "url": "http://localhost:3000/assist",
     "konsol_hatalari": []
   }

@@ -536,6 +536,39 @@ export interface TopicsResult {
 
 // --- Analitik (Dalga 3a + 3b) ---
 export interface TimeseriesPoint { date: string; avg: number | null; count: number; }
+
+/**
+ * Zaman serisi yanıtı — düz dizi DEĞİL.
+ *
+ * Backend "dürüst istatistik" katmanı eklenince şekil değişti: tek noktayla
+ * çizgi grafik çizmek bir *değişim* iddiasıdır ve yanıltıcıdır. Bu yüzden
+ * API artık arayüze ne çizeceğini de söylüyor.
+ *
+ * Tip düz dizi kaldığı için analitik sayfası `d.map is not a function` ile
+ * çöküyordu (B37).
+ */
+export interface TimeseriesResponse {
+  noktalar: TimeseriesPoint[];
+  /** false ise çizgi grafik ÇİZİLMEZ; tekil metrik kartı gösterilir */
+  grafik_cizilebilir: boolean;
+  aciklama: string;
+  tekil_deger: number | null;
+  toplam_cagri: number;
+}
+
+/**
+ * Müşterinin Sesi yanıtı — kategori ve etiket AYRI taksonomilerdir.
+ * Tek tabloda karıştırmak, aynı çağrıyı iki kez saymış gibi gösteriyordu.
+ */
+export interface VocGrup {
+  aciklama: string;
+  satirlar: VocTrend[];
+}
+
+export interface VocResponse {
+  kategoriler: VocGrup;
+  etiketler: VocGrup;
+}
 export interface VocTrend { kind: "category" | "intent"; label: string; recent: number; prior: number; change_pct: number; }
 export interface CohortRow { label: string; count: number; avg_score: number | null; avg_csat: number | null; crisis: number; }
 
