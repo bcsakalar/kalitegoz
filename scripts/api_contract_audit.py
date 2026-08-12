@@ -78,6 +78,10 @@ _ORNEKLER = {
     "metric": "score", "bucket": "day", "dimension": "team",
     "days": "30", "gunler": "30", "period": "30", "limit": "10",
     "q": "test", "query": "test", "status": "", "role": "",
+    # Model katalogu: provider/kind kapali kumeler; "1" gonderince 400 doner
+    # ve uc denetlenmeden gecer.
+    "provider": "ollama", "saglayici": "ollama", "kind": "llm", "tur": "llm",
+    "refresh": "false", "tazele": "false",
 }
 
 

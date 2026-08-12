@@ -44,7 +44,17 @@ function envParola() {
 }
 const PAROLA = arg("password", envParola());
 
-/** Sayfa listesi: [dosya adı, yol, giriş yapılacak rol, bekleme ipucu] */
+/**
+ * Sayfa listesi: [dosya adı, yol, giriş yapılacak rol, bekleme ipucu, sekme]
+ *
+ * `sekme` verilirse sayfa açıldıktan sonra o ada uyan düğmeye tıklanır.
+ * Neden gerekli: Yönetim ekranının 12 alt sekmesi React durumu ile seçiliyor,
+ * URL değişmiyor. Denetim yalnızca ilk sekmeyi (İşleme) görüyordu; geri
+ * kalan 11 sekme — yapay zekâ, kullanıcılar, SSO, rubrik — hiç ekran
+ * görüntüsü alınmadan geçiyordu. Çöken bir alt sekme fark edilmezdi.
+ *
+ * Ad hem TR hem EN olabilir: arayüz dili tarayıcı tercihine göre değişiyor.
+ */
 const SAYFALAR = [
   ["01-giris", "/login", null, "text=Kalite"],
   ["02-cagrilar", "/", "admin", null],
@@ -54,6 +64,10 @@ const SAYFALAR = [
   ["06-analitik", "/analytics", "admin", null],
   ["07-rubrik", "/rubric", "admin", null],
   ["08-yonetim", "/admin", "admin", null],
+  ["08a-yonetim-yapay-zeka", "/admin", "admin", null, /^(Yapay Zekâ|AI)$/],
+  ["08b-yonetim-kullanicilar", "/admin", "admin", null, /^(Kullanıcılar|Users)$/],
+  ["08c-yonetim-bilgi-bankasi", "/admin", "admin", null, /Bilgi Bankası|Knowledge base/i],
+  ["08d-yonetim-kurumsal-kimlik", "/admin", "admin", null, /^(Kurumsal Kimlik|Enterprise Identity)$/],
   ["09-guvenlik", "/security", "admin", null],
   ["10-roi", "/roi", "admin", null],
   ["11-liderlik", "/leaderboard", "supervisor", null],
@@ -147,8 +161,20 @@ async function main() {
     });
     page.on("pageerror", (e) => konsolHatalari.push(`pageerror: ${String(e).slice(0, 200)}`));
 
+    // Basarisiz istekleri URL'SIYLE yakala.
+    //
+    // Konsol "Failed to load resource: 403 (Forbidden)" diyor ve HANGI
+    // kaynak oldugunu SOYLEMIYOR. Bu haliyle rapor bir sey bulundugunu
+    // bildiriyor ama iz surulemiyor — denetimin ise yaramasi icin adres sart.
+    page.on("response", (r) => {
+      const k = r.status();
+      if (k >= 400 && !r.url().includes("/_next/")) {
+        konsolHatalari.push(`HTTP ${k}  ${r.url().replace(API, "")}`);
+      }
+    });
+
     let aktifRol = null;
-    for (const [ad, yol, rol] of SAYFALAR) {
+    for (const [ad, yol, rol, , sekme] of SAYFALAR) {
       if (secili && !secili.some((s) => ad.includes(s) || yol.includes(s))) continue;
       const oncekiHataSayisi = konsolHatalari.length;
       try {
@@ -163,6 +189,13 @@ async function main() {
         // Icerigin gelmesini bekle: iskelet yerine gercek ekran gorunsun
         await page.waitForLoadState("load", { timeout: 10000 }).catch(() => {});
         await page.waitForTimeout(2200);
+
+        // Alt sekme: URL degismedigi icin tiklamak zorunlu
+        if (sekme) {
+          await page.getByRole("button", { name: sekme }).first()
+            .click({ timeout: 8000 });
+          await page.waitForTimeout(2500);  // canli model listesi gelsin
+        }
 
         // HATA SINIRI KONTROLU — bu olmadan cokmus bir sayfa "basarili"
         // sayiliyordu: ekran goruntusu alinir, dosya yazilir, rapor yesil

@@ -17,7 +17,7 @@ from ..db import get_db
 from ..deps import CurrentUser, require_admin
 from ..models import AiUsage, Tenant
 from ..schemas import AiUsageRow, AiUsageSummary
-from ..services import ai_config, audit
+from ..services import ai_config, audit, model_catalog
 
 router = APIRouter(prefix="/api/v1/admin/ai", tags=["ai-admin"])
 
@@ -89,17 +89,79 @@ class OllamaPullRequest(BaseModel):
 
 
 # ---- Config ----
+def _yedege_dusme(db: Session, tenant_id: int, secili: str) -> dict:
+    """Son 24 saatte secili saglayici yerine yerel modelle yapilan cagri sayisi.
+
+    Ayri bir tabloya gerek yok: AiUsage her cagriyi GERCEKTEN kullanilan
+    saglayici adiyla yaziyor. Secili saglayici bulutken kayitta 'ollama'
+    goruyorsak, o cagri yedege dusmustur.
+    """
+    if secili == "ollama":
+        return {"var": False, "adet": 0, "toplam": 0}  # yerelken dusulecek yer yok
+
+    since = datetime.utcnow() - timedelta(hours=24)
+    satirlar = (
+        db.query(AiUsage.provider, func.count(AiUsage.id))
+        .filter(AiUsage.tenant_id == tenant_id, AiUsage.created_at >= since,
+                AiUsage.kind != "embed")  # gomme ayri saglayici secebilir
+        .group_by(AiUsage.provider)
+        .all()
+    )
+    sayim = {p: n for p, n in satirlar}
+    dusen = sayim.get("ollama", 0)
+    toplam = sum(sayim.values())
+    return {"var": dusen > 0, "adet": dusen, "toplam": toplam, "secili": secili}
+
+
 def _config_out(db: Session, tenant_id: int) -> dict:
     ai = _ai(db, tenant_id)
     keys = ai.get("keys", {}) or {}
     ts = _ts(db, tenant_id)
+    llm = ai_config.resolve(ts, "llm")
+    vision = ai_config.resolve(ts, "vision")
+    embed = ai_config.resolve(ts, "embed")
+
     return {
-        "llm_provider": ai_config.resolve(ts, "llm").provider,
-        "vision_provider": ai_config.resolve(ts, "vision").provider,
-        "embed_provider": ai_config.resolve(ts, "embed").provider,
+        "llm_provider": llm.provider,
+        "vision_provider": vision.provider,
+        "embed_provider": embed.provider,
         "llm_models": ai.get("llm_models", {}) or {},
         "vision_models": ai.get("vision_models", {}) or {},
         "embed_models": ai.get("embed_models", {}) or {},
+
+        # ETKIN model — su an GERCEKTEN kullanilan.
+        #
+        # `*_models` yalnizca kiracinin panelden yaptigi SECIMI tasir; bos
+        # olabilir ve o zaman sistem .env varsayilanina duser. Panel yalnizca
+        # secimi gosterdigi icin, hicbir secim yapilmamis bir kurulumda model
+        # alani BOS gorunuyordu ve kullanici "hicbir sey ayarli degil"
+        # saniyordu — oysa sistem calisiyordu.
+        #
+        # Bu alanlar "su an ne kullaniliyor" sorusunun cevabidir.
+        "effective": {
+            "llm": {"provider": llm.provider, "model": llm.model,
+                    "external": llm.external},
+            "vision": {"provider": vision.provider, "model": vision.model,
+                       "external": vision.external},
+            "embed": {"provider": embed.provider, "model": embed.model,
+                      "external": embed.external},
+        },
+        # Herhangi bir yuzey bulut saglayiciya gidiyorsa veri kurum disina
+        # cikiyor demektir; guvenlik sayfasi ve panel bunu belirtmeli.
+        "veri_disari_cikiyor": any(c.external for c in (llm, vision, embed)),
+
+        # SESSIZ DUSME PANOSU
+        #
+        # Bulut saglayici hata verirse sistem yerel Ollama'ya duser (bkz.
+        # llm.generate_json). Bu, bulut kesintisinde puanlamanin durmamasi
+        # icindir — ama cagri SECILENDEN BASKA bir modelle puanlanir.
+        # Izi yalnizca konteyner logunda kalirsa kullanici Gemini ile
+        # puanlandigini sanip yerel modelin puanina bakar.
+        #
+        # Burada son 24 saatin sayimi veriliyor; panel uyari gosterir.
+        "yedege_dusme": _yedege_dusme(db, tenant_id, llm.provider),
+        "yedek_acik": settings.llm_fallback_ollama,
+
         "keys_set": {p: bool(keys.get(p)) for p in ("gemini", "openai", "openrouter")},
         "providers": ai_config.PROVIDERS,
         "embed_providers": ai_config.EMBED_PROVIDERS,
@@ -114,8 +176,52 @@ def get_ai_config(db: Session = Depends(get_db), user: CurrentUser = Depends(req
 
 @router.get("/catalog")
 def get_catalog(user: CurrentUser = Depends(require_admin)):
-    """Onerilen modeller (Ollama indirilebilir + bulut model listeleri)."""
+    """Onerilen modeller (Ollama indirilebilir + bulut model listeleri).
+
+    NOT: Bu SABIT listedir ve eskiyebilir. Canli liste icin /ai/models
+    kullanin — o, saglayicinin kendi API'sinden ceker.
+    """
     return ai_config.CATALOG
+
+
+@router.get("/models")
+def list_models(
+    provider: str,
+    kind: str = "llm",
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_admin),
+):
+    """Bir saglayicinin CANLI model listesi.
+
+    Anahtar kiracinin ayarindan alinir; kullanicinin anahtari tekrar
+    girmesine gerek yoktur. OpenRouter anahtar gerektirmez — kullanici
+    anahtar girmeden once de listeyi gorebilir.
+
+    Liste alinamazsa yedek (sabit) liste doner ve `kaynak: "yedek"` ile
+    bunu SOYLER. Sessizce eski liste gostermek, kullaniciyi olmayan bir
+    modeli sectigini sanmaya birakir.
+    """
+    if kind not in ("llm", "embed", "vision", "hepsi"):
+        raise HTTPException(400, f"Gecersiz tur: {kind}")
+
+    tenant = db.get(Tenant, user.tenant_id)
+    ai = (tenant.settings or {}).get("ai", {}) if tenant else {}
+    anahtar = (ai.get("keys", {}) or {}).get(provider, "") or ai_config._global_key(provider)
+
+    sonuc = model_catalog.listele(
+        provider, kind,
+        api_key=anahtar,
+        base_url=settings.ollama_base_url,
+        tazele=refresh,
+    )
+    return {
+        "saglayici": sonuc.saglayici,
+        "tur": sonuc.tur,
+        "kaynak": sonuc.kaynak,
+        "hata": sonuc.hata,
+        "modeller": sonuc.modeller,
+    }
 
 
 @router.put("/config")
@@ -170,7 +276,14 @@ def test_ai(body: AITestRequest, db: Session = Depends(get_db),
         out = test_config(cfg)
         return {"ok": True, "provider": cfg.provider, "model": cfg.model, "output": out[:300]}
     except (LLMError, httpx.HTTPError, Exception) as exc:  # noqa: BLE001
-        return {"ok": False, "provider": cfg.provider, "model": cfg.model, "error": str(exc)[:400]}
+        # Ham istisna metni ("Client error '401 Unauthorized' for url ...
+        # https://developer.mozilla.org/...") kullaniciya ne yapacagini
+        # soylemiyordu. Model listesiyle ayni cevirici kullaniliyor.
+        return {
+            "ok": False, "provider": cfg.provider, "model": cfg.model,
+            "error": model_catalog.hata_mesaji(cfg.provider, exc, baglam="test"),
+            "ham": str(exc)[:300],  # ayrintiyi isteyen yonetici icin
+        }
 
 
 # ---- Ollama model yonetimi ----

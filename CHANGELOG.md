@@ -1,5 +1,40 @@
 # Değişiklik Günlüğü
 
+## v2.1 — Çoklu sağlayıcı gerçekten çalışır (2026-08-13)
+
+Soru şuydu: *"Gemini seçersem sistemdeki her şey Gemini ile mi çalışıyor?"*
+Cevap ölçülerek verildi.
+
+### Doğrulandı
+- Puanlama, gömme ve görsel **bağımsız** sağlayıcı seçiyor; anahtarlar
+  karışmıyor, kiracı bağlamı kapanınca sızmıyor (12 test).
+- Kaynak taraması: hiçbir serviste sabit kodlanmış sağlayıcı adresi yok —
+  olsaydı seçim sessizce atlanırdı.
+
+### Eklendi
+- **Canlı model listesi.** Sağlayıcının kendi API'sinden çekilir, 15 dk
+  önbelleklenir, erişilemezse statik yedeğe düşer ve *hangi kaynaktan
+  geldiğini söyler*. Ölçüldü: OpenRouter'da 410 model (önceki sabit liste: 4).
+- Aranabilir model seçici; her modelin boyut / bağlam / fiyat bilgisiyle,
+  Ollama'da kurulu olanlar işaretli. Listede olmayan ad da yazılabilir.
+- **Etkin model göstergesi.** Panel yalnızca *seçimi* gösterdiği için hiç
+  seçim yapılmamış kurulumda model alanı boş görünüyor ve kullanıcı "hiçbir
+  şey ayarlı değil" sanıyordu; artık fiilen kullanılan model yazıyor.
+- Sağlayıcının o yüzeyi hiç sunmadığı durum (OpenRouter'da gömme yok) boş
+  liste yerine sebebiyle dönüyor.
+
+### Düzeltildi
+- **B38** — bulut sağlayıcı düşünce sistem sessizce yerel modele kaçıyordu ve
+  bunun tek izi konteyner loguydu. Davranış korundu (kesinti puanlamayı
+  durdurmaz) ama artık `LLM_FALLBACK_OLLAMA` ile kapatılabiliyor ve düşme
+  sayısı panelde uyarı olarak görünüyor.
+- **B39** — dört güvenlik testi ana anahtarı hiç kaldırmadan geçiyordu:
+  anahtar iki kaynaktan okunuyor, testler yalnızca birini siliyordu.
+- Model türü artık sağlayıcının `capabilities` alanından okunuyor, ad
+  kalıbından değil — `bge-m3` LLM sanılmıştı.
+- Model seçicinin tüm metinleri i18n'e taşındı; İngilizce arayüzde satırlar
+  karma dilde görünüyordu.
+
 ## v2.0 — Uçtan uca overhaul (2026-08-09)
 
 Altı fazda yapıldı; her fazın raporu `docs/internal/FAZ-N-RAPOR.md` altında.
@@ -16,7 +51,7 @@ Altı fazda yapıldı; her fazın raporu `docs/internal/FAZ-N-RAPOR.md` altında
 | Tekrarlanabilirlik (std) | 1.95 | **0.46** |
 | Cohen's kappa (ortalama) | 0.32 | 0.51 |
 | Çekirdek uyum kriterlerinde kappa* | 0.32 | **0.94–1.00** |
-| Backend testi | 221 | **422** |
+| Backend testi | 221 | **496** |
 
 \* Açılış, KVKK / Aydınlatma, Kapanış, Yasaklı Kelime / Üslup. Diğer iki
 deterministik kriter (Kimlik Doğrulama 0.54, Script Uyumu 0.10) **tanım

@@ -142,11 +142,11 @@ def category_trends(db: Session, tenant_id: int, days: int = 14,
     # ayni cagrinin iki kez sayilmis gibi gorunmesine yol aciyordu.
     return {
         "kategoriler": {
-            "aciklama": "Cagrinin turu — her cagri TEK kategoriye aittir.",
+            "aciklama": "Çağrının türü — her çağrı TEK kategoriye aittir.",
             "satirlar": _trend(recent_cat, prior_cat, "category"),
         },
         "etiketler": {
-            "aciklama": "Niyet/konu etiketleri — bir cagri BIRDEN COK etiket alabilir.",
+            "aciklama": "Niyet/konu etiketleri — bir çağrı BİRDEN ÇOK etiket alabilir.",
             "satirlar": _trend(recent_int, prior_int, "intent"),
         },
     }

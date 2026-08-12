@@ -171,6 +171,49 @@ gönderilebilir (`subjective_model`). Ölçüm ve gerekçe:
 Bulut sağlayıcı (Gemini/OpenAI/OpenRouter) da desteklenir ama **veri kurum
 dışına çıkar** — güvenlik sayfası bunu açıkça söyler.
 
+### Üç yüzey bağımsızdır
+
+Puanlama, gömme ve görsel ayrı ayrı sağlayıcı seçer. Puanlama Gemini,
+gömme yerel Ollama, görsel OpenAI olabilir; anahtarlar birbirine karışmaz.
+Bunu `backend/tests/test_provider_routing.py` kilitler — testlerden biri
+kaynak taraması yapar ve servislerde **sabit kodlanmış sağlayıcı adresi**
+bulunursa kırılır. Sabit adres, kullanıcı Gemini seçtiğini sanırken çağrının
+sessizce Ollama'ya gitmesi demektir.
+
+### Model listesi canlıdır
+
+`GET /api/v1/admin/ai/models?provider=…&kind=…` sağlayıcının **kendi
+API'sinden** çeker (`services/model_catalog.py`), 15 dakika önbellekler ve
+erişilemezse statik yedeğe düşer. Yanıt hangi kaynaktan geldiğini söyler
+(`canli` / `onbellek` / `yedek`) ve panel bunu kullanıcıya yazar.
+
+| Sağlayıcı | Uç | Anahtar | Ölçülen |
+|---|---|---|---|
+| Ollama | `/api/tags` | gerekmez | kurulu modeller, `capabilities` ile tür |
+| OpenRouter | `/api/v1/models` | gerekmez | 410 model, bağlam + fiyat |
+| OpenAI | `/v1/models` | gerekir | anahtarsız yedek liste + neden |
+| Gemini | `/v1beta/models` | gerekir | anahtarsız yedek liste + neden |
+
+Model türü (llm/embed/vision) **sağlayıcının kendi meta verisinden** okunur,
+ad kalıbından değil — `bge-m3` ad kalıbıyla LLM sanılmıştı.
+
+Sağlayıcının o yüzeyi hiç sunmadığı durumlar (OpenRouter'da gömme yok)
+boş liste yerine **sebebiyle** döner; boş liste kullanıcıya "anahtarım mı
+yanlış?" dedirtiyordu.
+
+### Bulut düşerse ne olur
+
+`LLM_FALLBACK_OLLAMA=true` (varsayılan) iken bulut sağlayıcı hata verirse
+çağrı yerel Ollama ile puanlanır — kesinti puanlamayı durdurmaz. Ama o çağrı
+**seçilenden başka bir modelle** puanlanmıştır. Bu yüzden:
+
+- düşme `AiUsage`'a **gerçek** sağlayıcı adıyla yazılır,
+- panel son 24 saatin düşme sayısını uyarı bandında gösterir,
+- `false` yapılırsa çağrı hatayla durur ve kuyrukta bekler.
+
+Anahtarın kendisi yoksa yedeğe düşülmeden önce açık hata verilir — sorun
+yapılandırmadadır ve yerele kaçmak onu gizlerdi.
+
 ---
 
 ## 6. Güvenlik yüzeyi

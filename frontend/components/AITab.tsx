@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import ModelSecici from "@/components/ModelSecici";
 import type { AIConfig, AICatalog, OllamaModel, AITestResult, PullStatus, AiUsageSummary } from "@/lib/types";
 import { useT } from "@/components/I18nProvider";
 
@@ -65,17 +66,6 @@ export default function AITab() {
     return () => { if (pollRef.current && !active) { clearInterval(pollRef.current); pollRef.current = null; } };
   }, [pull, loadOllama]);
 
-  function suggestions(kind: "llm" | "vision" | "embed", provider: string): string[] {
-    if (!cat) return [];
-    if (provider === "ollama") return installed.map((m) => m.name);
-    const map: Record<string, string[]> = {
-      "gemini:llm": cat.gemini, "gemini:vision": cat.gemini_vision, "gemini:embed": cat.gemini_embed,
-      "openai:llm": cat.openai, "openai:vision": cat.openai_vision, "openai:embed": cat.openai_embed,
-      "openrouter:llm": cat.openrouter, "openrouter:vision": cat.openrouter_vision, "openrouter:embed": [],
-    };
-    return map[`${provider}:${kind}`] || [];
-  }
-
   async function startPull(model: string) {
     const m = model.trim(); if (!m) return;
     setPull((p) => ({ ...p, [m]: { status: "baslatiliyor", percent: 0, done: false, error: null } }));
@@ -115,6 +105,21 @@ export default function AITab() {
       {msg && <p className="card border-l-4 p-3 text-sm" style={{ borderLeftColor: "var(--status-good)" }}>{msg}</p>}
       <p className="text-sm text-ink2">{t("ai.intro")}</p>
 
+      {/* Sessiz düşme uyarısı.
+
+          Bulut sağlayıcı hata verdiğinde sistem yerel modele düşer ve
+          puanlama durmaz. İyi bir davranış — ama söylenmezse kullanıcı
+          Gemini ile puanlandığını sanıp yerel modelin puanına bakar.
+          Burada sayısı yazılır; sayı sıfırsa bant hiç görünmez. */}
+      {cfg.yedege_dusme?.var && (
+        <p className="card border-l-4 p-3 text-sm" style={{ borderLeftColor: "var(--status-warning)" }}>
+          {t("ai.fallbackWarn")
+            .replace("{n}", String(cfg.yedege_dusme.adet))
+            .replace("{toplam}", String(cfg.yedege_dusme.toplam))
+            .replace("{saglayici}", cfg.yedege_dusme.secili ?? "")}
+        </p>
+      )}
+
       {/* ---- Puanlama LLM ---- */}
       <div className="card space-y-4 p-4">
         <h2 className="text-sm font-semibold text-ink2">🧠 {t("ai.llmTitle")}</h2>
@@ -132,15 +137,36 @@ export default function AITab() {
           ))}
         </div>
         <ProviderConfig kind="llm" provider={llmP} models={llmM} setModels={setLlmM}
-          keys={keys} setKeys={setKeys} keysSet={cfg.keys_set} sugg={suggestions("llm", llmP)} t={t} />
+          keys={keys} setKeys={setKeys} keysSet={cfg.keys_set} t={t}
+          etkin={cfg.effective?.llm?.model} />
         <div className="flex flex-wrap items-center gap-3">
           <button className="btn" disabled={busy === "test"} onClick={runTest}>{busy === "test" ? t("ai.testing") : t("ai.test")}</button>
-          {test && (
-            <span className={`badge ${test.ok ? "badge-good" : "badge-critical"}`}>
-              <span className="dot" />{test.ok ? t("ai.testOk") : t("ai.testFail")}: {test.ok ? test.model : (test.error ?? "")}
+          {test?.ok && (
+            <span className="badge badge-good">
+              <span className="dot" />{t("ai.testOk")}: {test.model}
             </span>
           )}
         </div>
+
+        {/* Basarisizlik rozete sigmaz: mesaj artik "anahtar gecersiz, kontrol
+            edip kaydedin" gibi tam bir cumle. Ham istisna metni ayri, katli —
+            yoneticinin sagalyiciya iletebilmesi icin duruyor ama once
+            kullanilabilir cumle gorunuyor. */}
+        {test && !test.ok && (
+          <div className="card border-l-4 p-3 text-sm"
+               style={{ borderLeftColor: "var(--status-critical)" }}>
+            <p className="font-semibold">{t("ai.testFail")} — {test.provider}/{test.model}</p>
+            <p className="mt-1 text-ink2">{test.error}</p>
+            {test.ham && (
+              <details className="mt-2">
+                <summary className="cursor-pointer text-xs text-muted">
+                  {t("ai.testRaw")}
+                </summary>
+                <pre className="mt-1 overflow-x-auto text-[11px] text-muted">{test.ham}</pre>
+              </details>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ---- Vision ---- */}
@@ -148,7 +174,8 @@ export default function AITab() {
         <h2 className="text-sm font-semibold text-ink2">🖼 {t("ai.visionTitle")}</h2>
         <ProviderRow providers={cfg.vision_providers} value={visP} onChange={setVisP} t={t} />
         <ProviderConfig kind="vision" provider={visP} models={visM} setModels={setVisM}
-          keys={keys} setKeys={setKeys} keysSet={cfg.keys_set} sugg={suggestions("vision", visP)} t={t} compact />
+          keys={keys} setKeys={setKeys} keysSet={cfg.keys_set} t={t} compact
+          etkin={cfg.effective?.vision?.model} />
       </div>
 
       {/* ---- Embedding / RAG ---- */}
@@ -157,7 +184,8 @@ export default function AITab() {
         <p className="text-xs" style={{ color: "var(--status-warning)" }}>⚠ {t("ai.embedWarn")}</p>
         <ProviderRow providers={cfg.embed_providers} value={embP} onChange={setEmbP} t={t} />
         <ProviderConfig kind="embed" provider={embP} models={embM} setModels={setEmbM}
-          keys={keys} setKeys={setKeys} keysSet={cfg.keys_set} sugg={suggestions("embed", embP)} t={t} compact />
+          keys={keys} setKeys={setKeys} keysSet={cfg.keys_set} t={t} compact
+          etkin={cfg.effective?.embed?.model} />
       </div>
 
       <div className="flex justify-end">
@@ -264,14 +292,15 @@ function UsagePanel({ t }: { t: (k: string) => string }) {
 }
 
 /** Saglayici model + (bulut ise) anahtar giris alani. */
-function ProviderConfig({ kind, provider, models, setModels, keys, setKeys, keysSet, sugg, t, compact }: {
+function ProviderConfig({ kind, provider, models, setModels, keys, setKeys, keysSet, t, compact, etkin }: {
   kind: "llm" | "vision" | "embed"; provider: string;
   models: Record<string, string>; setModels: (m: Record<string, string>) => void;
   keys: Record<string, string>; setKeys: (k: Record<string, string>) => void;
-  keysSet: Record<string, boolean>; sugg: string[]; t: (k: string) => string; compact?: boolean;
+  keysSet: Record<string, boolean>; t: (k: string) => string; compact?: boolean;
+  /** Secim bosken sistemin fiilen kullandigi model */
+  etkin?: string;
 }) {
   const needsKey = PROVIDER_META[provider]?.needsKey;
-  const listId = `sugg-${kind}-${provider}`;
   return (
     <div className={`grid gap-3 ${compact ? "sm:grid-cols-2" : "sm:grid-cols-2"}`}>
       {needsKey && (
@@ -285,9 +314,17 @@ function ProviderConfig({ kind, provider, models, setModels, keys, setKeys, keys
       )}
       <label className="block">
         <span className="mb-1 block text-xs text-ink2">{t("ai.model")}</span>
-        <input className="input w-full" list={listId} placeholder={t("ai.modelPlaceholder")}
-          value={models[provider] ?? ""} onChange={(e) => setModels({ ...models, [provider]: e.target.value })} />
-        <datalist id={listId}>{sugg.map((s) => <option key={s} value={s} />)}</datalist>
+        {/* Sabit <datalist> yerine CANLI liste: saglayicinin kendi API'sinden
+            gelir, aranabilir ve baglam/fiyat bilgisi gosterir. Secim bosken
+            "su an kullanilan" model de yaziyor — panel bos gorunup kullaniciyi
+            "hicbir sey ayarli degil" sanmaya birakmasin. */}
+        <ModelSecici
+          saglayici={provider}
+          tur={kind}
+          deger={models[provider] ?? ""}
+          onChange={(v) => setModels({ ...models, [provider]: v })}
+          etkinModel={etkin}
+        />
       </label>
     </div>
   );

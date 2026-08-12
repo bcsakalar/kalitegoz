@@ -147,8 +147,13 @@ def tanimsiz_renk_siniflari() -> list[str]:
     for p in dosyalar():
         if p.suffix == ".css":
             continue
+        # Renkleri TANIMLAYAN dosyayi sinif KULLANIMI icin taramak anlamsiz:
+        # `"hairline-strong": "var(--border-strong)"` satirindaki
+        # `border-strong` bir sinif degil, degisken adinin parcasi.
+        if p.relative_to(ROOT).as_posix() == "frontend/tailwind.config.ts":
+            continue
         for i, satir in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
-            for m in re.finditer(r"(bg|text|border|fill|stroke|ring|divide)-([a-zA-Z][a-zA-Z0-9-]*)", satir):
+            for m in re.finditer(r"\b(bg|text|border|fill|stroke|ring|divide)-([a-zA-Z][a-zA-Z0-9-]*)\b", satir):
                 ad = m.group(2)
                 if yapisal.match(ad):
                     continue

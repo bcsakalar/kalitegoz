@@ -56,6 +56,7 @@ import type {
   OnboardingStatus,
   AIConfig,
   AICatalog,
+  ModelListesi,
   OllamaModel,
   AITestResult,
   PullStatus,
@@ -327,6 +328,10 @@ export const api = {
   putAiConfig: (body: Record<string, unknown>) =>
     request<AIConfig>("/admin/ai/config", { ...json(body), method: "PUT" }),
   aiCatalog: () => request<AICatalog>("/admin/ai/catalog"),
+  /** Canli model listesi — saglayicinin kendi API'sinden. */
+  aiModels: (provider: string, kind = "llm", refresh = false) =>
+    request<ModelListesi>(
+      `/admin/ai/models?provider=${provider}&kind=${kind}&refresh=${refresh}`),
   aiTest: (provider?: string) => request<AITestResult>("/admin/ai/test", json({ provider })),
   ollamaModels: () => request<{ models: OllamaModel[]; error?: string }>("/admin/ai/ollama/models"),
   ollamaPull: (model: string) => request<{ started: boolean }>("/admin/ai/ollama/pull", json({ model })),

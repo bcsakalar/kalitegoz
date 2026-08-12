@@ -208,19 +208,26 @@ def generate_json(model_cls: type[T], system: str, user: str) -> T:
     cfg = ai_config.active_llm()
     try:
         return _generate_with(model_cls, system, user, cfg)
-    except LLMError:
-        fallback_on = getattr(settings, "llm_fallback_ollama", True)
-        if cfg.provider != "ollama" and fallback_on:
-            logger.warning("Birincil saglayici (%s/%s) basarisiz; yerel Ollama'ya dusuluyor.",
-                           cfg.provider, cfg.model)
-            return _generate_with(model_cls, system, user, ai_config.ollama_fallback())
-        raise
+    except LLMError as exc:
+        if cfg.provider == "ollama":
+            raise
+        if not settings.llm_fallback_ollama:
+            # Kullanici "sadece sectigim saglayici" dedi: cagri kuyrukta kalsin,
+            # baska bir modelin puani sectigi modelin puani gibi gorunmesin.
+            raise LLMError(
+                f"{cfg.provider}/{cfg.model} basarisiz ve yerel yedek KAPALI: {exc}"
+            ) from exc
+        logger.warning("Birincil saglayici (%s/%s) basarisiz; yerel Ollama'ya dusuluyor.",
+                       cfg.provider, cfg.model)
+        # Dusme AiUsage'a provider='ollama' olarak yazilir; panel bunu secili
+        # saglayiciyla karsilastirip sayisini gosterir (sessiz dusme olmaz).
+        return _generate_with(model_cls, system, user, ai_config.ollama_fallback())
 
 
 def test_config(cfg: AIResolved) -> str:
     """Panelden 'Test et': verilen config ile kucuk bir istek yap, ham yaniti dondur."""
     return _chat(
         "Sen bir test asistanisin. SADECE gecerli JSON dondur.",
-        'Su JSON\'u aynen dondur: {"ok": true, "mesaj": "baglanti calisiyor"}',
+        'Su JSON\'u aynen dondur: {"ok": true, "mesaj": "bağlantı çalışıyor"}',
         cfg,
     )

@@ -54,6 +54,33 @@ ASCII_TR = {
     "Temsilci agir": "Temsilci ağır",
 }
 
+
+# Diakritigi soyulmus TURKCE KELIMELER.
+#
+# ASCII_TR (yukarida) rubrik kriter ADLARI icin yazilmis, 13 maddelik bir
+# ifade listesi. Genel bir dedektor degil ve oyle davranmiyor: "Hizli /
+# hafif — dusuk VRAM" gibi bir aciklama o listeden gecip gidiyordu.
+#
+# Bu liste KELIME duzeyinde calisir ve kelime siniriyla eslesir; boylece
+# Ingilizce metnin icinde tesadufen gecen harf dizileri yakalanmaz.
+# Kapsayici degil, YAYGIN olani yakalar — eksigi cikarsa buraya eklenir.
+ASCII_TR_KELIME = {
+    "hizli": "hızlı", "dusuk": "düşük", "yuksek": "yüksek", "guclu": "güçlü",
+    "cok": "çok", "saglam": "sağlam", "gorsel": "görsel", "dokuman": "doküman",
+    "Turkce": "Türkçe", "Ingilizce": "İngilizce", "agirlikli": "ağırlıklı",
+    "varsayilan": "varsayılan", "onerilen": "önerilen", "sigar": "sığar",
+    "kullanici": "kullanıcı", "baglanti": "bağlantı", "gecersiz": "geçersiz",
+    "yanlis": "yanlış", "olcum": "ölçüm", "degistir": "değiştir",
+    "secim": "seçim", "cagri": "çağrı", "puanlama": None, "gunluk": "günlük",
+    "acik": "açık", "kapali": "kapalı", "baslat": "başlat", "durdur": None,
+    "sifirla": "sıfırla", "gecmis": "geçmiş", "ayrinti": "ayrıntı",
+    "aciklama": "açıklama", "ozet": "özet", "gorusme": "görüşme",
+    "musteri": "müşteri", "temsilci": None, "kalitesi": None,
+}
+# Degeri None olanlar zaten diakritiksiz dogru yazilir — listede yer
+# tutuyorlar ki biri yanlislikla eklemesin.
+ASCII_TR_KELIME = {k: v for k, v in ASCII_TR_KELIME.items() if v}
+
 # Gelistirici jargonu -> kullaniciya gosterilecek karsiligi (bos = hic gosterilmez)
 JARGON = {
     "assigned": "Atandı",
@@ -134,6 +161,48 @@ def denetle_db_kriterleri() -> list[str]:
     return ihlaller
 
 
+def denetle_backend_metinleri() -> list[str]:
+    """Sunucudan gelen KULLANICIYA GORUNEN Turkce metinde ASCII var mi?
+
+    ## Neden bu kontrol sonradan eklendi
+
+    Denetim yalnizca `i18n.ts`'i tariyordu. Ama panelde gorunen her metin
+    orada degil: model katalogu aciklamalari, hata mesajlari ve durum
+    metinleri sunucudan geliyor ve arayuz onlari **oldugu gibi basiyor**.
+
+    Sonuc: "Turkce guclu, hizli" ve "dusuk VRAM" gibi diakritigi soyulmus
+    on aciklama aylarca panelde durdu ve denetim her kosuda YESIL dedi.
+    Kural yaziliydi (CLAUDE.md), denetim uyguladigini soyluyordu, kapsami
+    disindaydi.
+
+    ## Kapsam
+
+    Goruntuleme alani oldugu ADINDAN belli olan sozluk anahtarlari taranir:
+    `desc`, `label`, `aciklama`, `mesaj`, `baslik`, `title`, `ozet`.
+    Docstring ve log mesajlari KAPSAM DISI — onlar kullaniciya gitmiyor ve
+    bu depoda bilincli olarak ASCII yaziliyor.
+    """
+    ihlaller = []
+    be = ROOT / "backend" / "app"
+    if not be.exists():
+        return ihlaller
+    alan = re.compile(
+        r'"(desc|label|aciklama|mesaj|baslik|title|ozet)"\s*:\s*"((?:[^"\\]|\\.)*)"')
+    for p in be.rglob("*.py"):
+        if any(d in p.parts for d in SKIP_DIRS):
+            continue
+        for i, satir in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+            if satir.strip().startswith("#"):
+                continue
+            for _, deger in alan.findall(satir):
+                for ascii_hali, dogrusu in ASCII_TR_KELIME.items():
+                    if re.search(rf"\b{re.escape(ascii_hali)}\b", deger):
+                        ihlaller.append(
+                            f"{p.relative_to(ROOT)}:{i} ASCII Turkce: "
+                            f"{ascii_hali!r} -> {dogrusu!r}  ({deger[:50]})")
+    return ihlaller
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--json", action="store_true")
@@ -143,6 +212,7 @@ def main() -> int:
         "i18n sozlugu": denetle_i18n(),
         "arayuz jargonu": denetle_jsx(),
         "rubrik kriter adlari": denetle_db_kriterleri(),
+        "sunucu metinleri": denetle_backend_metinleri(),
     }
     toplam = sum(len(v) for v in gruplar.values())
 

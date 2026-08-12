@@ -215,6 +215,126 @@ denetimi, şablonu LF'e çevirme, `.env`'de CR kalmadığının son kontrolü.
 
 ---
 
+### B38 — bulut sağlayıcı düşünce sistem sessizce yerel modele kaçıyordu
+
+Kullanıcının isteği netti: *"Gemini ise sistemdeki her şey Gemini ile ...
+karışıklık istemiyorum."* Yönlendirmenin doğru olduğunu 12 testle doğruladım
+(üç yüzey bağımsız çözülüyor, anahtarlar karışmıyor, hiçbir serviste sabit
+kodlanmış sağlayıcı adresi yok). Ama kaynağı okurken **bir kaçış yolu** çıktı.
+
+`llm.generate_json` bulut sağlayıcı hata verdiğinde yerel Ollama'ya
+düşüyordu. Davranış meşru — bulut kesintisi puanlamayı durdurmasın. Sorun
+**görünmezliğiydi**, iki katmanda:
+
+1. Anahtar `getattr(settings, "llm_fallback_ollama", True)` ile okunuyordu ve
+   ayar **hiçbir yerde tanımlı değildi** — ne `config.py`'de ne
+   `.env.example`'da. Kapatmanın hiçbir yolu yoktu; yapılandırılabilir
+   *görünen* bir sabitti. Kullanıcı `.env`'e yazsa hiçbir şey değişmezdi ve
+   sebebini bulamazdı.
+2. Düşmenin tek izi bir konteyner log satırıydı. Panelde "Gemini" yazıyordu,
+   puanı yerel qwen vermişti, arada hiçbir fark görünmüyordu.
+
+Bu, CLAUDE.md'de adı konmuş kalıbın bir örneği daha: **kural yazılıydı,
+kodda uygulanmıyordu.**
+
+**Düzeltme** — davranış korundu, görünmezlik kaldırıldı:
+
+- `llm_fallback_ollama` gerçekten tanımlandı, `.env` + `.env.example`'a
+  açıklamasıyla girdi.
+- Kapalıyken çağrı, sebebini söyleyen bir hatayla durur ve kuyrukta bekler;
+  başka bir modelin puanı seçilen modelin puanı gibi görünmez.
+- Düşme `AiUsage`'a **gerçek** sağlayıcı adıyla yazılıyordu zaten — yani
+  sayılabilir iz vardı, kimse bakmıyordu. `/admin/ai/config` artık son 24
+  saatin sayımını döndürüyor, panel uyarı bandı gösteriyor.
+- Anahtar hiç yoksa yedeğe düşülmeden açık hata verilir; sorun
+  yapılandırmadadır ve yerele kaçmak onu gizlerdi.
+
+7 regresyon testi (`test_llm_fallback.py`), ikisi kaynak denetimi.
+
+### B39 — dört güvenlik testi anahtarı hiç kaldırmadan geçiyordu
+
+`make eval` sonrası tam takım koşulunca `test_security_checks.py` içinden
+dört test kırıldı. İlk okuma "regresyon" diyordu; ölçünce tersi çıktı.
+
+Ana anahtar iki kaynaktan okunabiliyor: `KG_MASTER_KEY_FILE` (Docker secret,
+**öncelikli**) ve `KG_MASTER_KEY` (ortam). Testler yalnızca ikincisini
+siliyordu. Üretim `.env`'i dosya yolunu tanımlayınca konteynerde şifreleme
+açık kaldı ve *"anahtar yoksa şifreleme kapalı der"* diyen test, anahtarı
+**hiç kaldırmadan** geçmiş oluyordu.
+
+Yani ürün doğru davranıyordu; **testler ölçtüklerini sandıkları şeyi
+ölçmüyordu.** Aynı dosyada anahtarı kurup şifrelemeyi doğrulayan dört test
+daha vardı — onlar da kendi anahtarlarıyla değil üretim anahtarıyla
+çalışıyordu; geçiyorlardı ama gerekçeleri yanlıştı.
+
+`anahtarsız` fikstürü **tüm** kaynakları temizliyor ve temizlendiğini
+doğruluyor; sekiz test artık kendi anahtarını kontrol ediyor.
+
+### Atlanan test, olmayan testtir
+
+`.env.example` denetimini önce `backend/tests` altına yazdım. `make test`
+konteynerde koşuyor ve konteynere yalnızca `backend/` bağlanıyor — dosya
+orada yok, test **her koşuda sessizce atlanıyordu**. Yeşil rapor veriyor,
+hiçbir şey korumuyordu. Host tarafındaki `scripts/tests/` altına taşındı.
+
+### API sözleşme denetimi yeni ucu 400 ile geçiyordu
+
+`api_contract_audit.py`, `/admin/ai/models` ucunu yer tutucu `1` ile
+çağırıyor, 400 alıyor ve "denetlenemedi" listesine atıyordu. Denetlenen uç
+sayısı 64'te kalmıştı. Bu, B37'nin ilk sürümünde `timeseries`'in atlanma
+sebebiyle **aynı** hata. `provider`/`kind` için gerçek örnek değerler
+eklendi; uç sayısı 65 oldu ve yeni uç gerçekten doğrulanıyor.
+
+---
+
+### B40 — iki denetim görünmez bir karakter yüzünden hiçbir şeyi kontrol etmiyordu
+
+`tr-audit`'e sunucu metinlerini kapsayan yeni bir kontrol ekledim. Sonuç
+TEMİZ çıktı. **Ateşlediğini kanıtlamak için** bilerek bir ihlal koydum —
+yine TEMİZ dedi. Kontrol yalancı yeşil veriyordu.
+
+Sebep: kaynak dosyadaki `` (kelime sınırı) kaçışının yerinde **gerçek bir
+backspace baytı (0x08)** vardı. Desen `dusuk` olmuştu ve hiçbir
+zaman eşleşmiyordu. Karakter terminalde görünmüyor, `grep` çıktısında
+görünmüyor, dosyayı okurken görünmüyor. Yazarken kullandığım kabuk
+belgesinin `\b`'yi bayta çevirmesinden kaynaklanmış.
+
+Depoyu bu gözle tarayınca **`ui_audit.py`'de de aynı karakter** çıktı:
+"tanımsız Tailwind rengi" kontrolü aynı şekilde ölüydü ve her koşumda
+TEMİZ diyordu.
+
+Bu, projenin "sessiz başarısızlık" listesine yeni bir madde: *hiçbir şeyi
+kontrol etmeyen kontrol*. Tanımsız CSS değişkeni gibi hata vermiyor, ama
+ondan daha kötü — çünkü **güvence veriyor.**
+
+**Düzeltme ve doğrulama**
+
+- Her iki dosyadaki backspace baytları `` kaçışına çevrildi; depo geneli
+  tarandı, başka örnek yok.
+- Her iki kontrol de **bilerek konulan bir ihlalle** ateşlediği doğrulandı,
+  sonra ihlal geri alındı. Bir denetim kontrolü artık "yeşil verdi" diye
+  kabul edilmiyor; kırıldığı görülmeden yazılmış sayılmıyor.
+
+**Ölü kontroller açılınca çıkan gerçek ihlaller**
+
+| Yer | Metin | Nerede görünüyordu |
+|---|---|---|
+| `analytics.py:145` | "Cagrinin turu — her cagri TEK..." | VoC panelinin açıklaması |
+| `analytics.py:149` | "...bir cagri BIRDEN COK etiket..." | VoC panelinin açıklaması |
+| `ai_config.py` ×10 | "Turkce guclu, hizli", "dusuk VRAM" | Model kataloğu kartları |
+| `llm.py:231` | "baglanti calisiyor" | Bağlantı testi çıktısı |
+
+`tr-audit` yalnızca `i18n.ts`'i tarıyordu; sunucudan gelip arayüzde olduğu
+gibi basılan metin **hiç denetlenmiyordu.** Kural CLAUDE.md'de yazılıydı,
+denetim uyguladığını söylüyordu, kapsamı dışındaydı — bu turun üçüncü
+"yazılı ama uygulanmayan kural" vakası.
+
+Ayrıca `ASCII_TR` genel bir dedektör değil, 13 maddelik bir rubrik-adı
+listesiymiş. Kelime düzeyinde çalışan ayrı bir liste (`ASCII_TR_KELIME`)
+eklendi; kapsayıcı değil, yaygın olanı yakalıyor ve bu açıkça yazılı.
+
+---
+
 ## 4. Repo ve güvenlik denetimi sonucu
 
 ### Kök dizin
@@ -340,8 +460,10 @@ sistem yine 20 bekleyen çağrıyla duruyor.
 
 | Komut | Sonuç |
 |---|---|
-| `make test` | **454 test geçti** |
+| `make test` | **496 test geçti** (backend) + 76 (betikler) |
 | `make audit` (tr + ui) | **0 ihlal** (7 kontrol) |
+| `make api-audit` | **0 uyuşmazlık** (65 uç) |
+| Ekran denetimi | 40 görüntü (16 sayfa + 4 alt sekme) × 2 tema, **0 çöken sayfa** |
 | `tsc --noEmit` | 0 hata |
 | `make eval` | §7 |
 
@@ -375,6 +497,36 @@ sistem yine 20 bekleyen çağrıyla duruyor.
 **Nesnel kriterlerin kappa'sı önceki koşumla kuruşu kuruşuna aynı (0.7639).**
 Bu, Katman A'nın gerçekten deterministik olduğunun dördüncü kez doğrulanması:
 kod değişti, DB sıfırlandı, sırlar döndü — sonuç değişmedi.
+
+### Çoklu sağlayıcı çalışması sonrası tekrar koşum (2026-08-13)
+
+`llm.py` değiştiği için altın set yeniden koşuldu. Ham çıktı:
+[`docs/eval/2026-08-12-coklu-saglayici.json`](eval/2026-08-12-coklu-saglayici.json).
+**Tüm eşikler sağlandı, çıkış kodu 0.**
+
+| Metrik | Önceki koşum | Bu koşum | Yorum |
+|---|---|---|---|
+| Sıfırlayıcı FP / FN | %0 / %0 | **%0 / %0** | değişmedi |
+| Kanıt doğrulanabilirlik | %100 | **%100** | değişmedi |
+| Nesnel kappa | 0.7639 | **0.7639** | **beşinci kez birebir aynı** |
+| Çekirdek nesnel en düşük | 0.9392 | **0.9392** | birebir aynı |
+| Kriter MAE | 0.783 | 0.758 | gürültü içinde |
+| Tam isabet | %64.9 | %65.2 | gürültü içinde |
+| Tekrarlanabilirlik std | 0.46 | 0.46 | değişmedi |
+| Öznel kappa | 0.1637 | 0.1078 | **aşağıya bakınız** |
+| Yetersiz kanıt oranı | %9.0 | %10.0 | — |
+
+Öznel kappa 0.056 düştü. Bu, ölçülmüş gürültü bandının (0.05) hemen üstünde
+— yani "anlamlı" demek için zayıf, "gürültü" demek için sınırda. Dürüst
+cevap şu: **bu değişimin bir mekanizması yok.** Bu turda `llm.py`'de yalnızca
+*hata yolu* değişti (bulut sağlayıcı düşerse ne olacağı); koşumun tamamı
+Ollama ile yapıldı ve hiç yedeğe düşme olmadı — düşme olsaydı panel sayardı,
+sayı sıfır. Kriter kararı üreten hiçbir kod yoluna dokunulmadı.
+
+Yani bu fark ya öznel kriterlerin bilinen koşum-arası oynaması, ya da
+gürültü bandının 0.05'ten biraz geniş olduğu. İkisini ayırmak için kriter
+bazlı varyansın ölçülmesi gerekir — **bu ölçüm hâlâ yapılmadı** ve §8'de
+açık olarak duruyor. Buradan "iyileşti" ya da "bozuldu" sonucu çıkarmıyorum.
 
 ### Değişen bir metrik: tekrarlanabilirlik 0.00 → 0.46
 
@@ -440,6 +592,17 @@ Dürüst liste. Hiçbiri gizlenmedi.
 9. **Mobil görünüm denetlenmedi** — tüm ekran görüntüleri 1440×900.
 10. **Ekran okuyucuyla test edilmedi** — ARIA etiketleri kodda var ama gerçek
     bir okuyucuyla gezilmedi.
+10b. **Bulut sağlayıcı gerçek anahtarla denenmedi.** Elimde Gemini/OpenAI/
+    OpenRouter anahtarı yok. Kanıtlanan şu: sahte anahtarla istek atıldığında
+    üç sağlayıcı da **kendi gerçek adresinden kendi kimlik doğrulama hatasını**
+    döndürüyor ve seçilen model istekte yer alıyor — yani bağlantı doğru
+    kuruluyor. Kanıtlanmayan: gerçek bir anahtarla dönen yanıtın JSON şemasının
+    puanlayıcıyı memnun ettiği. Bir anahtar girildiğinde ilk kontrol panelin
+    "bağlantıyı test et" düğmesi olmalı.
+10c. **Süpervizör rolünde `/admin/users` 403 alıyor** ve çağıran kod hatayı
+    `.catch(() => {})` ile yutuyor; kullanıcı listesi sessizce boş kalıyor.
+    Görünür bir kırılma yok, o yüzden bu turda düzeltilmedi — ama sessiz
+    başarısızlık sınıfında ve ekran denetimi artık adresi raporluyor.
 
 ### İşletim tarafı
 

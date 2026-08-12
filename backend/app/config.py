@@ -66,6 +66,13 @@ class Settings(BaseSettings):
     # yavas oldugundan timeout comert (yoksa kuyrukta bekleyen istek dusuyor).
     llm_timeout_sec: int = 900
     llm_max_retries: int = 1  # JSON parse hatasi sonrasi repair denemesi
+    # Bulut saglayici (Gemini/OpenAI/OpenRouter) hata verirse yerel Ollama'ya
+    # dusulsun mu? True: bulut kesintisi puanlamayi durdurmaz — ama cagri
+    # SECILENDEN BASKA bir modelle puanlanir. False: cagri hatayla durur ve
+    # kuyrukta kalir, hicbir puan yanlis modele ait olmaz.
+    # Hangisi secilirse secilsin dusme AiUsage'a saglayici adiyla yazilir ve
+    # Yonetim > Yapay Zeka panelinde sayisi gosterilir — sessiz kalmaz.
+    llm_fallback_ollama: bool = True
 
     # --- Bilgi bankasi / RAG (embedding) ---
     embed_model: str = "nomic-embed-text"        # Ollama embedding modeli

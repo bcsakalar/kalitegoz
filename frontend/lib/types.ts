@@ -316,6 +316,25 @@ export interface AIConfig {
   vision_models: Record<string, string>;
   embed_models: Record<string, string>;
   keys_set: Record<string, boolean>;
+  /**
+   * Su an FIILEN kullanilan saglayici/model.
+   *
+   * `*_models` yalnizca panelden yapilan SECIMI tasir ve bos olabilir; o
+   * durumda sistem .env varsayilanina duser. Panel yalnizca secime baktigi
+   * icin hicbir secim yapilmamis kurulumda model alani bos gorunuyor ve
+   * kullanici "hicbir sey ayarli degil" saniyordu.
+   */
+  effective?: { llm: EtkinAI; vision: EtkinAI; embed: EtkinAI };
+  /** Herhangi bir yuzey bulut saglayiciya gidiyorsa true */
+  veri_disari_cikiyor?: boolean;
+  /**
+   * Bulut saglayici hata verip yerel modele DUSULEN cagri sayisi (son 24s).
+   * Bu cagrilar secilen modelle degil yerel modelle puanlanmistir; panel
+   * uyarmazsa kullanici farki hic goremez.
+   */
+  yedege_dusme?: { var: boolean; adet: number; toplam: number; secili?: string };
+  /** Yedege dusme davranisi acik mi (LLM_FALLBACK_OLLAMA) */
+  yedek_acik?: boolean;
   providers: string[];
   embed_providers: string[];
   vision_providers: string[];
@@ -337,7 +356,13 @@ export interface SimulateChange { id: number; filename: string; before: number; 
 export interface SimulateResult { call_count: number; avg_before: number; avg_after: number; zeroed_before: number; zeroed_after: number; biggest_changes: SimulateChange[]; }
 export interface WeakCriterion { name: string; avg: number; }
 export interface CoachingPlan { agent_id: number; agent_name: string; call_count: number; weak_criteria: WeakCriterion[]; focus: string[]; plan: string; }
-export interface AITestResult { ok: boolean; provider: string; model: string; output?: string; error?: string; }
+export interface AITestResult {
+  ok: boolean; provider: string; model: string; output?: string;
+  /** Ne yapilacagini soyleyen ceviri ("anahtar gecersiz", "kota doldu") */
+  error?: string;
+  /** Ham istisna metni — ayrintiyi isteyen yonetici icin, varsayilan gizli */
+  ham?: string;
+}
 export interface PullStatus { status: string; percent: number; done: boolean; error: string | null; }
 
 // --- Dalga 2 ---
@@ -789,4 +814,44 @@ export interface CSATBand {
   bant: string;
   n: number;
   ortalama_csat: number | null;
+}
+
+// --- Canli model katalogu ---
+
+export interface ModelBilgi {
+  id: string;
+  ad: string;
+  tur: "llm" | "embed" | "vision";
+  /**
+   * Bilgi alanlari SAYI olarak gelir, hazir metin olarak degil.
+   *
+   * Once sunucu "9.0 GB · 32K baglam" gibi Turkce metin uretiyordu; arayuz
+   * Ingilizceyken satir karma dilde goruunuyordu. Birim ve kelime secimi
+   * arayuzun isi.
+   */
+  /** Model dosya boyutu (yalnizca Ollama) */
+  boyut_gb?: number | null;
+  /** Baglam penceresi, token */
+  baglam?: number | null;
+  /** Milyon token basina giris fiyati, USD (yalnizca OpenRouter) */
+  fiyat_m?: number | null;
+  ucretsiz?: boolean;
+  /** Ollama'da yerel olarak kurulu mu */
+  kurulu: boolean;
+}
+
+export interface ModelListesi {
+  saglayici: string;
+  tur: string;
+  /** canli = saglayicidan cekildi · onbellek · yedek = sabit liste, ESKI olabilir */
+  kaynak: string;
+  hata: string;
+  modeller: ModelBilgi[];
+}
+
+/** Su an FIILEN kullanilan saglayici/model (secim bos olsa da doludur) */
+export interface EtkinAI {
+  provider: string;
+  model: string;
+  external: boolean;
 }

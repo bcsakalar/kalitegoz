@@ -34,18 +34,18 @@ OPENROUTER_BASE = "https://openrouter.ai/api/v1"
 CATALOG = {
     "ollama_recommended": [
         # --- Puanlama (LLM) ---
-        {"name": "qwen2.5:7b-instruct", "size": "4.7 GB", "kind": "llm", "desc": "Dengeli varsayilan — Turkce guclu, hizli"},
-        {"name": "qwen2.5:14b", "size": "9 GB", "kind": "llm", "desc": "En iyi kalite — 12GB VRAM'e sigar (onerilen)"},
-        {"name": "gemma3:12b", "size": "8.1 GB", "kind": "llm", "desc": "Google Gemma 3 — 140+ dil, gorsel de yapar"},
-        {"name": "qwen3:8b", "size": "5.2 GB", "kind": "llm", "desc": "Qwen3 — yeni nesil, hiz/kalite dengesi"},
-        {"name": "qwen2.5:3b", "size": "2 GB", "kind": "llm", "desc": "Hizli / hafif — dusuk VRAM"},
+        {"name": "qwen2.5:7b-instruct", "size": "4.7 GB", "kind": "llm", "desc": "Dengeli varsayılan — Türkçe güçlü, hızlı"},
+        {"name": "qwen2.5:14b", "size": "9 GB", "kind": "llm", "desc": "En iyi kalite — 12 GB VRAM'e sığar (önerilen)"},
+        {"name": "gemma3:12b", "size": "8.1 GB", "kind": "llm", "desc": "Google Gemma 3 — 140+ dil, görsel de yapar"},
+        {"name": "qwen3:8b", "size": "5.2 GB", "kind": "llm", "desc": "Qwen3 — yeni nesil, hız/kalite dengesi"},
+        {"name": "qwen2.5:3b", "size": "2 GB", "kind": "llm", "desc": "Hızlı / hafif — düşük VRAM"},
         # --- Embedding (RAG / benzer cagri) ---
-        {"name": "qwen3-embedding:4b", "size": "2.5 GB", "kind": "embed", "desc": "Qwen3 Embedding — cok dilli #1, Turkce en iyi"},
-        {"name": "bge-m3", "size": "1.2 GB", "kind": "embed", "desc": "BGE-M3 — cok dilli, saglam (production)"},
-        {"name": "nomic-embed-text", "size": "274 MB", "kind": "embed", "desc": "Nomic — hafif, hizli (Ingilizce agirlikli)"},
+        {"name": "qwen3-embedding:4b", "size": "2.5 GB", "kind": "embed", "desc": "Qwen3 gömme — çok dilli #1, Türkçe en iyi"},
+        {"name": "bge-m3", "size": "1.2 GB", "kind": "embed", "desc": "BGE-M3 — çok dilli, sağlam (üretim)"},
+        {"name": "nomic-embed-text", "size": "274 MB", "kind": "embed", "desc": "Nomic — hafif, hızlı (İngilizce ağırlıklı)"},
         # --- Gorsel denetim (Vision) ---
-        {"name": "llama3.2-vision:11b", "size": "7.8 GB", "kind": "vision", "desc": "Llama 3.2 Vision — genel gorsel/dokuman en iyi"},
-        {"name": "qwen3-vl:4b", "size": "3.3 GB", "kind": "vision", "desc": "Qwen3-VL — hafif, OCR/Turkce metin"},
+        {"name": "llama3.2-vision:11b", "size": "7.8 GB", "kind": "vision", "desc": "Llama 3.2 Vision — genel görsel/doküman en iyi"},
+        {"name": "qwen3-vl:4b", "size": "3.3 GB", "kind": "vision", "desc": "Qwen3-VL — hafif, OCR/Türkçe metin"},
     ],
     "gemini": ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"],
     "openai": ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1"],
