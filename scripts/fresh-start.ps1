@@ -43,7 +43,7 @@ for ($i = 0; $i -lt 60; $i++) {
 if ($ok) {
     Write-Host ""
     Write-Host "HAZIR ✓  Arayuz: http://localhost:3000   API: http://localhost:8000/docs" -ForegroundColor Green
-    Write-Host "Demo giris: landing'den rol sec (parolasiz) veya admin@demo.local / demo1234" -ForegroundColor Green
+    Write-Host "Demo giris: landing'den rol sec (parolasiz) veya admin@demo.local; parola .env icindeki ADMIN_PASSWORD" -ForegroundColor Green
     Write-Host "Dashboard'u doldurmak icin: Yonetim > Demo > 'Demoyu sifirla & doldur'" -ForegroundColor Green
     Write-Host ""
     Write-Host "NATIVE AI: Ollama calisiyor mu? Sesli cagri icin host worker'i baslatin:" -ForegroundColor Yellow

@@ -1,0 +1,81 @@
+{
+  "id": "dusuk-06-cozumsuz-kapanis",
+  "title": "Cagri cozumsuz kapandi",
+  "bucket": "dusuk",
+  "tags": [
+    "agir_eksik"
+  ],
+  "duration_sec": 24.75,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Gökhan. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 10.1,
+      "text": "Bahar Yalçın, 335678."
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 10.45,
+      "end": 12.05,
+      "text": "Modemim bozuldu, değişim istiyorum."
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 12.4,
+      "end": 15.2,
+      "text": "Modem değişimi için teknik ekip randevusu gerekiyor."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 15.55,
+      "end": 16.75,
+      "text": "Randevu alabilir miyiz?"
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 17.1,
+      "end": 19.1,
+      "text": "Şu an sistem randevu vermiyor."
+    },
+    {
+      "idx": 7,
+      "speaker": "musteri",
+      "start": 19.45,
+      "end": 20.65,
+      "text": "Ne yapacağım peki?"
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 21.0,
+      "end": 22.2,
+      "text": "Yarın tekrar arayın."
+    },
+    {
+      "idx": 9,
+      "speaker": "musteri",
+      "start": 22.55,
+      "end": 23.75,
+      "text": "Tamam."
+    }
+  ]
+}

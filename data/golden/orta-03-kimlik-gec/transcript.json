@@ -1,0 +1,81 @@
+{
+  "id": "orta-03-kimlik-gec",
+  "title": "Kimlik dogrulama cok gec yapildi",
+  "bucket": "orta",
+  "tags": [
+    "kismi_eksik"
+  ],
+  "duration_sec": 28.75,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Umut. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "musteri",
+      "start": 6.15,
+      "end": 7.75,
+      "text": "Faturamda bir sorun var."
+    },
+    {
+      "idx": 2,
+      "speaker": "temsilci",
+      "start": 8.1,
+      "end": 10.5,
+      "text": "Bakıyorum, evet bir düzeltme yapmam gerekiyor."
+    },
+    {
+      "idx": 3,
+      "speaker": "temsilci",
+      "start": 10.85,
+      "end": 13.25,
+      "text": "Düzeltmeyi yaptım, 30 TL indirim tanımladım."
+    },
+    {
+      "idx": 4,
+      "speaker": "musteri",
+      "start": 13.6,
+      "end": 14.8,
+      "text": "Teşekkürler."
+    },
+    {
+      "idx": 5,
+      "speaker": "temsilci",
+      "start": 15.15,
+      "end": 18.35,
+      "text": "Bu arada adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 6,
+      "speaker": "musteri",
+      "start": 18.7,
+      "end": 19.9,
+      "text": "Ozan Demir, 220145."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 20.25,
+      "end": 23.05,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 8,
+      "speaker": "musteri",
+      "start": 23.4,
+      "end": 24.6,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 24.95,
+      "end": 27.75,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

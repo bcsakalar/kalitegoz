@@ -123,7 +123,7 @@ export default function TrendChart({ data, title }: { data: TrendPoint[]; title:
           <path d={areaPath} fill="var(--series-1)" opacity={0.1} />
           <path
             d={linePath} fill="none" stroke="var(--series-1)"
-            strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"
+            strokeWidth={2} strokeLinejoin="miter" strokeLinecap="butt"
           />
           {/* crosshair */}
           {hover && (

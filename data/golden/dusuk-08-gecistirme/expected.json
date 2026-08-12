@@ -1,0 +1,24 @@
+{
+  "scores": {
+    "Açılış": 10,
+    "KVKK / Aydınlatma": 10,
+    "Kimlik Doğrulama": 10,
+    "Aktif Dinleme": 3,
+    "İhtiyaç Analizi": 4,
+    "Çözüm / Yönlendirme": 2,
+    "Yasaklı Kelime / Üslup": 10,
+    "Kapanış": 10,
+    "Script Uyumu": 10,
+    "Bilgi Doğruluğu": 4
+  },
+  "zeroed": false,
+  "zeroing_criterion": null,
+  "alerts": [
+    "low_score"
+  ],
+  "evidence_must_contain": {},
+  "must_not_penalize": [],
+  "notes": "'Kim soylediyse ona sorun' — sorumluluk reddi. Kaba ama hakaret degil, sifirlama URETILEMEZ.",
+  "scenario_id": "dusuk-08-gecistirme",
+  "regression_for": null
+}

@@ -1,0 +1,24 @@
+{
+  "scores": {
+    "Açılış": 10,
+    "KVKK / Aydınlatma": 10,
+    "Kimlik Doğrulama": 0,
+    "Aktif Dinleme": 5,
+    "İhtiyaç Analizi": 5,
+    "Çözüm / Yönlendirme": 5,
+    "Yasaklı Kelime / Üslup": 10,
+    "Kapanış": 10,
+    "Script Uyumu": 8,
+    "Bilgi Doğruluğu": 5
+  },
+  "zeroed": true,
+  "zeroing_criterion": "Kimlik Doğrulama",
+  "alerts": [
+    "zeroing"
+  ],
+  "evidence_must_contain": {},
+  "must_not_penalize": [],
+  "notes": "SIFIRLAMA ZORUNLU. Gerekce ve kanit kalici olarak saklanmali.",
+  "scenario_id": "sifir-06-kritik-yanlis-bilgi",
+  "regression_for": null
+}

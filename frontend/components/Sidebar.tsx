@@ -117,30 +117,33 @@ export default function Sidebar({
         {/* Logo */}
         <div className="flex h-14 shrink-0 items-center gap-2 border-b border-hairline px-3">
           <Link href="/" className="flex items-center gap-2 overflow-hidden font-bold">
-            <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-series text-sm text-white">
+            <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center bg-series text-sm text-white">
               K
             </span>
             {!collapsed && <span className="truncate text-lg">{t("app.name")}</span>}
           </Link>
-          <div className={collapsed ? "mx-auto" : "ml-auto"}>
+          {/* Sag kume: zil + canli baglanti gostergesi.
+              TEK bir `ml-auto` var — iki ayri `ml-auto` kullanildiginda
+              ogeler birbirinden kopuyor ve canli etiketi kenara yapisip
+              kirpiliyordu. */}
+          <div className={`flex items-center gap-2 ${collapsed ? "mx-auto" : "ml-auto"}`}>
+            {/* Canli baglanti gostergesi: kullanici alarmlarin aninda mi yoksa
+                yoklama ile mi geldigini bilmeli. */}
+            {me.role !== "agent" && !collapsed && (
+              <span
+                className="flex shrink-0 items-center gap-1 text-[10px] text-muted"
+                title={connected ? t("alerts.live.on") : t("alerts.live.off")}
+              >
+                <span
+                  aria-hidden
+                  className="h-1.5 w-1.5 shrink-0"
+                  style={{ background: connected ? "var(--status-good)" : "var(--muted)" }}
+                />
+                {connected ? t("alerts.live.short") : ""}
+              </span>
+            )}
             <NotificationBell collapsed={collapsed} />
           </div>
-          {/* Canli baglanti gostergesi: kullanici alarmlarin aninda mi yoksa
-              yoklama ile mi geldigini bilmeli. */}
-          {me.role !== "agent" && !collapsed && (
-            <span
-              className="ml-auto flex items-center gap-1 text-[10px] text-muted"
-              title={connected ? t("alerts.live.on") : t("alerts.live.off")}
-            >
-              <span
-                aria-hidden
-                className={`h-1.5 w-1.5 rounded-full ${
-                  connected ? "bg-[var(--status-ok)]" : "bg-[var(--muted)]"
-                }`}
-              />
-              {connected ? t("alerts.live.short") : ""}
-            </span>
-          )}
         </div>
 
         {/* Navigasyon — rol bazli, gruplu (B21) */}
@@ -173,7 +176,7 @@ export default function Sidebar({
                         {!collapsed && <span className="truncate">{t(l.labelKey)}</span>}
                         {l.badge === "alerts" && unread > 0 && (
                           <span
-                            className={`rounded-full bg-[var(--status-critical)] px-1.5 text-[10px] font-bold text-white ${
+                            className={` bg-[var(--status-critical)] px-1.5 text-[10px] font-bold text-white ${
                               collapsed ? "absolute right-0.5 top-0.5" : "ml-auto"
                             }`}
                           >
@@ -195,8 +198,8 @@ export default function Sidebar({
           <ThemeSwitch collapsed={collapsed} />
           <LangSwitch collapsed={collapsed} />
 
-          <div className={`flex items-center gap-2 rounded-lg bg-[var(--surface-2)] p-2 ${collapsed ? "justify-center" : ""}`}>
-            <span aria-hidden className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-series text-xs font-bold text-white">
+          <div className={`flex items-center gap-2 bg-[var(--surface-2)] p-2 ${collapsed ? "justify-center" : ""}`}>
+            <span aria-hidden className="grid h-7 w-7 shrink-0 place-items-center bg-series text-xs font-bold text-white">
               {me.name.slice(0, 1).toUpperCase()}
             </span>
             {!collapsed && (
@@ -243,14 +246,14 @@ function ThemeSwitch({ collapsed }: { collapsed: boolean }) {
     { v: "system", icon: "🖥️", key: "common.system" },
   ];
   return (
-    <div className={`flex gap-0.5 rounded-lg bg-[var(--surface-2)] p-1 ${collapsed ? "flex-col" : ""}`}>
+    <div className={`flex gap-0.5 bg-[var(--surface-2)] p-1 ${collapsed ? "flex-col" : ""}`}>
       {opts.map((o) => (
         <button
           key={o.v}
           onClick={() => setTheme(o.v)}
           title={t(o.key)}
           aria-pressed={theme === o.v}
-          className={`flex flex-1 items-center justify-center rounded-md py-1 text-xs font-medium ${
+          className={`flex flex-1 items-center justify-center py-1 text-xs font-medium ${
             theme === o.v ? "bg-[var(--surface)] text-ink shadow-sm" : "text-ink2 hover:text-ink"
           }`}
         >
@@ -264,14 +267,14 @@ function ThemeSwitch({ collapsed }: { collapsed: boolean }) {
 function LangSwitch({ collapsed }: { collapsed: boolean }) {
   const { lang, setLang } = useI18n();
   return (
-    <div className={`flex gap-0.5 rounded-lg bg-[var(--surface-2)] p-1 ${collapsed ? "flex-col" : ""}`}>
+    <div className={`flex gap-0.5 bg-[var(--surface-2)] p-1 ${collapsed ? "flex-col" : ""}`}>
       {LANGS.map((l) => (
         <button
           key={l.code}
           onClick={() => setLang(l.code)}
           aria-pressed={lang === l.code}
           title={l.label}
-          className={`flex flex-1 items-center justify-center gap-1 rounded-md py-1 text-xs font-semibold ${
+          className={`flex flex-1 items-center justify-center gap-1 py-1 text-xs font-semibold ${
             lang === l.code ? "bg-[var(--surface)] text-ink shadow-sm" : "text-ink2 hover:text-ink"
           }`}
         >

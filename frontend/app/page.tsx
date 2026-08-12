@@ -162,7 +162,7 @@ export default function DashboardPage() {
         <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-medium">
           <span aria-hidden>🔍</span> {t("calls.filters")}
           {activeCount > 0 && (
-            <span className="rounded-full bg-series/10 px-2 py-0.5 text-xs font-semibold text-series">{activeCount}</span>
+            <span className="bg-series/10 px-2 py-0.5 text-xs font-semibold text-series">{activeCount}</span>
           )}
           <span className="ml-auto text-xs text-muted">{t("calls.filtersHint")}</span>
         </summary>
@@ -242,7 +242,7 @@ export default function DashboardPage() {
       </div>
 
       {isStaff && selected.size > 0 && (
-        <div className="card flex flex-wrap items-center gap-2 border-l-4 p-3" style={{ borderLeftColor: "var(--series)" }}>
+        <div className="card flex flex-wrap items-center gap-2 border-l-4 p-3" style={{ borderLeftColor: "var(--series-1)" }}>
           <span className="text-sm font-semibold">{selected.size} {t("bulk.selected")}</span>
           <button className="btn !py-1 text-xs" onClick={() => doBulk("golden_on")}>⭐ {t("bulk.goldenOn")}</button>
           <button className="btn !py-1 text-xs" onClick={() => doBulk("golden_off")}>☆ {t("bulk.goldenOff")}</button>
@@ -331,7 +331,7 @@ function SavedViews({ filters, apply, t }: {
       <span className="text-xs text-muted">⭐ {t("views.title")}:</span>
       {views.length === 0 && <span className="text-xs text-muted">{t("views.empty")}</span>}
       {views.map((v) => (
-        <span key={v.name} className="inline-flex items-center gap-1 rounded-full bg-grid px-2.5 py-1 text-xs">
+        <span key={v.name} className="inline-flex items-center gap-1 bg-grid px-2.5 py-1 text-xs">
           <button className="font-medium hover:text-series" onClick={() => apply({ ...EMPTY, ...v.filters })}>{v.name}</button>
           <button className="text-muted hover:text-[var(--status-critical)]" aria-label="sil"
             onClick={() => persist(views.filter((x) => x.name !== v.name))}>×</button>

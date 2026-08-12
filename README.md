@@ -1,218 +1,210 @@
-# KaliteGöz — Çağrı Merkezi Kalite Yönetim Platformu
+# KaliteGöz
 
-> 🖥️ **NATIVE AI:** Ollama (LLM+embedding+vision) ve Whisper STT artık **PC'de (host)
-> native** çalışır, Docker'da değil — makine daha az yorulur, GPU doğrudan kullanılır.
-> Kurulum: **[NATIVE-AI-KURULUM.md](NATIVE-AI-KURULUM.md)** · Test/sistem: **[SISTEM-TEST-REHBERI.md](SISTEM-TEST-REHBERI.md)**.
-> (Aşağıdaki bazı `docker compose exec ollama …` komutları bu değişiklikle güncelliğini yitirdi → `ollama pull …`.)
+**Çağrı merkezi görüşmelerini otomatik puanlayan, kararının kanıtını gösteren
+ve kendi sınırını bilen bir kalite yönetim platformu.** Tamamen yerel çalışır —
+ses, transkript ve puanlar kurumun donanımından hiç çıkmaz.
 
-> **Tek komutla demo:** `make demo` → http://localhost:3000 → rol seçip tek tıkla girin.
-> **Diğer dokümanlar:** [Satış özeti](docs/SALES-ONEPAGER.md) · [Demo senaryosu](docs/DEMO-SCRIPT.md) · [API rehberi](docs/API.md) · [Yol haritası](docs/ROADMAP.md) · [Çalıştırma/test](run.md)
+<sub>Türkçe ana doküman · [English summary below](#english-summary)</sub>
 
-Çağrı merkezleri çağrıların **%2–3'ünü** elle dinler. KaliteGöz **%100'ünü**
-otomatik dinler, puanlar ve raporlar — sesli çağrı ve chat kanalı, aynı rubrikle.
-Multi-tenant, RBAC'lı, KVKK uyumlu, kendi sunucunuzda çalışan kurumsal bir platform.
+---
+
+## Neden var?
+
+Çağrı merkezlerinde kalite kontrolü elle yapılır ve çağrıların **%2-5'ini**
+kapsar. Kalan %95+ hiç denetlenmez: uyum ihlali, yanlış bilgi ve müşteri kaybı
+sinyalleri görülmeden geçer.
+
+KaliteGöz her çağrıyı puanlar, **her kararın yanına transkriptten birebir
+alıntı koyar**, ve güvenilir olmadığını bildiği kriteri insana yollar.
+
+---
+
+## Ekranlar
+
+### Süpervizör kokpiti
+![Kokpit](docs/screens/03-kokpit-dark.png)
+
+### İnceleme kuyruğu — kanıtla birlikte puanlama
+![İnceleme kuyruğu](docs/screens/04-inceleme-kuyrugu-dark.png)
+
+### Çağrı listesi
+![Çağrılar](docs/screens/02-cagrilar-light.png)
+
+### Güvenlik ve uyum durumu
+![Güvenlik](docs/screens/09-guvenlik-dark.png)
+
+---
+
+## Ölçülen doğruluk
+
+50 senaryoluk altın set üzerinde, gerçek puanlama motoruyla. `make eval` ile
+**yeniden üretilebilir**; ham çıktılar [`docs/eval/`](docs/eval/) altında.
+
+| Metrik | v1 | v2 |
+|---|---|---|
+| Sıfırlayıcı ihlal yanlış-pozitif | %38.5 | **%0.0** |
+| Sıfırlayıcı ihlal yanlış-negatif | %18.2 | **%0.0** |
+| Kriter bazlı ortalama hata (MAE, 0-10) | 2.16 | **0.78** |
+| Kanıt doğrulanabilirlik | %56.1 | **%100** |
+| Tekrarlanabilirlik (3 koşum, std) | 1.95 | **0.46** |
+| Tam isabet oranı | %21.4 | **%64.9** |
+
+### Kriter türüne göre — çünkü tek ortalama yanıltıyor
+
+| | Nesnel kriterler | Öznel kriterler |
+|---|---|---|
+| Ne ölçer | Açılış, KVKK anonsu, kimlik doğrulama, kapanış, üslup | Aktif dinleme, ihtiyaç analizi, çözüm, bilgi doğruluğu |
+| Nasıl çözülür | **Kodla** — dil modeline sorulmaz | Kanıt zorunlu LLM |
+| Cohen's kappa | Çekirdek 4 kriter: **0.94–1.00** | **0.18** |
+| Kapsam iddiası | %100, puan kesin | **Öneri** — geçerli puan insan onayıyla oluşur |
+
+> **Bu tablo ürünün en dürüst kısmıdır.** Öznel kriterlerde sistem güvenilir
+> değil ve **bunu biliyor**: kappa'sı 0.40'ın altındaki kriterlerde güven
+> skoru otomatik tavanlanır, çağrı garantili insan onayına düşer.
+>
+> Referans setinin nasıl üretildiği ve neyin *kanıtlanmadığı*:
+> [KALITE-METODOLOJISI.md §4](docs/KALITE-METODOLOJISI.md)
+
+---
+
+## Nasıl çalışır — üç katman
 
 ```
- ses (wav/mp3)  ·  chat (JSON)
-   │  REST API (/api/v1)  ·  watch-folder (data/inbox)
-   ▼
-┌──────────┐  Celery/Redis   ┌───────────────────────────────────────────────┐
-│ FastAPI  │ ──────────────► │ worker (kuyruk: voice) — ağır STT             │
-│  api     │   2 kuyruk      │ 1. STT (faster-whisper medium int8)           │
-│ JWT+RBAC │                 │    • stereo: sol=müşteri sağ=temsilci         │
-│ tenant   │                 │      (bedava diarization) · mono: pyannote    │
-└────┬─────┘                 │ 2. Konuşma metrikleri (oran/söz kesme/        │
-     │                       │    sessizlik/hız) — LLM'e nesnel dayanak      │
-     │                       ├───────────────────────────────────────────────┤
-     │  PostgreSQL(+pgvector)│ worker-fast (kuyruk: fast) — chat/rescore     │
-     │  tenant · rubrik ·    │ 3. Uyum motoru: yasaklı kelime (fuzzy, kim    │
-     │  puan · ihlal · alarm │    söyledi) + kriz tespiti                    │
-     │  itiraz · audit log   │ 4. RAG: bilgi bankasından ilgili pasajlar     │
-     │  bilgi bankası (RAG)  │ 5. LLM rubrik puanlama (Ollama qwen2.5:7b     │
-     ▼                       │    veya Gemini) — JSON şema + repair          │
-┌──────────┐                 │ 6. Sıfırlayıcı ihlal → puan 0 + alarm+webhook │
-│ Next.js  │                 ├───────────────────────────────────────────────┤
-│ dashboard│                 │ beat — KVKK retention (her gece 03:15)        │
-└──────────┘                 └───────────────────────────────────────────────┘
+KATMAN A — DETERMİNİSTİK ÖN KONTROL   (kod, LLM yok)
+   ↓ kesin cevabı olan her şey burada biter ve LLM'i EZER
+KATMAN B — KANIT ZORUNLU LLM          (kriter grubu bazında, sıcaklık 0)
+   ↓ her kararın yanında transkriptten birebir alıntı
+KATMAN C — SUNUCU DOĞRULAMASI          (kod)
+   ↓ alıntı gerçekten transkriptte var mı? puan aritmetiği KODDA
 ```
 
-## Hızlı başlangıç
+**Üç mutlak kural**
+
+1. **Kanıt yoksa ceza yok.** Doğrulanamayan alıntıyla düşük puan verilmez;
+   kriter "yetersiz kanıt" olur ve insana gider.
+2. **Toplam puan kodda hesaplanır.** Dil modeline toplam sordurulmaz.
+3. **Kanıtsız sıfırlama sistem hatasıdır** ve istisna fırlatır.
+
+Ayrıntı: [MIMARI.md](docs/MIMARI.md)
+
+---
+
+## Özellikler
+
+**Puanlama ve uyum**
+Üç katmanlı hibrit motor · sıfırlayıcı ihlal tespiti · yasaklı kelime ve üslup ·
+kriz tespiti (avukat/hakem heyeti) · KVKK anonsu denetimi · script uyumu ·
+kanıt–ses bağı (alıntıya tıkla, o saniyeyi dinle)
+
+**İki aşamalı kalite kontrol**
+Risk bazlı inceleme kuyruğu (7 kural) · kaliteci onayı/düzeltme · temsilci
+itirazı · kalibrasyon oturumları ve değerlendiriciler arası uyum · koçluk
+planı ve koçluk etkisi ölçümü · temsilci öz değerlendirmesi
+
+**Analitik**
+Süpervizör kokpiti · konu keşfi ve kök neden kümeleme · trend/anomali alarmı ·
+müşteri kaybı (churn) riski · gerçek FCR · **kalite puanı ↔ gerçek CSAT
+korelasyonu** · ROI hesabı · hedef takibi · lig ve rozetler
+
+**Kurumsal**
+Çok kiracılı · 4 rol + takım kapsamı · OIDC/SSO (panelden yapılandırılır) ·
+diskte şifreleme + anahtar rotasyonu + KMS yolu · PII maskeleme · denetim
+günlüğü · saklama süresi otomasyonu · webhook + açık API · TR/EN arayüz ·
+açık/koyu tema
+
+Rakiplerle karşılaştırma ve **neyimiz yok**: [PIYASA-ANALIZI.md](docs/PIYASA-ANALIZI.md)
+
+---
+
+## 5 dakikada kurulum
+
+**Gereksinimler:** Docker Desktop, [Ollama](https://ollama.com) (host'ta),
+16 GB RAM (32 GB önerilir).
 
 ```bash
-make demo        # .env oluşturur, stack'i kurar, LLM modelini indirir, demo veriyi üretir
-```
+git clone <depo-adresi> && cd KaliteGoz
 
-> ⚠️ **Ağır işi siz başlatırsınız.** Demo tenant'ta **işleme duraklatılmış** gelir:
-> çağrılar yüklenir ama STT/LLM çalışmaz (makineniz boşta, ~%1 CPU). Hazır
-> olduğunuzda **Yönetim → İşleme → "▶ İşlemeyi başlat"**. Böylece 7B LLM + Whisper
-> bilgisayarınızı siz istemeden meşgul etmez.
+# 1) Sırları üret — elle doldurulacak TEK alan kalmaz
+./scripts/generate-secrets.sh
 
-`make` yoksa:
-```bash
-cp .env.example .env
+# 2) Yapay zekâ modelleri — Ollama HOST'ta çalışır, Docker'da DEĞİL
+ollama pull qwen2.5:7b-instruct
+ollama pull nomic-embed-text
+
+# 3) Servisler
 docker compose up -d --build
-pip install -r scripts/requirements.txt
-python scripts/generate_demo.py --upload http://localhost:8000
+
+# 4) Doğrula
+curl http://localhost:8000/health    # {"status":"ok"}
+curl http://localhost:8000/ready     # {"status":"ready"}
 ```
 
-| Adres | Ne |
+Panel: **http://localhost:3000** · API: **http://localhost:8000/docs**
+
+Sistemi adım adım denemek için: [TEST-REHBERI.md](docs/TEST-REHBERI.md)
+Donanım, üretim sertleştirmesi, sorun giderme: [KURULUM.md](docs/KURULUM.md)
+
+---
+
+## Teknoloji
+
+| Katman | Ne |
 |---|---|
-| http://localhost:3000 | Dashboard (rol seçimli demo girişi) |
-| http://localhost:8000/docs | API (OpenAPI/Swagger) |
-| http://localhost:8000/metrics | Prometheus metrikleri |
+| Backend | Python 3.12 · FastAPI · SQLAlchemy 2 · Celery |
+| Veri | PostgreSQL 16 · Redis 7 |
+| Frontend | Next.js 15 (App Router) · React 19 · TypeScript · Tailwind |
+| Yapay zekâ | **Ollama** (yerel LLM + gömme) · **Whisper** (STT) — host'ta çalışır |
+| Dağıtım | Docker Compose · on-prem |
 
-**Demo hesapları** (parola `demo1234`): `admin@demo.local` ·
-`sef.satis@demo.local` · `kalite@demo.local` · `ayse.yilmaz@demo.local`
+---
 
-İlk açılışta qwen2.5:7b (~4.7 GB) ve Whisper medium (~1.5 GB) indirilir (tek sefer).
-
-## Arayüz
-
-- **Sol sidebar** — rol bazlı menü (temsilci yönetim sayfalarını görmez), katlanabilir,
-  mobilde drawer. Alarm sayısı nav üzerinde canlı görünür.
-- **Açık / koyu / sistem teması** — sağ alttan seçilir, tercih tarayıcıda saklanır.
-- **Türkçe / English** — 🇹🇷/🇬🇧 ile anlık değişir; ilk girişte tarayıcı dilinden tahmin edilir.
-- **Sayfalar** — Çağrılar · Arama · Kokpit · **Analitik** (zaman serisi + VoC trend + kohort) ·
-  **Asistan** (canlı sufle + görsel denetim) · Temsilciler · Lig (+ "Performansım" gamification) ·
-  Görevler · Kalibrasyon · Rubrik · Yönetim (+ uyum paketleri).
-- **Çağrı detayı** — 🧠 Yapay Zekâ Analizi kartı: baskın duygu, duygu seyri, churn riski,
-  müşteri efor skoru, sonraki-en-iyi-aksiyon, niyet etiketleri, duygu-sonuç uyumsuzluk uyarısı.
-
-## Roller (RBAC)
-
-| Rol | Yetki |
-|---|---|
-| **Yönetici** | Her şey + kullanıcı/kampanya/yasaklı kelime yönetimi |
-| **Süpervizör** | Ekip kokpiti, alarmlar, koçluk görevi atama |
-| **Kalite Uzmanı** | Puan override, kalibrasyon, itiraz kararı |
-| **Temsilci** | **Yalnızca kendi** çağrıları, karnesi, itiraz hakkı |
-
-## Öne çıkan yetenekler
-
-- **Sıfırlayıcı ihlal** — kritik kriter (KVKK, kimlik doğrulama) eşik altındaysa
-  veya temsilci ağır yasaklı ifade kullandıysa çağrı puanı otomatik **0** + alarm.
-- **Bilgi bankası (RAG)** — şirket prosedür/SSS dokümanlarınızı (PDF/DOCX/MD/TXT)
-  yükleyin; temsilcinin verdiği bilgi bu dokümanlarla karşılaştırılır. *"İade süresini
-  30 gün dedi, prosedürde 14 gün yazıyor"* → **Bilgi Doğruluğu** kriterinde düşük puan
-  + gerekçede doğru bilgi ve kaynak doküman.
-- **Konuşma araması** — tüm transkriptlerde ifade arayın: *"avukat"*, *"garanti ederim"*,
-  *"iptal ediyorum"*. Konuşmacı/kanal filtresi, sonuca tıklayınca **sesin tam o anına**
-  atlar. Temsilci yalnızca kendi çağrılarında arar.
-- **Yönetilebilir rubrik** — kriter/ağırlık/grup/puan aralığı; **kampanya ve kanal
-  bazlı** rubrik; yeni kriter LLM prompt'una otomatik girer (kod değişikliği yok).
-- **Yasaklı kelime motoru** — exact/fuzzy/regex, TR çekim varyasyonları, ve
-  **kim söyledi** (müşteri küfrederse temsilci cezalandırılmaz).
-- **Kriz tespiti** — hukuki/eskalasyon söylemi ("avukatıma gideceğim") → etiket + alarm.
-- **Konuşma metrikleri** — konuşma oranı, söz kesme, sessizlik, kelime/dk;
-  chat'te ilk/ortalama yanıt süresi. LLM'e ipucu olarak verilir.
-- **Duygu değişimi + tahmini CSAT** + otomatik **koçluk önerisi**.
-- **Kalibrasyon & itiraz** — insan override + AI/insan sapma raporu; temsilci itirazı.
-- **Gamification** — liderlik tablosu, rozetler, temsilci karnesi (PDF).
-- **KVKK** — PII maskeleme (harici LLM'e maskeli gider — **testle garanti**),
-  append-only audit log, **otomatik saklama süresi (retention)**: süresi dolan
-  kayıtlar her gece silinir, silme denetim kaydına yazılır.
-- **Toplu yeniden puanlama** — rubrik değişince tüm çağrılar tek tuşla güncel
-  rubrikle yeniden puanlanır (STT tekrar çalışmaz).
-- **Entegrasyon** — REST API, webhook, watch-folder, CSV/Excel/PDF export.
-
-## Yapılandırma
-
-Tüm ayarlar `.env` ([.env.example](.env.example) eksiksiz şablondur):
-
-| Değişken | Açıklama |
-|---|---|
-| `JWT_SECRET` | **Production'da mutlaka değiştirin** |
-| `DEMO_MODE` | Rol seçimli parolasız giriş — **production'da `false`** |
-| `LLM_PROVIDER` | `ollama` (varsayılan, offline) veya `gemini` |
-| `WHISPER_DEVICE` | `auto` / `cuda` / `cpu` |
-| `HF_TOKEN` | mono kayıtlarda pyannote diarization için |
-| `WEBHOOK_URLS` | ihlal/kriz olaylarının POST edileceği adresler |
-| `MASK_LOCAL_LLM` | yerel LLM'e giden metni de maskele |
-| `RATE_LIMIT_PER_MIN` | IP başına dakikalık istek limiti |
-
-## Kaynak kullanımı (CPU / RAM)
-
-Yerel LLM + STT çalıştırdığınız için işleme **ağırdır**. Üç katmanlı koruma var:
-
-1. **İşleme duraklatılabilir** — Yönetim → İşleme. Duraklatılmışken çağrılar
-   birikir, makine **boşta kalır (~%1 CPU)**. Ağır işi siz başlatırsınız.
-2. **Ollama boştayken modeli bırakır** (`OLLAMA_KEEP_ALIVE=5m`) → RAM serbest.
-3. **Her servisin CPU/RAM tavanı var** (`.env`'den ayarlanır).
-
-Ölçülen değerler (12 çekirdek / 11.7 GB Docker VM, varsayılan ayarlar):
-
-| Servis | CPU tavanı | RAM tavanı | Boşta | Puanlama sırasında |
-|---|---|---|---|---|
-| `ollama` (LLM) | 4 çekirdek | 8 GB | **~20 MB** | ~6 GB, ~%400 CPU |
-| `worker` (Whisper STT) | 4 çekirdek | 3 GB | ~90 MB | ~1.6 GB, ~%400 CPU |
-| `worker-fast`, `api`, `frontend` | 1-2 çekirdek | 0.5-1 GB | ~100 MB | ~100 MB |
-| `beat`, `watcher` | 0.5 çekirdek | 256 MB | ~50 MB | ~50 MB |
-| **Toplam** | | | **~%1 CPU** | ~%400-800 CPU |
-
-**Ayar düğmeleri** (`.env`):
-
-| Değişken | Etki |
-|---|---|
-| `OLLAMA_NUM_THREAD=4` | LLM çıkarım thread'i — **ana CPU tüketicisi**. Ayarlanmazsa llama.cpp tüm çekirdekleri kapar (12 çekirdekte ~550% CPU). Düşürmek CPU'yu rahatlatır, puanlamayı yavaşlatır. |
-| `OLLAMA_KEEP_ALIVE=5m` | Model bellekte kalma süresi. Uzun = hızlı ama **boşta da ~6 GB tutar**; kısa = RAM serbest ama sonraki istekte ~70 sn yeniden yükleme. |
-| `OLLAMA_NUM_CTX=8192` | Bağlam penceresi. Büyütmek KV cache'i (RAM) şişirir. Büyütürseniz `CHUNK_THRESHOLD_SEC`'i de gözden geçirin. |
-| `OLLAMA_CPUS` / `OLLAMA_MEM` | Container tavanları |
-| `WORKER_CPUS` / `WORKER_MEM` | STT worker tavanları |
-
-**Makineniz zorlanıyorsa** (hafif mod):
-```bash
-# .env
-OLLAMA_MODEL=qwen2.5:3b      # 4.7 GB → ~2 GB, belirgin hızlı (kalite biraz düşer)
-OLLAMA_NUM_THREAD=4
-WHISPER_MODEL=small          # 1.5 GB → ~500 MB, ~3x hızlı
-OLLAMA_KEEP_ALIVE=2m
-```
-Sonra: `docker compose up -d` + `docker compose exec ollama ollama pull qwen2.5:3b`
-
-**GPU'nuz varsa** (çok daha hızlı): NVIDIA Container Toolkit kurun →
-`docker-compose.yml`'de `ollama` ve `worker` servislerinin `deploy.resources`
-altındaki GPU bloklarını açın → `.env` → `WHISPER_DEVICE=cuda`. GPU'da
-`worker-fast` concurrency'sini 2-4 yapabilirsiniz.
-
-### Mono kayıtlarda pyannote
-```bash
-docker compose build --build-arg WITH_DIARIZATION=1 worker
-# .env → HF_TOKEN=hf_...
-```
-
-## Test
+## Geliştirme
 
 ```bash
-make test     # pytest: PII maskeleme, yasaklı kelime, RBAC, tenant izolasyonu
-```
-CI (GitHub Actions): backend test + frontend lint/build + docker build.
-
-## Proje yapısı
-
-```
-backend/app/
-  api/        auth, calls, chats, criteria, agents, stats, admin, workflow, supervisor, reports
-  services/   audio, stt, diarization, metrics, compliance, masking, llm, scoring, ingest, audit, webhooks, events
-  tasks/      celery_app + pipeline (process_call, process_chat, rescore_call)
-  models.py   multi-tenant şema · security.py JWT/bcrypt · deps.py RBAC · seed.py demo tohum
-  watcher.py  watch-folder servisi
-backend/tests/  pytest (maskeleme, uyum, RBAC/tenant, canlı alarm)
-frontend/app/   login · / (çağrılar) · calls/[id] · cockpit · agents · agents/[id] · leaderboard · workflow · rubric · admin
-scripts/generate_demo.py   sentetik demo (TTS sesli + chat + 8 haftalık geçmiş)
-scripts/tts_engines.py     TTS motorları (edge-tts gerçek kadın/erkek · Piper çevrimdışı yedek)
-scripts/tr_gender.py       Türkçe ad/hitap → cinsiyet (yalnız demo seslendirmesi)
-scripts/tests/             pytest (cinsiyet çıkarımı, konuşmacı ayrımı)
-docs/       AUDIT · ROADMAP · SALES-ONEPAGER · DEMO-SCRIPT · API
+make test      # backend regresyon takimi
+make eval      # altin set uzerinde puanlama dogrulugu (esik saglanmazsa CI kirilir)
+make audit     # Turkce karakter + arayuz (keskin kose, tanimli renk) denetimi
 ```
 
-## Sorun giderme
+Kod ve doküman rehberi: [CLAUDE.md](CLAUDE.md) · Tüm dokümanlar: [docs/](docs/README.md)
 
-| Belirti | Çözüm |
-|---|---|
-| Puanlama `LLM erisim hatasi` | Model inmesi bitmemiş: `docker compose logs ollama-pull`; sonra çağrıda "Yeniden puanla" |
-| İlk çağrı çok yavaş | Whisper medium iniyor (tek sefer). Hız için `.env` → `WHISPER_MODEL=small` |
-| Frontend "Oturum gerekli" | Token süresi doldu; çıkış yapıp tekrar girin |
-| Frontend API'ye erişemiyor | `NEXT_PUBLIC_API_URL` build'e gömülür → `docker compose build frontend` |
-| Şema hatası (`column does not exist`) | `make clean && make demo` (eski DB'yi temizler) |
+---
 
-Ayrıntılı çalıştırma/test rehberi: **[run.md](run.md)**
+## Lisans
+
+[AGPL-3.0](LICENSE) — Ayrıntı ve gerekçe: [docs/FINAL-RAPOR.md](docs/FINAL-RAPOR.md)
+
+---
+
+<a name="english-summary"></a>
+
+## English summary
+
+**KaliteGöz** is a call-center quality management platform that scores every
+conversation, **shows the verbatim transcript evidence behind each decision**,
+and knows where it is unreliable. It runs **fully on-premise** — audio,
+transcripts and scores never leave your hardware.
+
+**Three-layer scoring.** Layer A resolves objective compliance criteria
+(greeting, GDPR/KVKK notice, identity verification, closing, banned language)
+**in code** — the LLM is never asked. Layer B evaluates subjective criteria
+with an LLM that must quote the transcript. Layer C **verifies every quote
+server-side**; an unverifiable quote yields no score and routes the call to a
+human reviewer.
+
+**Measured, reproducible accuracy** (50-scenario golden set, `make eval`):
+
+| Metric | v1 | v2 |
+|---|---|---|
+| Zeroing-violation false positives | 38.5% | **0.0%** |
+| Mean absolute error (0-10 scale) | 2.16 | **0.78** |
+| Evidence verifiability | 56.1% | **100%** |
+| Repeatability (3 runs, std dev) | 1.95 | **0.46** |
+
+Cohen's kappa is **0.94–1.00** on the four core objective criteria and
+**0.18** on subjective ones. We publish both numbers: on subjective criteria
+the system produces a *suggestion*, and a valid score requires human approval.
+See [docs/KALITE-METODOLOJISI.md](docs/KALITE-METODOLOJISI.md) for how the
+reference set was produced and what is explicitly **not** proven.
+
+Interface language: Turkish and English. Documentation: Turkish.

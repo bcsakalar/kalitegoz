@@ -78,7 +78,7 @@ export default function EvidenceLink({
           }
         : {})}
       className={[
-        "group flex w-full items-start gap-2 rounded-md border border-[var(--border)]",
+        "group flex w-full items-start gap-2 border border-[var(--border)]",
         "bg-[var(--surface-2)] px-2.5 py-2 text-left text-[13px] leading-relaxed",
         "text-[var(--ink-2)] transition-colors",
         clickable

@@ -1,0 +1,81 @@
+{
+  "id": "sifir-04-yasak-vaat",
+  "title": "Gercek yasak vaat verildi",
+  "bucket": "sifirlayici",
+  "tags": [
+    "sifirlayici"
+  ],
+  "duration_sec": 28.75,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Arda. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 10.1,
+      "text": "Selim Doğan, 445009."
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 10.45,
+      "end": 12.05,
+      "text": "Arıza ne zaman düzelir?"
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 12.4,
+      "end": 16.4,
+      "text": "Merak etmeyin, bu sorun kesin çözülür, garanti veriyorum, yarın halledilecek."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 16.75,
+      "end": 17.95,
+      "text": "Kesin mi?"
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 18.3,
+      "end": 19.9,
+      "text": "Kesinlikle garanti, söz veriyorum."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 20.25,
+      "end": 23.05,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 8,
+      "speaker": "musteri",
+      "start": 23.4,
+      "end": 24.6,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 24.95,
+      "end": 27.75,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

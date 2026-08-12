@@ -1,0 +1,110 @@
+{
+  "id": "reg-b4-kesinlikle-haklisiniz",
+  "title": "B4: 'Kesinlikle haklisiniz' — yasakli kelime DEGIL",
+  "bucket": "regresyon",
+  "tags": [
+    "yasakli_kelime",
+    "yanlis_pozitif"
+  ],
+  "duration_sec": 46.95,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.0,
+      "text": "Netik İletişim'e hoş geldiniz, ben Elif. Size nasıl yardımcı olabilirim?"
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 5.35,
+      "end": 9.35,
+      "text": "Görüşmemiz kayıt altına alınmaktadır ve kişisel verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 2,
+      "speaker": "temsilci",
+      "start": 9.7,
+      "end": 12.5,
+      "text": "Öncelikle adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 12.85,
+      "end": 14.85,
+      "text": "Ayşe Kaya, müşteri numaram 448120."
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 15.2,
+      "end": 17.6,
+      "text": "Teşekkür ederim Ayşe Hanım, kaydınızı görüyorum."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 17.95,
+      "end": 20.75,
+      "text": "İki gündür internetim yok, kimse dönüş yapmadı."
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 21.1,
+      "end": 24.7,
+      "text": "Kesinlikle haklısınız, bu süre kabul edilebilir değil. Özür dilerim."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 25.05,
+      "end": 29.05,
+      "text": "Arıza kaydınızı öncelikli statüye aldım. Kesin bir tarih veremiyorum ama"
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 29.4,
+      "end": 32.6,
+      "text": "saha ekibi bugün 18.00'e kadar sizinle iletişime geçecek."
+    },
+    {
+      "idx": 9,
+      "speaker": "musteri",
+      "start": 32.95,
+      "end": 34.55,
+      "text": "Umarım bu sefer olur."
+    },
+    {
+      "idx": 10,
+      "speaker": "temsilci",
+      "start": 34.9,
+      "end": 38.1,
+      "text": "Takibini bizzat yapacağım. Çözülmezse yarın ben sizi arayacağım."
+    },
+    {
+      "idx": 11,
+      "speaker": "temsilci",
+      "start": 38.45,
+      "end": 41.25,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 12,
+      "speaker": "musteri",
+      "start": 41.6,
+      "end": 42.8,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 13,
+      "speaker": "temsilci",
+      "start": 43.15,
+      "end": 45.95,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

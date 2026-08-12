@@ -18,10 +18,18 @@ from .models import (
     Tenant,
     User,
 )
+from .config import settings
 from .security import hash_password
 
 DEMO_SLUG = "demo"
-DEMO_PASSWORD = "demo1234"
+
+# Baslangic kullanicilarinin parolasi .env'den gelir (ADMIN_PASSWORD) ve
+# scripts/generate-secrets.sh tarafindan uretilir.
+#
+# Neden kodda sabit bir varsayilan YOK: "demo1234" gibi bir varsayilan, acik
+# kaynak bir depoda herkesin bildigi bir parola demektir. Kurulumun calismasi
+# icin bir sey uretilmis olmasi gerekiyorsa, o seyi KURULUM uretmeli.
+DEMO_PASSWORD = settings.admin_password
 
 # 12 temsilci, 2 takima bolunmus (satis / destek)
 DEMO_AGENTS = [

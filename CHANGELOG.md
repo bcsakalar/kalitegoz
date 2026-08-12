@@ -2,8 +2,8 @@
 
 ## v2.0 — Uçtan uca overhaul (2026-08-09)
 
-Altı fazda yapıldı; her fazın raporu `docs/v2/FAZ-N-RAPOR.md` altında.
-Ölçüm çıktıları `docs/v2/eval/`, ekran görüntüleri `docs/v2/screens/`.
+Altı fazda yapıldı; her fazın raporu `docs/internal/FAZ-N-RAPOR.md` altında.
+Ölçüm çıktıları `docs/eval/`, ekran görüntüleri `docs/screens/`.
 
 ### Ölçülen sonuç
 
@@ -13,7 +13,7 @@ Altı fazda yapıldı; her fazın raporu `docs/v2/FAZ-N-RAPOR.md` altında.
 | Sıfırlayıcı ihlal yanlış-negatif | %18.2 | **%0.0** |
 | Kriter bazlı MAE (0-10) | 2.16 | **0.82** |
 | Kanıt doğrulanabilirlik | %56.1 | **%100** |
-| Tekrarlanabilirlik (std) | 1.95 | **0.00** |
+| Tekrarlanabilirlik (std) | 1.95 | **0.46** |
 | Cohen's kappa (ortalama) | 0.32 | 0.51 |
 | Çekirdek uyum kriterlerinde kappa* | 0.32 | **0.94–1.00** |
 | Backend testi | 221 | **422** |
@@ -58,7 +58,7 @@ Ayrıntı: `docs/KALITE-METODOLOJISI.md` §4.
 - Ölçüldü: kokpit 1000 çağrıyla **0.011 sn**
 
 ### FAZ 5 — Arayüz yeniden tasarımı
-- Dört skill kuruldu ve okundu; `docs/v2/05-TASARIM-PLANI.md` kod öncesi üretildi
+- Dört skill kuruldu ve okundu; `docs/internal/05-TASARIM-PLANI.md` kod öncesi üretildi
 - 14 düz menü → 5 rol bazlı grup; 13 emoji ikon → 17 inline SVG
 - İmza öğesi: **kanıt-transkript bağı** — alıntıya tıklayınca ses o saniyeye atlar
 - Dört durum bileşenleri (yükleniyor/boş/hata/dolu)
@@ -69,7 +69,7 @@ Ayrıntı: `docs/KALITE-METODOLOJISI.md` §4.
 - Rubrik kriter adları **tam Türkçe** (migration ile mevcut veri dahil)
 - `scripts/tr_audit.py` — Türkçe karakter ve jargon denetimi, CI'da
 - AI çıktısı Türkçe kalite kapısı: ASCII Türkçe tespit edilirse düzeltme istenir
-- `docs/v2/SOZLUK.md` — terim sözlüğü; aynı kavrama iki isim verilmez
+- `docs/SOZLUK.md` — terim sözlüğü; aynı kavrama iki isim verilmez
 - `make demo` — 220 çağrılık satış demosu, zaman içinde iyileşme hikâyesiyle
 - `docs/KALITE-METODOLOJISI.md` — satış dokümanı, ölçülmüş metriklerle
 - `docs/KVKK-UYUM.md` — veri yerleşimi, maskeleme, rol matrisi
@@ -93,7 +93,7 @@ Ayrıntı: `docs/KALITE-METODOLOJISI.md` §4.
   penceresi + KMS/Vault entegrasyon yolu (`docs/KVKK-UYUM.md` §3.1–3.2)
 - Rol bazlı açılış ekranı: kaliteci → inceleme kuyruğu, yönetici → kokpit,
   temsilci → kendi karnesi
-- `docs/v2/SORULAR.md`: **17 sorunun tamamı kapatıldı**, açık soru yok
+- `docs/internal/SORULAR.md`: **17 sorunun tamamı kapatıldı**, açık soru yok
 
 ### Kapatılan hatalar
 B1–B26 (prompt dosyasında listelenen) + B27–B32 (denetimde bulunan)

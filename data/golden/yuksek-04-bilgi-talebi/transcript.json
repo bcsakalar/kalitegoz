@@ -1,0 +1,116 @@
+{
+  "id": "yuksek-04-bilgi-talebi",
+  "title": "Bilgi talebi — dogru ve eksiksiz bilgi",
+  "bucket": "yuksek",
+  "tags": [
+    "temiz"
+  ],
+  "duration_sec": 50.5,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.0,
+      "text": "Netik İletişim'e hoş geldiniz, ben Tolga. Size nasıl yardımcı olabilirim?"
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 5.35,
+      "end": 9.35,
+      "text": "Görüşmemiz kayıt altına alınmaktadır ve kişisel verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 2,
+      "speaker": "temsilci",
+      "start": 9.7,
+      "end": 12.5,
+      "text": "Öncelikle adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 12.85,
+      "end": 14.85,
+      "text": "Ayşe Kaya, müşteri numaram 448120."
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 15.2,
+      "end": 17.6,
+      "text": "Teşekkür ederim Ayşe Hanım, kaydınızı görüyorum."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 17.95,
+      "end": 20.35,
+      "text": "Yurt dışına çıkacağım, roaming nasıl açılıyor?"
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 20.7,
+      "end": 24.3,
+      "text": "Hattınızda uluslararası dolaşım şu an kapalı görünüyor, hemen açabilirim."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 24.65,
+      "end": 28.25,
+      "text": "Gideceğiniz ülkeyi öğrenebilir miyim? Paket seçenekleri ülkeye göre değişiyor."
+    },
+    {
+      "idx": 8,
+      "speaker": "musteri",
+      "start": 28.6,
+      "end": 29.8,
+      "text": "Almanya."
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 30.15,
+      "end": 36.15,
+      "text": "Almanya için 7 günlük 5 GB paket 350 TL. Paketsiz kullanımda MB başına ücretlendirme olur."
+    },
+    {
+      "idx": 10,
+      "speaker": "temsilci",
+      "start": 36.5,
+      "end": 40.1,
+      "text": "Paketi şimdi tanımlarsam yurt dışına çıktığınız gün otomatik başlar."
+    },
+    {
+      "idx": 11,
+      "speaker": "musteri",
+      "start": 40.45,
+      "end": 41.65,
+      "text": "Tanımlayın lütfen."
+    },
+    {
+      "idx": 12,
+      "speaker": "temsilci",
+      "start": 42.0,
+      "end": 44.8,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 13,
+      "speaker": "musteri",
+      "start": 45.15,
+      "end": 46.35,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 14,
+      "speaker": "temsilci",
+      "start": 46.7,
+      "end": 49.5,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

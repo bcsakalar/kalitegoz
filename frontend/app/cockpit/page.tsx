@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import DistBars from "@/components/DistBars";
 import StatTile from "@/components/StatTile";
+import CSATPanel from "@/components/CSATPanel";
 import { api, CATEGORY_LABELS, fmtDuration, VIOLATION_LABELS } from "@/lib/api";
 import type {
   SupervisorCockpit, TopicsResult, CoachingEffectiveness, ReviewStats, EmergingTopic,
@@ -46,13 +47,17 @@ export default function CockpitPage() {
 
       <ExecSummaryPanel />
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid items-start gap-5 lg:grid-cols-2">
         <TargetsPanel />
-        <CorrelationsPanel />
+        <CSATPanel />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid items-start gap-5 lg:grid-cols-2">
+        <CorrelationsPanel />
         <ChurnPanel />
+      </div>
+
+      <div className="grid items-start gap-5 lg:grid-cols-2">
         <AppealsPanel />
       </div>
 
@@ -60,12 +65,12 @@ export default function CockpitPage() {
 
       <TopicsPanel />
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid items-start gap-5 lg:grid-cols-2">
         <CoachingEffectPanel />
         <ReviewPanel />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid items-start gap-5 lg:grid-cols-2">
         <DistBars title={t("cockpit.violationDist")}
           items={Object.entries(c.violation_dist).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: VIOLATION_LABELS[k] ?? k, value: v }))} />
         <div className="card p-4">
@@ -73,7 +78,7 @@ export default function CockpitPage() {
           <div className="mt-2 space-y-1">
             {c.agents.slice(0, 12).map((a, i) => (
               <Link key={a.agent_id} href={`/agents/${a.agent_id}`}
-                className="flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-grid/50">
+                className="flex items-center gap-3 px-2 py-1.5 text-sm hover:bg-grid/50">
                 <span className="w-5 text-right font-semibold text-muted">{i + 1}</span>
                 <span className="flex-1 font-medium">{a.agent_name}</span>
                 <span className="text-xs text-muted">{a.call_count}</span>
@@ -99,17 +104,17 @@ function ChurnPanel() {
       <h3 className="text-sm font-semibold text-ink2">📉 {t("churn.title")}</h3>
       <p className="mb-2 text-xs text-muted">{t("churn.desc")}</p>
       <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="rounded-lg bg-grid/40 p-2"><div className="text-lg font-bold text-[var(--status-critical)] tabular-nums">{d.high}</div><div className="text-[10px] text-muted">{t("risk.yuksek")}</div></div>
-        <div className="rounded-lg bg-grid/40 p-2"><div className="text-lg font-bold text-[var(--status-warn)] tabular-nums">{d.medium}</div><div className="text-[10px] text-muted">{t("risk.orta")}</div></div>
-        <div className="rounded-lg bg-grid/40 p-2"><div className="text-lg font-bold text-[var(--status-ok)] tabular-nums">{d.low}</div><div className="text-[10px] text-muted">{t("risk.dusuk")}</div></div>
+        <div className="bg-grid/40 p-2"><div className="text-lg font-bold text-[var(--status-critical)] tabular-nums">{d.high}</div><div className="text-[10px] text-muted">{t("risk.yuksek")}</div></div>
+        <div className="bg-grid/40 p-2"><div className="text-lg font-bold text-[var(--status-warning)] tabular-nums">{d.medium}</div><div className="text-[10px] text-muted">{t("risk.orta")}</div></div>
+        <div className="bg-grid/40 p-2"><div className="text-lg font-bold text-[var(--status-good)] tabular-nums">{d.low}</div><div className="text-[10px] text-muted">{t("risk.dusuk")}</div></div>
       </div>
       {d.retention_list.length > 0 && (
         <div className="mt-3">
           <p className="mb-1 text-xs font-semibold text-ink2">{t("churn.retention")} (%{d.high_rate})</p>
           <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
             {d.retention_list.map((c) => (
-              <Link key={c.id} href={`/calls/${c.id}`} className="flex items-center gap-2 rounded-lg px-2 py-1 text-xs hover:bg-grid/50">
-                <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--status-critical)]" />
+              <Link key={c.id} href={`/calls/${c.id}`} className="flex items-center gap-2 px-2 py-1 text-xs hover:bg-grid/50">
+                <span className="h-2 w-2 shrink-0 bg-[var(--status-critical)]" />
                 <span className="flex-1 truncate">{c.agent_name ?? "—"} · {CATEGORY_LABELS[c.category ?? ""] ?? c.category}</span>
                 <span className="tabular-nums text-muted">{c.total_score ?? "—"}</span>
               </Link>
@@ -136,10 +141,10 @@ function AppealsPanel() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-2 text-center lg:grid-cols-4">
-            <div className="rounded-lg bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">{d.total}</div><div className="text-[10px] text-muted">{t("appeals.total")}</div></div>
-            <div className="rounded-lg bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">{d.open}</div><div className="text-[10px] text-muted">{t("appeals.open")}</div></div>
-            <div className="rounded-lg bg-grid/40 p-2"><div className="text-lg font-bold text-[var(--status-warn)] tabular-nums">%{d.overturn_rate}</div><div className="text-[10px] text-muted">{t("appeals.overturn")}</div></div>
-            <div className="rounded-lg bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">{d.avg_resolution_days ?? "—"}</div><div className="text-[10px] text-muted">{t("appeals.avgDays")}</div></div>
+            <div className="bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">{d.total}</div><div className="text-[10px] text-muted">{t("appeals.total")}</div></div>
+            <div className="bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">{d.open}</div><div className="text-[10px] text-muted">{t("appeals.open")}</div></div>
+            <div className="bg-grid/40 p-2"><div className="text-lg font-bold text-[var(--status-warning)] tabular-nums">%{d.overturn_rate}</div><div className="text-[10px] text-muted">{t("appeals.overturn")}</div></div>
+            <div className="bg-grid/40 p-2"><div className="text-lg font-bold tabular-nums">{d.avg_resolution_days ?? "—"}</div><div className="text-[10px] text-muted">{t("appeals.avgDays")}</div></div>
           </div>
           <p className="mt-2 text-xs text-muted">✅ {d.accepted} {t("appeals.accepted")} · ❌ {d.rejected} {t("appeals.rejected")}</p>
         </>
@@ -174,10 +179,10 @@ function ExecSummaryPanel() {
       {err && <p className="mt-2 text-xs text-danger">{t("common.error")}: {err}</p>}
       {d && (
         <div className="mt-3 space-y-3">
-          <p className="rounded-lg bg-series/10 p-3 text-sm font-medium leading-relaxed">{d.headline}</p>
+          <p className="bg-series/10 p-3 text-sm font-medium leading-relaxed">{d.headline}</p>
           <div className="grid gap-3 md:grid-cols-3">
             {([["exec.wins", "✅", d.wins], ["exec.risks", "⚠️", d.risks], ["exec.actions", "🎯", d.actions]] as const).map(([k, ic, arr]) => (
-              <div key={k} className="rounded-lg bg-grid/40 p-3">
+              <div key={k} className="bg-grid/40 p-3">
                 <div className="mb-1 text-xs font-semibold text-ink2">{ic} {t(k)}</div>
                 <ul className="space-y-1 text-sm">
                   {arr.length ? arr.map((x, i) => <li key={i} className="leading-snug">• {x}</li>)
@@ -209,7 +214,7 @@ function CorrelationsPanel() {
         <div className="space-y-2">
           {rows.map((r) => (
             <div key={r.factor} className="flex items-center gap-2 text-sm">
-              <span className={`w-10 text-right font-bold tabular-nums ${r.direction === "positive" ? "text-[var(--status-ok)]" : "text-[var(--status-critical)]"}`}>
+              <span className={`w-10 text-right font-bold tabular-nums ${r.direction === "positive" ? "text-[var(--status-good)]" : "text-[var(--status-critical)]"}`}>
                 {r.corr > 0 ? "+" : ""}{r.corr}
               </span>
               <span className="flex-1">{r.insight}</span>
@@ -262,11 +267,11 @@ function TargetsPanel() {
         <div className="mb-3 space-y-1.5">
           {rows.map((r) => (
             <div key={r.id} className="flex items-center gap-2 text-sm">
-              <span className={`h-2 w-2 shrink-0 rounded-full ${r.actual == null ? "bg-muted" : r.met ? "bg-[var(--status-ok)]" : "bg-[var(--status-critical)]"}`} />
+              <span className={`h-2 w-2 shrink-0 ${r.actual == null ? "bg-muted" : r.met ? "bg-[var(--status-good)]" : "bg-[var(--status-critical)]"}`} />
               <span className="flex-1 truncate">{r.scope_name} · {TARGET_METRICS[r.metric] ?? r.metric}</span>
               <span className="tabular-nums text-muted">{t("targets.target")} {r.target_value}</span>
               <span aria-hidden>→</span>
-              <span className={`font-semibold tabular-nums ${r.actual == null ? "text-muted" : r.met ? "text-[var(--status-ok)]" : "text-[var(--status-critical)]"}`}>
+              <span className={`font-semibold tabular-nums ${r.actual == null ? "text-muted" : r.met ? "text-[var(--status-good)]" : "text-[var(--status-critical)]"}`}>
                 {r.actual == null ? "—" : r.actual}
               </span>
               <button className="text-muted hover:text-[var(--status-critical)]" onClick={() => del(r.id)} aria-label="sil">×</button>
@@ -317,7 +322,7 @@ function EmergingPanel() {
       ) : (
         <div className="mt-3 flex flex-wrap gap-2">
           {rows.map((r, i) => (
-            <div key={i} className="flex items-center gap-2 rounded-lg bg-grid/40 px-3 py-2">
+            <div key={i} className="flex items-center gap-2 bg-grid/40 px-3 py-2">
               <span className="text-xs text-muted">{r.kind === "category" ? "🏷" : "🎯"}</span>
               <span className="text-sm font-medium">{CATEGORY_LABELS[r.label] ?? r.label}</span>
               <span className="text-xs tabular-nums text-muted">{r.prev_count}→{r.now_count}</span>
@@ -360,7 +365,11 @@ function TopicsPanel() {
       </div>
 
       {err && <p className="mt-3 text-sm text-ink2">{err}</p>}
-      {busy && !data && <p className="py-6 text-center text-sm text-muted">{t("topics.analyzing")}</p>}
+      {/* Butonda zaten "Analiz ediliyor…" yaziyor; govdede tekrar etmek
+          aynı bilgiyi iki kez soyluyordu. Govde artik ne BEKLENDIGINI soyluyor. */}
+      {busy && !data && (
+        <p className="py-6 text-center text-sm text-muted">{t("topics.waitHint")}</p>
+      )}
 
       {data && data.topics.length === 0 && (
         <p className="py-6 text-center text-sm text-muted">{t("topics.empty")}</p>
@@ -370,7 +379,7 @@ function TopicsPanel() {
         <>
           <div className="mt-3 space-y-2">
             {data.topics.map((tp, i) => (
-              <div key={i} className="rounded-lg bg-grid/40 p-3">
+              <div key={i} className="bg-grid/40 p-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold">{tp.baslik}</span>
                   <span className="badge badge-info">{tp.cagri_sayisi}</span>
@@ -424,16 +433,16 @@ function CoachingEffectPanel() {
       <h3 className="text-sm font-semibold text-ink2">🎯 {t("coacheff.title")}</h3>
       <p className="mb-2 text-xs text-muted">{t("coacheff.hint")}</p>
       <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="rounded-lg bg-grid/40 p-2">
+        <div className="bg-grid/40 p-2">
           <div className="text-lg font-bold">{d.measurable_count}</div>
           <div className="text-[10px] text-muted">{t("coacheff.measurable")}</div>
         </div>
-        <div className="rounded-lg bg-grid/40 p-2">
-          <div className="text-lg font-bold text-[var(--status-ok)]">%{d.improved_rate}</div>
+        <div className="bg-grid/40 p-2">
+          <div className="text-lg font-bold text-[var(--status-good)]">%{d.improved_rate}</div>
           <div className="text-[10px] text-muted">{t("coacheff.improved")}</div>
         </div>
-        <div className="rounded-lg bg-grid/40 p-2">
-          <div className={`text-lg font-bold ${d.avg_delta >= 0 ? "text-[var(--status-ok)]" : "text-[var(--status-critical)]"}`}>
+        <div className="bg-grid/40 p-2">
+          <div className={`text-lg font-bold ${d.avg_delta >= 0 ? "text-[var(--status-good)]" : "text-[var(--status-critical)]"}`}>
             {d.avg_delta > 0 ? "+" : ""}{d.avg_delta}
           </div>
           <div className="text-[10px] text-muted">{t("coacheff.avgDelta")}</div>
@@ -445,7 +454,7 @@ function CoachingEffectPanel() {
           <span className="text-muted">{t("coacheff.before")} {e.before_avg}</span>
           <span aria-hidden>→</span>
           <span className="text-muted">{t("coacheff.after")} {e.after_avg}</span>
-          <span className={`font-semibold ${e.improved ? "text-[var(--status-ok)]" : "text-[var(--status-critical)]"}`}>
+          <span className={`font-semibold ${e.improved ? "text-[var(--status-good)]" : "text-[var(--status-critical)]"}`}>
             {e.delta > 0 ? "+" : ""}{e.delta}
           </span>
         </div>
@@ -493,7 +502,7 @@ function ReviewPanel() {
           </div>
           <div className="mt-3 flex gap-2 text-center text-xs">
             {Object.entries(s.counts).map(([k, v]) => (
-              <div key={k} className="flex-1 rounded-lg bg-grid/40 p-2">
+              <div key={k} className="flex-1 bg-grid/40 p-2">
                 <div className="text-base font-semibold">{v}</div>
                 <div className="text-[10px] text-muted">{k}</div>
               </div>
@@ -506,7 +515,7 @@ function ReviewPanel() {
         <label className="text-xs">
           <span className="block text-muted">{t("rev.reviewer")}</span>
           <select value={reviewer} onChange={(e) => setReviewer(e.target.value === "" ? "" : Number(e.target.value))}
-            className="mt-0.5 rounded-lg border border-hairline bg-surface2 px-2 py-1 text-sm">
+            className="mt-0.5 border border-hairline bg-surface2 px-2 py-1 text-sm">
             <option value="">{t("rev.select")}</option>
             {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>
@@ -514,7 +523,7 @@ function ReviewPanel() {
         <label className="text-xs">
           <span className="block text-muted">{t("rev.strategy")}</span>
           <select value={reason} onChange={(e) => setReason(e.target.value)}
-            className="mt-0.5 rounded-lg border border-hairline bg-surface2 px-2 py-1 text-sm">
+            className="mt-0.5 border border-hairline bg-surface2 px-2 py-1 text-sm">
             <option value="random">{t("wf.reason.random")}</option>
             <option value="low_confidence">{t("wf.reason.low_confidence")}</option>
             <option value="critical">{t("wf.reason.critical")}</option>
@@ -523,7 +532,7 @@ function ReviewPanel() {
         <label className="text-xs">
           <span className="block text-muted">{t("rev.count")}</span>
           <input type="number" min={1} max={50} value={count} onChange={(e) => setCount(Number(e.target.value))}
-            className="mt-0.5 w-16 rounded-lg border border-hairline bg-surface2 px-2 py-1 text-sm" />
+            className="mt-0.5 w-16 border border-hairline bg-surface2 px-2 py-1 text-sm" />
         </label>
         <button className="btn btn-primary !py-1 text-xs" disabled={busy || reviewer === ""} onClick={createSample}>
           {busy ? "…" : t("rev.sampleAssign")}

@@ -1,0 +1,102 @@
+{
+  "id": "orta-04-bilgi-eksik",
+  "title": "Dogru ama eksik bilgi verildi",
+  "bucket": "orta",
+  "tags": [
+    "kismi_eksik"
+  ],
+  "duration_sec": 31.4,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Ceren. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 10.1,
+      "text": "Nur Aydın, 887420."
+    },
+    {
+      "idx": 3,
+      "speaker": "temsilci",
+      "start": 10.45,
+      "end": 11.65,
+      "text": "Teşekkürler Nur Hanım."
+    },
+    {
+      "idx": 4,
+      "speaker": "musteri",
+      "start": 12.0,
+      "end": 13.6,
+      "text": "Cayma bedeli ne kadar?"
+    },
+    {
+      "idx": 5,
+      "speaker": "temsilci",
+      "start": 13.95,
+      "end": 15.95,
+      "text": "Taahhüdünüz varsa cayma bedeli çıkar."
+    },
+    {
+      "idx": 6,
+      "speaker": "musteri",
+      "start": 16.3,
+      "end": 17.5,
+      "text": "Ne kadar peki?"
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 17.85,
+      "end": 19.05,
+      "text": "Sözleşmenize göre değişiyor."
+    },
+    {
+      "idx": 8,
+      "speaker": "musteri",
+      "start": 19.4,
+      "end": 20.6,
+      "text": "Yani bilmiyor musunuz?"
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 20.95,
+      "end": 22.55,
+      "text": "Kalan aya göre hesaplanıyor."
+    },
+    {
+      "idx": 10,
+      "speaker": "temsilci",
+      "start": 22.9,
+      "end": 25.7,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 11,
+      "speaker": "musteri",
+      "start": 26.05,
+      "end": 27.25,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 12,
+      "speaker": "temsilci",
+      "start": 27.6,
+      "end": 30.4,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

@@ -34,14 +34,14 @@ export default function NotificationBell({ collapsed }: { collapsed?: boolean })
   return (
     <>
       <button
-        className="relative grid h-8 w-8 shrink-0 place-items-center rounded-lg text-lg hover:bg-[var(--surface-2)]"
+        className="relative grid h-8 w-8 shrink-0 place-items-center text-lg hover:bg-[var(--surface-2)]"
         onClick={() => setOpen((o) => !o)}
         title={t("notif.title")}
         aria-label={t("notif.title")}
       >
         🔔
         {count > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-[var(--status-critical)] px-1 text-[10px] font-bold leading-4 text-white">
+          <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center bg-[var(--status-critical)] px-1 text-[10px] font-bold leading-4 text-white">
             {count > 99 ? "99+" : count}
           </span>
         )}
@@ -50,7 +50,7 @@ export default function NotificationBell({ collapsed }: { collapsed?: boolean })
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
-          <div className="fixed left-2 top-14 z-50 max-h-[70vh] w-80 overflow-y-auto rounded-xl border border-hairline bg-surface shadow-lg">
+          <div className="fixed left-2 top-14 z-50 max-h-[70vh] w-80 overflow-y-auto border border-hairline bg-surface shadow-lg">
             <div className="flex items-center justify-between border-b border-hairline px-3 py-2">
               <span className="text-sm font-semibold">{t("notif.title")}</span>
               {count > 0 && (

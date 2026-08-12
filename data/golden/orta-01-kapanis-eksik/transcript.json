@@ -1,0 +1,67 @@
+{
+  "id": "orta-01-kapanis-eksik",
+  "title": "Kapanis eksik — 'baska yardim?' sorulmadi",
+  "bucket": "orta",
+  "tags": [
+    "kismi_eksik"
+  ],
+  "duration_sec": 20.85,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Hakan. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 10.1,
+      "text": "Ali Vural, 771290."
+    },
+    {
+      "idx": 3,
+      "speaker": "temsilci",
+      "start": 10.45,
+      "end": 11.65,
+      "text": "Teşekkürler Ali Bey."
+    },
+    {
+      "idx": 4,
+      "speaker": "musteri",
+      "start": 12.0,
+      "end": 14.0,
+      "text": "Faturamı nasıl otomatik ödemeye bağlarım?"
+    },
+    {
+      "idx": 5,
+      "speaker": "temsilci",
+      "start": 14.35,
+      "end": 16.75,
+      "text": "Kredi kartı bilgilerinizi internet şubesinden tanımlayabilirsiniz."
+    },
+    {
+      "idx": 6,
+      "speaker": "musteri",
+      "start": 17.1,
+      "end": 18.3,
+      "text": "Tamam anladım."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 18.65,
+      "end": 19.85,
+      "text": "İyi günler."
+    }
+  ]
+}

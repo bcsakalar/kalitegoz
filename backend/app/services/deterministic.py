@@ -3,7 +3,7 @@
 ## Neden bu katman var
 
 FAZ 1 taban çizgisi ölçtü: en kötü üç kriter, deterministik olarak çözülebilecek
-olanlardı (`docs/v2/FAZ-1-RAPOR.md`):
+olanlardı (`docs/internal/FAZ-1-RAPOR.md`):
 
     KVKK / Aydinlatma      MAE 3.43   kappa 0.32
     Kimlik Dogrulama       MAE 3.06   kappa 0.36

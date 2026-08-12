@@ -1,0 +1,109 @@
+{
+  "id": "ses-02-agir-aksan",
+  "title": "Agir aksanli musteri — transkript bozuk ama temsilci dogru anladi",
+  "bucket": "ses_kalitesi",
+  "tags": [
+    "aksan"
+  ],
+  "duration_sec": 48.95,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Sıla. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 12.5,
+      "text": "Mamet Şahan, numara altı altı üç bir sıfır iki."
+    },
+    {
+      "idx": 3,
+      "speaker": "temsilci",
+      "start": 12.85,
+      "end": 15.65,
+      "text": "Teşekkürler Mehmet Bey, 663102 numaralı kaydınızı görüyorum."
+    },
+    {
+      "idx": 4,
+      "speaker": "musteri",
+      "start": 16.0,
+      "end": 18.8,
+      "text": "Fatora çok gelmiş bu ay, neden ola?"
+    },
+    {
+      "idx": 5,
+      "speaker": "temsilci",
+      "start": 19.15,
+      "end": 23.15,
+      "text": "Faturanızı inceliyorum. Geçen ay kotanız aşılmış, ek kullanım ücreti yansımış."
+    },
+    {
+      "idx": 6,
+      "speaker": "musteri",
+      "start": 23.5,
+      "end": 25.1,
+      "text": "Ben ne yapayım şimdi?"
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 25.45,
+      "end": 29.45,
+      "text": "Size iki seçenek sunayım: kotası daha yüksek bir pakete geçebiliriz,"
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 29.8,
+      "end": 34.6,
+      "text": "ya da kota bitince internetin durmasını sağlayan ayarı açabilirim, ek ücret çıkmaz."
+    },
+    {
+      "idx": 9,
+      "speaker": "musteri",
+      "start": 34.95,
+      "end": 36.15,
+      "text": "İkincisi iyi ola."
+    },
+    {
+      "idx": 10,
+      "speaker": "temsilci",
+      "start": 36.5,
+      "end": 40.1,
+      "text": "Ayarı açtım. Bundan sonra kotanız bitince ek ücret oluşmayacak."
+    },
+    {
+      "idx": 11,
+      "speaker": "temsilci",
+      "start": 40.45,
+      "end": 43.25,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 12,
+      "speaker": "musteri",
+      "start": 43.6,
+      "end": 44.8,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 13,
+      "speaker": "temsilci",
+      "start": 45.15,
+      "end": 47.95,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

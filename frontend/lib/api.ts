@@ -81,6 +81,8 @@ import type {
   SSOConfigSave,
   SSOSaveResult,
   EncryptionStatus,
+  CSATCorrelation,
+  CSATBand,
 } from "./types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -183,6 +185,13 @@ export const api = {
   ssoConfigSave: (body: SSOConfigSave) =>
     request<SSOSaveResult>("/enterprise/sso/config", { ...json(body), method: "PUT" }),
   encryptionStatus: () => request<EncryptionStatus>("/enterprise/encryption/status"),
+
+  // --- Gercek musteri anketi (CSAT) ---
+  csatCorrelation: () => request<CSATCorrelation>("/csat/correlation"),
+  csatDistribution: () => request<{ bantlar: CSATBand[] }>("/csat/distribution"),
+  csatWrite: (callId: number, puan: number, kaynak = "manuel", yorum = "") =>
+    request<{ call_id: number; actual_csat: number }>(`/csat/${callId}`,
+      json({ puan, kaynak, yorum })),
 
   // --- Auth ---
   login: async (email: string, password: string, tenantSlug = "demo") => {

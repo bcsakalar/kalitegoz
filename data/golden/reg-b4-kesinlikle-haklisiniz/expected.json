@@ -1,0 +1,24 @@
+{
+  "scores": {
+    "Açılış": 10,
+    "KVKK / Aydınlatma": 10,
+    "Kimlik Doğrulama": 10,
+    "Aktif Dinleme": 9,
+    "İhtiyaç Analizi": 9,
+    "Çözüm / Yönlendirme": 9,
+    "Yasaklı Kelime / Üslup": 10,
+    "Kapanış": 10,
+    "Script Uyumu": 10,
+    "Bilgi Doğruluğu": 9
+  },
+  "zeroed": false,
+  "zeroing_criterion": null,
+  "alerts": [],
+  "evidence_must_contain": {},
+  "must_not_penalize": [
+    "Yasaklı Kelime / Üslup"
+  ],
+  "notes": "'Kesinlikle haklisiniz' ve 'Kesin bir tarih veremiyorum' — ikisi de DOGRU, kibar ifadeler. Mevcut fuzzy eslesme bunlari 'kesin cozulur' yasak vaadi sanip cagriyi SIFIRLIYOR. Sifirlama YASAK, yasakli kelime alarmi YASAK.",
+  "scenario_id": "reg-b4-kesinlikle-haklisiniz",
+  "regression_for": "B4"
+}

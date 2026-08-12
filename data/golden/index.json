@@ -1,0 +1,401 @@
+{
+  "toplam": 50,
+  "kovalar": {
+    "regresyon": 10,
+    "yuksek": 8,
+    "orta": 8,
+    "dusuk": 8,
+    "sifirlayici": 6,
+    "kriz": 4,
+    "tuzak": 4,
+    "ses_kalitesi": 2
+  },
+  "regresyon_vakalari": {
+    "B1": "reg-b1-acilis-tam",
+    "B2": "reg-b2-kvkk-farkli-cumle",
+    "B3": "reg-b3-musteri-kesiyor",
+    "B4": "reg-b4-kesinlikle-haklisiniz",
+    "B5": "reg-b5-sifirlama-gerekceli",
+    "B6": "reg-b6-ikiz-b",
+    "B32": "reg-b32-kvkk-yok-sifirlanmali",
+    "B29": "reg-b29-konusmaci-bilinmiyor",
+    "B30": "reg-b30-uzun-cagri-orta-ihlal"
+  },
+  "sifirlanmasi_beklenen": [
+    "reg-b5-sifirlama-gerekceli",
+    "dusuk-04-kvkk-yok",
+    "dusuk-07-script-disi",
+    "sifir-01-hakaret",
+    "sifir-02-kvkk-anons-yok",
+    "sifir-03-kimlik-atlandi",
+    "sifir-04-yasak-vaat",
+    "sifir-05-agir-kufur",
+    "sifir-06-kritik-yanlis-bilgi",
+    "reg-b32-kvkk-yok-sifirlanmali",
+    "reg-b30-uzun-cagri-orta-ihlal"
+  ],
+  "kriterler": [
+    "Açılış",
+    "KVKK / Aydınlatma",
+    "Kimlik Doğrulama",
+    "Aktif Dinleme",
+    "İhtiyaç Analizi",
+    "Çözüm / Yönlendirme",
+    "Yasaklı Kelime / Üslup",
+    "Kapanış",
+    "Script Uyumu",
+    "Bilgi Doğruluğu"
+  ],
+  "senaryolar": [
+    {
+      "id": "reg-b1-acilis-tam",
+      "bucket": "regresyon",
+      "title": "B1: Acilis kriteri — kurum adi ve temsilci adi ilk cumlede var",
+      "zeroed": false,
+      "regression_for": "B1"
+    },
+    {
+      "id": "reg-b2-kvkk-farkli-cumle",
+      "bucket": "regresyon",
+      "title": "B2: KVKK anonsu YAPILDI ama standart kalibin disinda bir cumleyle",
+      "zeroed": false,
+      "regression_for": "B2"
+    },
+    {
+      "id": "reg-b3-musteri-kesiyor",
+      "bucket": "regresyon",
+      "title": "B3: Sozu MUSTERI kesiyor, temsilci hic kesmiyor",
+      "zeroed": false,
+      "regression_for": "B3"
+    },
+    {
+      "id": "reg-b4-kesinlikle-haklisiniz",
+      "bucket": "regresyon",
+      "title": "B4: 'Kesinlikle haklisiniz' — yasakli kelime DEGIL",
+      "zeroed": false,
+      "regression_for": "B4"
+    },
+    {
+      "id": "reg-b5-sifirlama-gerekceli",
+      "bucket": "regresyon",
+      "title": "B5: Gercek sifirlayici ihlal — gerekce ve kanit ZORUNLU",
+      "zeroed": true,
+      "regression_for": "B5"
+    },
+    {
+      "id": "reg-b6-ikiz-a",
+      "bucket": "regresyon",
+      "title": "B6: Ikiz senaryo A — B ile ayni akis, kucuk kelime farklari",
+      "zeroed": false,
+      "regression_for": "B6"
+    },
+    {
+      "id": "reg-b6-ikiz-b",
+      "bucket": "regresyon",
+      "title": "B6: Ikiz senaryo B — A ile ayni akis, kucuk kelime farklari",
+      "zeroed": false,
+      "regression_for": "B6"
+    },
+    {
+      "id": "yuksek-01-fatura-itiraz",
+      "bucket": "yuksek",
+      "title": "Fatura itirazi — eksiksiz cozum",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "yuksek-02-ariza-cozuldu",
+      "bucket": "yuksek",
+      "title": "Ariza — ilk temasta cozum",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "yuksek-03-iptal-kazanim",
+      "bucket": "yuksek",
+      "title": "Iptal talebi — ihtiyac analiziyle kazanim",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "yuksek-04-bilgi-talebi",
+      "bucket": "yuksek",
+      "title": "Bilgi talebi — dogru ve eksiksiz bilgi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "yuksek-05-tasinma",
+      "bucket": "yuksek",
+      "title": "Tasinma talebi — proaktif yonlendirme",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "yuksek-06-sikayet-empati",
+      "bucket": "yuksek",
+      "title": "Sikayet — guclu empati ve telafi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "yuksek-07-teknik-detay",
+      "bucket": "yuksek",
+      "title": "Teknik detay — anlasilir anlatim",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "yuksek-08-odeme-plani",
+      "bucket": "yuksek",
+      "title": "Odeme guclugu — cozum odakli",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "orta-01-kapanis-eksik",
+      "bucket": "orta",
+      "title": "Kapanis eksik — 'baska yardim?' sorulmadi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "orta-02-ihtiyac-analizi-zayif",
+      "bucket": "orta",
+      "title": "Ihtiyac analizi yapilmadan cozum onerildi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "orta-03-kimlik-gec",
+      "bucket": "orta",
+      "title": "Kimlik dogrulama cok gec yapildi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "orta-04-bilgi-eksik",
+      "bucket": "orta",
+      "title": "Dogru ama eksik bilgi verildi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "orta-05-monoton-uslup",
+      "bucket": "orta",
+      "title": "Islem dogru, uslup mekanik",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "orta-06-acilis-yarim",
+      "bucket": "orta",
+      "title": "Acilis: kurum adi var, temsilci adi YOK",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "orta-07-cozum-yonlendirme",
+      "bucket": "orta",
+      "title": "Cozum yerine baska birime yonlendirme",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "orta-08-tekrar-soru",
+      "bucket": "orta",
+      "title": "Musteri ayni seyi iki kez sormak zorunda kaldi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "dusuk-01-acilis-yok",
+      "bucket": "dusuk",
+      "title": "Acilis hic yapilmadi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "dusuk-02-empati-yok",
+      "bucket": "dusuk",
+      "title": "Magdur musteriye empatisiz yanit",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "dusuk-03-yanlis-bilgi",
+      "bucket": "dusuk",
+      "title": "Yanlis bilgi verildi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "dusuk-04-kvkk-yok",
+      "bucket": "dusuk",
+      "title": "KVKK anonsu yok (kritik kriter esikte)",
+      "zeroed": true,
+      "regression_for": null
+    },
+    {
+      "id": "dusuk-05-sozu-temsilci-kesiyor",
+      "bucket": "dusuk",
+      "title": "Temsilci musterinin sozunu surekli kesiyor",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "dusuk-06-cozumsuz-kapanis",
+      "bucket": "dusuk",
+      "title": "Cagri cozumsuz kapandi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "dusuk-07-script-disi",
+      "bucket": "dusuk",
+      "title": "Script tamamen atlandi",
+      "zeroed": true,
+      "regression_for": null
+    },
+    {
+      "id": "dusuk-08-gecistirme",
+      "bucket": "dusuk",
+      "title": "Musteri sorusu gecistirildi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "sifir-01-hakaret",
+      "bucket": "sifirlayici",
+      "title": "Temsilci musteriye hakaret etti",
+      "zeroed": true,
+      "regression_for": null
+    },
+    {
+      "id": "sifir-02-kvkk-anons-yok",
+      "bucket": "sifirlayici",
+      "title": "KVKK anonsu hic yapilmadi",
+      "zeroed": true,
+      "regression_for": null
+    },
+    {
+      "id": "sifir-03-kimlik-atlandi",
+      "bucket": "sifirlayici",
+      "title": "Kimlik dogrulama hic yapilmadan islem yapildi",
+      "zeroed": true,
+      "regression_for": null
+    },
+    {
+      "id": "sifir-04-yasak-vaat",
+      "bucket": "sifirlayici",
+      "title": "Gercek yasak vaat verildi",
+      "zeroed": true,
+      "regression_for": null
+    },
+    {
+      "id": "sifir-05-agir-kufur",
+      "bucket": "sifirlayici",
+      "title": "Temsilci kufretti",
+      "zeroed": true,
+      "regression_for": null
+    },
+    {
+      "id": "sifir-06-kritik-yanlis-bilgi",
+      "bucket": "sifirlayici",
+      "title": "Kimlik dogrulama sahte bilgiyle gecildi",
+      "zeroed": true,
+      "regression_for": null
+    },
+    {
+      "id": "kriz-01-avukat",
+      "bucket": "kriz",
+      "title": "Musteri avukat tehdidi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "kriz-02-hakem-heyeti",
+      "bucket": "kriz",
+      "title": "Tuketici hakem heyeti tehdidi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "kriz-03-iptal-tehdidi",
+      "bucket": "kriz",
+      "title": "Iptal tehdidi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "kriz-04-medya",
+      "bucket": "kriz",
+      "title": "Sosyal medyada tesir etme tehdidi",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "tuzak-01-kurum-adi-cumle-ortasinda",
+      "bucket": "tuzak",
+      "title": "Kurum adi cumlenin ORTASINDA geciyor",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "tuzak-02-musteri-anlamiyor",
+      "bucket": "tuzak",
+      "title": "Temsilci dogru bilgi veriyor, musteri anlamiyor",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "tuzak-03-musteri-kufrediyor",
+      "bucket": "tuzak",
+      "title": "Musteri kufrediyor, temsilci sakin kaliyor",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "tuzak-04-anons-parcali",
+      "bucket": "tuzak",
+      "title": "KVKK anonsu iki ayri replige bolunmus",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "ses-01-dusuk-kalite",
+      "bucket": "ses_kalitesi",
+      "title": "Dusuk ses kalitesi — anlasilmayan bolumler isaretli",
+      "zeroed": false,
+      "regression_for": null
+    },
+    {
+      "id": "reg-b32-kvkk-yok-sifirlanmali",
+      "bucket": "regresyon",
+      "title": "B32: Deterministik KVKK tespiti SIFIRLAMAYA baglanmali",
+      "zeroed": true,
+      "regression_for": "B32"
+    },
+    {
+      "id": "reg-b29-konusmaci-bilinmiyor",
+      "bucket": "regresyon",
+      "title": "B29: Konusmaci ayrimi yoksa uyum kriteri 'yetersiz kanit' olmali",
+      "zeroed": false,
+      "regression_for": "B29"
+    },
+    {
+      "id": "reg-b30-uzun-cagri-orta-ihlal",
+      "bucket": "regresyon",
+      "title": "B30: Uzun cagrida ihlal ORTADA — kirpma yuzunden kacirilmamali",
+      "zeroed": true,
+      "regression_for": "B30"
+    },
+    {
+      "id": "ses-02-agir-aksan",
+      "bucket": "ses_kalitesi",
+      "title": "Agir aksanli musteri — transkript bozuk ama temsilci dogru anladi",
+      "zeroed": false,
+      "regression_for": null
+    }
+  ]
+}

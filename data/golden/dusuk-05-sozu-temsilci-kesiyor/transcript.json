@@ -1,0 +1,88 @@
+{
+  "id": "dusuk-05-sozu-temsilci-kesiyor",
+  "title": "Temsilci musterinin sozunu surekli kesiyor",
+  "bucket": "dusuk",
+  "tags": [
+    "agir_eksik"
+  ],
+  "duration_sec": 21.15,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Doruk. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 10.1,
+      "text": "Serpil Uz, 447120."
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 10.45,
+      "end": 13.25,
+      "text": "Geçen ay bir kampanyaya girmiştim, o kampanya"
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 11.75,
+      "end": 12.95,
+      "text": "Kampanyanız iptal olmuş."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 13.3,
+      "end": 15.3,
+      "text": "Ama ben iptal etmedim, sadece"
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 13.7,
+      "end": 14.9,
+      "text": "Sistemde iptal görünüyor."
+    },
+    {
+      "idx": 7,
+      "speaker": "musteri",
+      "start": 15.25,
+      "end": 16.85,
+      "text": "Bir dakika, izah edeyim"
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 15.45,
+      "end": 17.05,
+      "text": "Gerek yok, kayıt böyle."
+    },
+    {
+      "idx": 9,
+      "speaker": "musteri",
+      "start": 17.4,
+      "end": 18.6,
+      "text": "Beni dinlemiyorsunuz."
+    },
+    {
+      "idx": 10,
+      "speaker": "temsilci",
+      "start": 18.95,
+      "end": 20.15,
+      "text": "Dinliyorum efendim."
+    }
+  ]
+}

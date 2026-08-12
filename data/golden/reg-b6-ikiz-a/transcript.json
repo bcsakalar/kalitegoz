@@ -1,0 +1,109 @@
+{
+  "id": "reg-b6-ikiz-a",
+  "title": "B6: Ikiz senaryo A — B ile ayni akis, kucuk kelime farklari",
+  "bucket": "regresyon",
+  "tags": [
+    "tekrarlanabilirlik"
+  ],
+  "duration_sec": 44.95,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.0,
+      "text": "Netik İletişim'e hoş geldiniz, ben Deniz. Size nasıl yardımcı olabilirim?"
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 5.35,
+      "end": 9.35,
+      "text": "Görüşmemiz kayıt altına alınmaktadır ve kişisel verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 2,
+      "speaker": "temsilci",
+      "start": 9.7,
+      "end": 12.5,
+      "text": "Öncelikle adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 12.85,
+      "end": 14.85,
+      "text": "Ayşe Kaya, müşteri numaram 448120."
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 15.2,
+      "end": 17.6,
+      "text": "Teşekkür ederim Ayşe Hanım, kaydınızı görüyorum."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 17.95,
+      "end": 20.35,
+      "text": "Dün teknisyen randevum vardı, kimse gelmedi."
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 20.7,
+      "end": 23.5,
+      "text": "Bunun için özür dilerim, hemen kaydınızı inceliyorum."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 23.85,
+      "end": 28.25,
+      "text": "Randevunuz saha ekibi tarafından hatalı kapatılmış. Yarın sabah için yeniden açıyorum."
+    },
+    {
+      "idx": 8,
+      "speaker": "musteri",
+      "start": 28.6,
+      "end": 30.2,
+      "text": "Yarın kesin gelirler mi?"
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 30.55,
+      "end": 34.55,
+      "text": "Kaydı öncelikli statüde açtım, teknisyen yola çıkmadan önce sizi arayacak."
+    },
+    {
+      "idx": 10,
+      "speaker": "musteri",
+      "start": 34.9,
+      "end": 36.1,
+      "text": "Peki, tamam."
+    },
+    {
+      "idx": 11,
+      "speaker": "temsilci",
+      "start": 36.45,
+      "end": 39.25,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 12,
+      "speaker": "musteri",
+      "start": 39.6,
+      "end": 40.8,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 13,
+      "speaker": "temsilci",
+      "start": 41.15,
+      "end": 43.95,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

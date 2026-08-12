@@ -1,0 +1,131 @@
+{
+  "id": "tuzak-04-anons-parcali",
+  "title": "KVKK anonsu iki ayri replige bolunmus",
+  "bucket": "tuzak",
+  "tags": [
+    "kvkk",
+    "tuzak"
+  ],
+  "duration_sec": 43.6,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 2.6,
+      "text": "Netik İletişim, ben Yiğit."
+    },
+    {
+      "idx": 1,
+      "speaker": "musteri",
+      "start": 2.95,
+      "end": 4.15,
+      "text": "İyi günler."
+    },
+    {
+      "idx": 2,
+      "speaker": "temsilci",
+      "start": 4.5,
+      "end": 6.9,
+      "text": "Öncelikle bilgilendirmem gereken bir konu var."
+    },
+    {
+      "idx": 3,
+      "speaker": "temsilci",
+      "start": 7.25,
+      "end": 9.65,
+      "text": "Bu görüşme hizmet kalitesi amacıyla kaydedilmektedir."
+    },
+    {
+      "idx": 4,
+      "speaker": "musteri",
+      "start": 10.0,
+      "end": 11.2,
+      "text": "Tamam."
+    },
+    {
+      "idx": 5,
+      "speaker": "temsilci",
+      "start": 11.55,
+      "end": 14.75,
+      "text": "Ayrıca paylaşacağınız kişisel veriler mevzuata uygun şekilde işlenecektir."
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 15.1,
+      "end": 17.5,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 7,
+      "speaker": "musteri",
+      "start": 17.85,
+      "end": 19.05,
+      "text": "Pelin Acar, 552018."
+    },
+    {
+      "idx": 8,
+      "speaker": "musteri",
+      "start": 19.4,
+      "end": 21.8,
+      "text": "Hattımı yurt dışı kullanıma açtırmak istiyorum."
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 22.15,
+      "end": 24.55,
+      "text": "Uluslararası dolaşımı açıyorum. Hangi ülkeye gideceksiniz?"
+    },
+    {
+      "idx": 10,
+      "speaker": "musteri",
+      "start": 24.9,
+      "end": 26.1,
+      "text": "İtalya."
+    },
+    {
+      "idx": 11,
+      "speaker": "temsilci",
+      "start": 26.45,
+      "end": 30.85,
+      "text": "İtalya için 7 günlük 5 GB paket 350 TL, tanımlayayım mı?"
+    },
+    {
+      "idx": 12,
+      "speaker": "musteri",
+      "start": 31.2,
+      "end": 32.4,
+      "text": "Tanımlayın."
+    },
+    {
+      "idx": 13,
+      "speaker": "temsilci",
+      "start": 32.75,
+      "end": 34.75,
+      "text": "Tanımladım, çıkış gününüzde otomatik başlayacak."
+    },
+    {
+      "idx": 14,
+      "speaker": "temsilci",
+      "start": 35.1,
+      "end": 37.9,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 15,
+      "speaker": "musteri",
+      "start": 38.25,
+      "end": 39.45,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 16,
+      "speaker": "temsilci",
+      "start": 39.8,
+      "end": 42.6,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

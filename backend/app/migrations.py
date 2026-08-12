@@ -227,6 +227,24 @@ _STATEMENTS: list[tuple[str, str]] = [
     ("ix_calibration_sessions_scheduled_at",
      "CREATE INDEX IF NOT EXISTS ix_calibration_sessions_scheduled_at "
      "ON calibration_sessions (scheduled_at)"),
+
+    # --- Gercek musteri anketi (CSAT) — piyasa analizi 5.1 ---
+    ("calls.actual_csat",
+     "ALTER TABLE calls ADD COLUMN IF NOT EXISTS actual_csat DOUBLE PRECISION"),
+    ("calls.csat_source",
+     "ALTER TABLE calls ADD COLUMN IF NOT EXISTS csat_source VARCHAR(16)"),
+    ("calls.csat_comment",
+     "ALTER TABLE calls ADD COLUMN IF NOT EXISTS csat_comment TEXT"),
+    ("calls.csat_at",
+     "ALTER TABLE calls ADD COLUMN IF NOT EXISTS csat_at TIMESTAMP"),
+    ("ix_calls_actual_csat",
+     "CREATE INDEX IF NOT EXISTS ix_calls_actual_csat ON calls (actual_csat)"),
+
+    # --- Kurulumla gelen ornek cagri bayragi ---
+    ("calls.is_demo",
+     "ALTER TABLE calls ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT FALSE"),
+    ("ix_calls_is_demo",
+     "CREATE INDEX IF NOT EXISTS ix_calls_is_demo ON calls (is_demo)"),
 ]
 
 

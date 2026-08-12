@@ -11,7 +11,7 @@ Bu modul katmanlari sirayla kosturur, sonuclari DB'ye yazar ve alarm uretir.
 
 Onceki surum tek dev prompt'ta 10 kriteri birden degerlendiriyordu; FAZ 1 taban
 cizgisi olctu: kappa 0.32, kanit dogrulanabilirlik %56, sifirlayici yanlis
-pozitif %38.5 (docs/v2/FAZ-1-RAPOR.md). O implementasyon kaldirildi.
+pozitif %38.5 (docs/internal/FAZ-1-RAPOR.md). O implementasyon kaldirildi.
 """
 
 import logging
@@ -184,7 +184,7 @@ def run_scoring(db: Session, call: Call) -> ScoringOutcome:
 #   KATMAN C — sunucu dogrulamasi + puan aritmetigi
 #        v  alinti gercekten transkriptte var mi? toplam KODDA hesaplanir
 #
-# Gerekce ve olculen taban cizgisi: docs/v2/FAZ-1-RAPOR.md
+# Gerekce ve olculen taban cizgisi: docs/internal/FAZ-1-RAPOR.md
 # =========================================================================
 
 def _brand_names(tenant: Tenant | None) -> tuple[str, ...]:

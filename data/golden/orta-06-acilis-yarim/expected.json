@@ -1,0 +1,22 @@
+{
+  "scores": {
+    "Açılış": 6,
+    "KVKK / Aydınlatma": 10,
+    "Kimlik Doğrulama": 10,
+    "Aktif Dinleme": 8,
+    "İhtiyaç Analizi": 8,
+    "Çözüm / Yönlendirme": 8,
+    "Yasaklı Kelime / Üslup": 10,
+    "Kapanış": 10,
+    "Script Uyumu": 9,
+    "Bilgi Doğruluğu": 8
+  },
+  "zeroed": false,
+  "zeroing_criterion": null,
+  "alerts": [],
+  "evidence_must_contain": {},
+  "must_not_penalize": [],
+  "notes": "Kurum adi VAR, temsilci adi YOK. Acilis KISMEN karsilandi: 5-7 bandi. 0-2 vermek de 10 vermek de hatali.",
+  "scenario_id": "orta-06-acilis-yarim",
+  "regression_for": null
+}

@@ -1,0 +1,22 @@
+{
+  "scores": {
+    "Açılış": 5,
+    "KVKK / Aydınlatma": 5,
+    "Kimlik Doğrulama": 5,
+    "Aktif Dinleme": 5,
+    "İhtiyaç Analizi": 5,
+    "Çözüm / Yönlendirme": 5,
+    "Yasaklı Kelime / Üslup": 5,
+    "Kapanış": 5,
+    "Script Uyumu": 5,
+    "Bilgi Doğruluğu": 5
+  },
+  "zeroed": false,
+  "zeroing_criterion": null,
+  "alerts": [],
+  "evidence_must_contain": {},
+  "must_not_penalize": [],
+  "notes": "Mono kayit + HF_TOKEN yok -> tum segmentler 'bilinmeyen'. KVKK anonsu metinde VAR ama kimin soyledigi BILINMIYOR. Sistem 'ihlal' DIYEMEZ (yanlis pozitif) ama 'tam puan' da VEREMEZ. Dogru cevap: yetersiz kanit -> insan kuyrugu. SIFIRLAMA KESINLIKLE YASAK.",
+  "scenario_id": "reg-b29-konusmaci-bilinmiyor",
+  "regression_for": "B29"
+}

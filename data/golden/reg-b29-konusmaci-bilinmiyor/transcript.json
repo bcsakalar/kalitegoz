@@ -1,0 +1,83 @@
+{
+  "id": "reg-b29-konusmaci-bilinmiyor",
+  "title": "B29: Konusmaci ayrimi yoksa uyum kriteri 'yetersiz kanit' olmali",
+  "bucket": "regresyon",
+  "tags": [
+    "diarizasyon",
+    "mono",
+    "yetersiz_kanit"
+  ],
+  "duration_sec": 28.75,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "bilinmeyen",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Tolga. Görüşmemiz kayıt altına alınmaktadır, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "bilinmeyen",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "bilinmeyen",
+      "start": 8.9,
+      "end": 10.1,
+      "text": "Sinan Er, 336720."
+    },
+    {
+      "idx": 3,
+      "speaker": "bilinmeyen",
+      "start": 10.45,
+      "end": 12.85,
+      "text": "Teşekkürler Sinan Bey. Nasıl yardımcı olabilirim?"
+    },
+    {
+      "idx": 4,
+      "speaker": "bilinmeyen",
+      "start": 13.2,
+      "end": 14.8,
+      "text": "İnternetim iki gündür yavaş."
+    },
+    {
+      "idx": 5,
+      "speaker": "bilinmeyen",
+      "start": 15.15,
+      "end": 18.35,
+      "text": "Hattınızı test ediyorum, senkron hızınız düşmüş. Profili yeniliyorum."
+    },
+    {
+      "idx": 6,
+      "speaker": "bilinmeyen",
+      "start": 18.7,
+      "end": 19.9,
+      "text": "Şimdi nasıl?"
+    },
+    {
+      "idx": 7,
+      "speaker": "bilinmeyen",
+      "start": 20.25,
+      "end": 23.05,
+      "text": "48 Mbps görüyorum, önceden 6 Mbps idi."
+    },
+    {
+      "idx": 8,
+      "speaker": "bilinmeyen",
+      "start": 23.4,
+      "end": 26.2,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 9,
+      "speaker": "bilinmeyen",
+      "start": 26.55,
+      "end": 27.75,
+      "text": "Yok, teşekkürler."
+    }
+  ]
+}

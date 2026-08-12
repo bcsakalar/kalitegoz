@@ -8,7 +8,7 @@ MODEL := $(if $(MODEL),$(MODEL),qwen2.5:7b)
 EMBED := $(shell grep -E '^EMBED_MODEL=' .env 2>/dev/null | cut -d= -f2)
 EMBED := $(if $(EMBED),$(EMBED),nomic-embed-text)
 
-.PHONY: help demo up down clean logs test test-scripts seed-history pull-model wait-api demo-data rebuild eval eval-build eval-baseline demo-reset tr-audit perf
+.PHONY: help demo up down clean logs test test-scripts seed-history pull-model wait-api demo-data rebuild eval eval-build eval-baseline demo-reset tr-audit ui-audit audit perf
 
 help:
 	@echo "KaliteGoz komutlari:"
@@ -54,8 +54,8 @@ eval-build:
 eval: eval-build
 	@docker compose cp scripts/golden/evaluate.py api:/tmp/evaluate.py
 	@docker compose exec -T api python /tmp/evaluate.py $(EVAL_ARGS)
-	@mkdir -p docs/v2/eval && cp -f data/eval/*.json docs/v2/eval/ 2>/dev/null || true
-	@echo "Rapor: docs/v2/eval/"
+	@mkdir -p docs/eval && cp -f data/eval/*.json docs/eval/ 2>/dev/null || true
+	@echo "Rapor: docs/eval/"
 
 eval-baseline:
 	@$(MAKE) eval EVAL_ARGS="--no-gate"
@@ -70,6 +70,13 @@ demo-reset:
 
 tr-audit:
 	python scripts/tr_audit.py
+
+# Keskin kose kurali: border-radius her yerde 0, tek tokendan yonetilir.
+ui-audit:
+	python scripts/ui_audit.py
+
+# Tum statik denetimler tek komutta (CI bunu kosar)
+audit: tr-audit ui-audit
 
 perf:
 	@docker compose cp scripts/perf_check.py api:/tmp/perf_check.py

@@ -69,7 +69,7 @@ export function Skeleton({ rows = 3, className = "" }: { rows?: number; classNam
   return (
     <div className={`space-y-2 ${className}`} aria-hidden="true">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="h-9 animate-pulse rounded-md bg-[var(--surface-2)]" />
+        <div key={i} className="h-9 animate-pulse bg-[var(--surface-2)]" />
       ))}
     </div>
   );

@@ -736,3 +736,24 @@ export interface EncryptionStatus {
   mesaj: string;
   uzunluk_yeterli: boolean;
 }
+
+// --- Gercek musteri anketi (CSAT) — piyasa analizi 5.1 ---
+
+export interface CSATCorrelation {
+  n: number;
+  yeterli_veri: boolean;
+  asgari_ornekleme: number;
+  /** null = yayimlanmiyor (az orneklem) veya olculemez (sabit veri) */
+  korelasyon: number | null;
+  yorum: string;
+  tahmin_mae: number | null;
+  tahmin_n: number;
+  mesaj: string;
+  uyari?: string;
+}
+
+export interface CSATBand {
+  bant: string;
+  n: number;
+  ortalama_csat: number | null;
+}

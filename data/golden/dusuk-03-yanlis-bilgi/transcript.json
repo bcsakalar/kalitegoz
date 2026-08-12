@@ -1,0 +1,88 @@
+{
+  "id": "dusuk-03-yanlis-bilgi",
+  "title": "Yanlis bilgi verildi",
+  "bucket": "dusuk",
+  "tags": [
+    "agir_eksik"
+  ],
+  "duration_sec": 28.7,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Yasin. Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 10.1,
+      "text": "Aslı Tan, 118872."
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 10.45,
+      "end": 12.05,
+      "text": "Cayma hakkım kaç gün?"
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 12.4,
+      "end": 14.0,
+      "text": "Cayma hakkı 7 gündür."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 14.35,
+      "end": 16.75,
+      "text": "Emin misiniz? Bana 14 gün demişlerdi."
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 17.1,
+      "end": 18.3,
+      "text": "Hayır, 7 gün."
+    },
+    {
+      "idx": 7,
+      "speaker": "musteri",
+      "start": 18.65,
+      "end": 19.85,
+      "text": "Peki."
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 20.2,
+      "end": 23.0,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 9,
+      "speaker": "musteri",
+      "start": 23.35,
+      "end": 24.55,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 10,
+      "speaker": "temsilci",
+      "start": 24.9,
+      "end": 27.7,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

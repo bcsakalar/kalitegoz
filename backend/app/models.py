@@ -329,6 +329,22 @@ class Call(Base):
         return self.qa_state == QAState.final
     is_crisis: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     predicted_csat: Mapped[float | None] = mapped_column(Float, nullable=True)  # 1-5 LLM tahmini
+
+    # --- Gercek musteri anketi (CSAT) ---
+    #
+    # `predicted_csat` bir TAHMINDIR ve tek basina hicbir sey kanitlamaz: onu
+    # ureten model ile onu degerlendiren rubrik ayni tarafin urunu. Urunun
+    # "kaliteli cagri" tanimini DISARIDAN dogrulayan tek veri, musterinin
+    # kendi verdigi puandir.
+    #
+    # Bu alanlar dolduruldugunda kalite puani <-> gercek CSAT korelasyonu
+    # olculebilir hale gelir. Korelasyon zayif cikarsa sorgulanmasi gereken
+    # sey model degil, RUBRIGIN KENDISIDIR — ve dogrusu budur.
+    actual_csat: Mapped[float | None] = mapped_column(Float, nullable=True, index=True)
+    # anket | manuel | ice_aktarma — puanin nereden geldigi denetlenebilsin
+    csat_source: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    csat_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    csat_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     risky_moments: Mapped[list] = mapped_column(JSON, default=list)
     metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
@@ -355,6 +371,13 @@ class Call(Base):
     coaching: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Manuel etiketleme + "altin/ornek cagri" (egitim kutuphanesi)
     is_golden: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    # Kurulumla birlikte gelen ORNEK cagri. `is_golden`dan AYRI bir kavram:
+    # is_golden = kalite ekibinin "bu iyi ornek" diye isaretledigi gercek cagri,
+    # is_demo   = urunu denemek icin uretilmis sentetik cagri.
+    # Ikisi karistirilirsa demo verisi egitim kutuphanesine sizar.
+    # `make eval` zaten ayri bir kiracida calisir; bu bayrak demo verisini
+    # gercek trafikten ayirt etmeyi ve tek komutla temizlemeyi saglar.
+    is_demo: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     tags: Mapped[list] = mapped_column(JSON, default=list)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Cagri ozeti/transkript embedding'i (JSON) — semantik "benzer cagri" aramasi icin

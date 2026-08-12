@@ -61,6 +61,10 @@ services:
     volumes:
       - ./data:/data
       - models:/models
+      # Sifreleme ana anahtari: ORTAM DEGISKENI DEGIL, salt-okunur DOSYA.
+      # Ortam degiskenleri `docker inspect` ve /proc/<pid>/environ uzerinden
+      # gorunur; dosya izinlerle korunur. scripts/generate-secrets.sh uretir.
+      - ./secrets:/run/secrets:ro
     extra_hosts:
       # PC'de (host) native calisan Ollama'ya erisim (LLM/embedding/vision).
       - "host.docker.internal:host-gateway"
@@ -92,6 +96,10 @@ services:
     volumes:
       - ./data:/data
       - models:/models
+      # Sifreleme ana anahtari: ORTAM DEGISKENI DEGIL, salt-okunur DOSYA.
+      # Ortam degiskenleri `docker inspect` ve /proc/<pid>/environ uzerinden
+      # gorunur; dosya izinlerle korunur. scripts/generate-secrets.sh uretir.
+      - ./secrets:/run/secrets:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -115,6 +123,7 @@ services:
     env_file: .env
     volumes:
       - ./data:/data
+      - ./secrets:/run/secrets:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -133,6 +142,7 @@ services:
     env_file: .env
     volumes:
       - ./data:/data
+      - ./secrets:/run/secrets:ro
     depends_on:
       api:
         condition: service_healthy

@@ -32,7 +32,7 @@ export default function DistBars({
             <span className="w-24 shrink-0 text-right text-ink2">{item.label}</span>
             <div className="flex flex-1 items-center gap-2 border-l border-baseline pl-px">
               <div
-                className="h-4 rounded-r bg-series"
+                className="h-4 bg-series"
                 style={{ width: `${(item.value / max) * 100}%`, minWidth: 2 }}
               />
               <span className="font-semibold tabular-nums">{item.value}</span>

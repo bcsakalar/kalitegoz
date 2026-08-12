@@ -98,8 +98,8 @@ export default function LoginPage() {
             {brand?.logo_data_url ? (
               <img src={brand.logo_data_url} alt="logo" className="h-10 max-w-48 object-contain" />
             ) : (
-              <span aria-hidden className="grid h-10 w-10 place-items-center rounded-xl text-xl text-white"
-                style={{ background: brand?.brand_color ?? "var(--series)" }}>
+              <span aria-hidden className="grid h-10 w-10 place-items-center text-xl text-white"
+                style={{ background: brand?.brand_color ?? "var(--series-1)" }}>
                 {orgName.slice(0, 1)}
               </span>
             )}
@@ -195,7 +195,8 @@ export default function LoginPage() {
             </summary>
             <div className="grid gap-2 border-t border-hairline p-4 sm:grid-cols-2">
               {DEMO_ROLES.map((r) => (
-                <button key={r.role} onClick={() => demoLogin(r.role)} disabled={!!busy}
+                <button key={r.role} data-demo-role={r.role}
+                  onClick={() => demoLogin(r.role)} disabled={!!busy}
                   className="card flex items-start gap-3 p-3 text-left transition hover:border-series disabled:opacity-50">
                   <span className="text-xl" aria-hidden>{r.icon}</span>
                   <span className="min-w-0">
@@ -205,7 +206,7 @@ export default function LoginPage() {
                 </button>
               ))}
             </div>
-            <p className="px-4 pb-3 text-center text-xs text-muted">{t("login.demoNote")} <code>demo1234</code></p>
+            <p className="px-4 pb-3 text-center text-xs text-muted">{t("login.demoNote")}</p>
           </details>
         )}
       </div>
@@ -231,10 +232,10 @@ function ThemeToggle() {
     { v: "system", icon: "🖥️", key: "common.system" },
   ];
   return (
-    <div className="flex gap-0.5 rounded-lg bg-[var(--surface-2)] p-1">
+    <div className="flex gap-0.5 bg-[var(--surface-2)] p-1">
       {opts.map((o) => (
         <button key={o.v} onClick={() => setTheme(o.v)} title={t(o.key)} aria-pressed={theme === o.v}
-          className={`rounded-md px-2 py-1 text-xs ${theme === o.v ? "bg-[var(--surface)] shadow-sm" : "opacity-60"}`}>
+          className={` px-2 py-1 text-xs ${theme === o.v ? "bg-[var(--surface)] shadow-sm" : "opacity-60"}`}>
           <span aria-hidden>{o.icon}</span>
         </button>
       ))}
@@ -245,10 +246,10 @@ function ThemeToggle() {
 function LangToggle() {
   const { lang, setLang } = useI18n();
   return (
-    <div className="flex gap-0.5 rounded-lg bg-[var(--surface-2)] p-1">
+    <div className="flex gap-0.5 bg-[var(--surface-2)] p-1">
       {LANGS.map((l) => (
         <button key={l.code} onClick={() => setLang(l.code)} title={l.label} aria-pressed={lang === l.code}
-          className={`rounded-md px-2 py-1 text-xs font-semibold ${lang === l.code ? "bg-[var(--surface)] shadow-sm" : "opacity-60"}`}>
+          className={` px-2 py-1 text-xs font-semibold ${lang === l.code ? "bg-[var(--surface)] shadow-sm" : "opacity-60"}`}>
           {l.flag} {l.code.toUpperCase()}
         </button>
       ))}

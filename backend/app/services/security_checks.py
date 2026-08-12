@@ -54,11 +54,17 @@ def _diskte_sifreleme() -> Kontrol:
         anahtar="encryption_at_rest", baslik="Diskte şifreleme", kritik=True,
         durum="ok" if ok else "kapali", kanit=mesaj,
         nasil_acilir=(
+            # S12'den sonra tercih edilen yol DOSYA. Ortam degiskeni hala
+            # calisiyor ama `docker inspect` ve /proc/<pid>/environ uzerinden
+            # sizdigi icin ikinci sirada oneriliyor.
             "" if ok else
-            f"En az 32 karakterlik bir anahtarı `{crypto.ENV_KEY}` ortam "
-            "değişkeni olarak tanımlayın. Anahtar `.env` dosyasında DEĞİL, "
-            "ayrı bir secret kaynağında tutulmalıdır (Docker secret, systemd "
-            "EnvironmentFile veya KMS)."
+            f"En az 32 karakterlik bir anahtar üretip bir dosyaya yazın "
+            f"(`openssl rand -base64 48 > kg_master_key`) ve dosya yolunu "
+            f"`{crypto.KEY_FILE_ENV}` ile gösterin. Docker/K8s secret olarak "
+            f"mount edilmesi önerilir. Küçük kurulumlarda `{crypto.ENV_KEY}` "
+            "ortam değişkeni de kullanılabilir; anahtar `.env` dosyasında "
+            "DEĞİL, ayrı bir secret kaynağında tutulmalıdır. Kesintisiz "
+            "rotasyon ve KMS/Vault entegrasyonu: docs/KVKK-UYUM.md §3.1–3.2."
         ),
     )
 
@@ -69,10 +75,14 @@ def _sso() -> Kontrol:
         anahtar="sso", baslik="Tek oturum açma (SSO)", kritik=True,
         durum=durum, kanit=mesaj, detay=detay,
         nasil_acilir=(
+            # S12: artik yonetim ekranindan yapilandirilabiliyor; once o
+            # soylenmeli, ortam degiskeni ikinci secenek.
             "" if durum == "ok" else
-            "OIDC sağlayıcınızın discovery adresini `OIDC_ISSUER`, istemci "
-            "bilgilerini `OIDC_CLIENT_ID` / `OIDC_CLIENT_SECRET` ile tanımlayın. "
-            "Keycloak ile yerel test edilebilir."
+            "Yönetim → Kurumsal Kimlik ekranından OIDC issuer, istemci kimliği "
+            "ve istemci sırrını girin; kaydetmeden önce sağlayıcı doğrulanır. "
+            "Alternatif olarak `OIDC_ISSUER` / `OIDC_CLIENT_ID` / "
+            "`OIDC_CLIENT_SECRET` ortam değişkenleri de kullanılabilir "
+            "(panel ayarı ortam değişkenini ezer). Keycloak ile yerel test edilebilir."
         ),
     )
 

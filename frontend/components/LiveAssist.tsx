@@ -6,7 +6,7 @@ import { useT } from "@/components/I18nProvider";
 import type { AssistSuggestion } from "@/lib/types";
 
 const SEV_COLOR: Record<string, string> = {
-  kritik: "var(--status-critical)", uyari: "var(--status-warn)", bilgi: "var(--series-1)",
+  kritik: "var(--status-critical)", uyari: "var(--status-warning)", bilgi: "var(--series-1)",
 };
 
 /* Web Speech API tarayici tipleri (TS'de standart degil) */
@@ -84,7 +84,7 @@ export default function LiveAssist() {
 
   if (!supported) {
     return (
-      <div className="rounded-lg bg-[var(--status-warn)]/10 p-3 text-sm text-ink2">
+      <div className="bg-[var(--status-warning)]/10 p-3 text-sm text-ink2">
         Tarayıcınız canlı ses tanımayı (Web Speech API) desteklemiyor. Chrome/Edge deneyin
         veya yukarıdaki metin kutusunu kullanın.
       </div>
@@ -101,15 +101,15 @@ export default function LiveAssist() {
         )}
         {listening && (
           <span className="flex items-center gap-1 text-xs text-muted">
-            <span className={`h-2 w-2 rounded-full ${connected ? "bg-[var(--status-ok)] animate-pulse" : "bg-[var(--muted)]"}`} />
+            <span className={`h-2 w-2 ${connected ? "bg-[var(--status-good)] animate-pulse" : "bg-[var(--muted)]"}`} />
             {connected ? t("assist.listening") : t("assist.connecting")}
           </span>
         )}
       </div>
-      {text && <p className="rounded-lg bg-grid/40 p-2 text-xs text-ink2">{text}</p>}
+      {text && <p className="bg-grid/40 p-2 text-xs text-ink2">{text}</p>}
       <div className="space-y-2">
         {suggestions.map((s, i) => (
-          <div key={i} className="rounded-lg bg-grid/40 p-2 text-sm" style={{ borderLeft: `3px solid ${SEV_COLOR[s.severity] ?? "var(--muted)"}` }}>
+          <div key={i} className="bg-grid/40 p-2 text-sm" style={{ borderLeft: `3px solid ${SEV_COLOR[s.severity] ?? "var(--muted)"}` }}>
             <div className="flex items-center gap-2 text-[10px] uppercase text-muted">
               <span style={{ color: SEV_COLOR[s.severity] }}>{t(`sev.${s.severity}`)}</span>
               <span>{t(`kind.${s.kind}`)}</span>

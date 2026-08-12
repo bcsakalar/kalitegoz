@@ -8,7 +8,7 @@ import LiveAssist from "@/components/LiveAssist";
 import type { AssistSuggestion, VisionStatus, VisionResult } from "@/lib/types";
 
 const SEV_COLOR: Record<string, string> = {
-  kritik: "var(--status-critical)", uyari: "var(--status-warn)", bilgi: "var(--series-1)",
+  kritik: "var(--status-critical)", uyari: "var(--status-warning)", bilgi: "var(--series-1)",
 };
 
 export default function AssistPage() {
@@ -56,7 +56,7 @@ export default function AssistPage() {
           </div>
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5}
             placeholder={t("assist.placeholder")}
-            className="w-full rounded-lg border border-hairline bg-surface2 p-2 text-sm" />
+            className="w-full border border-hairline bg-surface2 p-2 text-sm" />
           <button className="btn btn-primary" onClick={analyze} disabled={busy || !text.trim()}>
             {busy ? "…" : t("assist.analyze")}
           </button>
@@ -68,9 +68,9 @@ export default function AssistPage() {
           {suggestions && (
             <div className="space-y-2">
               {suggestions.length === 0 ? (
-                <p className="rounded-lg bg-[var(--status-ok)]/10 p-2 text-sm text-[var(--status-ok)]">✓ {t("assist.noSuggestions")}</p>
+                <p className="bg-[var(--status-good)]/10 p-2 text-sm text-[var(--status-good)]">✓ {t("assist.noSuggestions")}</p>
               ) : suggestions.map((s, i) => (
-                <div key={i} className="rounded-lg bg-grid/40 p-2 text-sm" style={{ borderLeft: `3px solid ${SEV_COLOR[s.severity] ?? "var(--muted)"}` }}>
+                <div key={i} className="bg-grid/40 p-2 text-sm" style={{ borderLeft: `3px solid ${SEV_COLOR[s.severity] ?? "var(--muted)"}` }}>
                   <div className="flex items-center gap-2 text-[10px] uppercase text-muted">
                     <span style={{ color: SEV_COLOR[s.severity] }}>{t(`sev.${s.severity}`)}</span>
                     <span>{t(`kind.${s.kind}`)}</span>
@@ -87,7 +87,7 @@ export default function AssistPage() {
         <div className="card space-y-3 p-4">
           <h2 className="text-sm font-semibold text-ink2">🖼 {t("assist.visionTitle")}</h2>
           {vstatus && !vstatus.enabled ? (
-            <p className="rounded-lg bg-[var(--status-warn)]/10 p-3 text-sm text-ink2">{t("assist.visionDisabled")}</p>
+            <p className="bg-[var(--status-warning)]/10 p-3 text-sm text-ink2">{t("assist.visionDisabled")}</p>
           ) : (
             <>
               <div className="text-xs text-muted">
@@ -107,7 +107,7 @@ export default function AssistPage() {
                   boylece hem Turkce olur hem klavyeyle erisilebilir kalir. */}
               <label
                 htmlFor="kg-vision-file"
-                className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-6 text-center transition-colors hover:border-[var(--series-1)] focus-within:ring-2 focus-within:ring-[var(--series-1)]"
+                className="flex cursor-pointer flex-col items-center gap-1 border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-6 text-center transition-colors hover:border-[var(--series-1)] focus-within:ring-2 focus-within:ring-[var(--series-1)]"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault();
@@ -138,7 +138,7 @@ export default function AssistPage() {
               {vbusy && <p className="text-sm text-muted">{t("assist.visionAnalyzing")}</p>}
               {verr && <p className="text-sm text-[var(--status-critical)]">{verr}</p>}
               {vresult && (
-                <div className="space-y-2 rounded-lg bg-grid/40 p-3 text-sm">
+                <div className="space-y-2 bg-grid/40 p-3 text-sm">
                   <div className="flex flex-wrap gap-2">
                     <span className="badge badge-neutral">{vresult.belge_turu}</span>
                     <span className={`badge ${vresult.kvkk_riski === "yuksek" ? "badge-critical" : vresult.kvkk_riski === "orta" ? "badge-warn" : "badge-neutral"}`}>

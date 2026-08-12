@@ -9,8 +9,8 @@ const AUTO_DISMISS_MS = 8000;
 
 const SEVERITY_COLOR: Record<string, string> = {
   yuksek: "var(--status-critical)",
-  orta: "var(--status-warn)",
-  dusuk: "var(--status-ok)",
+  orta: "var(--status-warning)",
+  dusuk: "var(--status-good)",
 };
 
 /** Canli alarm bildirimi. WebSocket'ten alarm geldiginde sag altta belirir. */
@@ -26,7 +26,7 @@ export default function AlertToast() {
 
   if (!incoming) return null;
 
-  const color = SEVERITY_COLOR[incoming.severity] ?? "var(--status-warn)";
+  const color = SEVERITY_COLOR[incoming.severity] ?? "var(--status-warning)";
 
   return (
     <div

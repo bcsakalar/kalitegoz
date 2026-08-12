@@ -39,7 +39,7 @@ function KontrolSatiri({ k }: { k: SecurityCheck }) {
     <li className="border-b border-[var(--border)] py-3 last:border-0">
       <div className="flex items-start gap-3">
         <span
-          className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
+          className="mt-1.5 h-2.5 w-2.5 shrink-0"
           style={{ background: renk }}
           aria-hidden="true"
         />
@@ -50,7 +50,7 @@ function KontrolSatiri({ k }: { k: SecurityCheck }) {
               {DURUM_ETIKET[k.durum] ?? k.durum}
             </span>
             {k.kritik && k.durum !== "ok" && (
-              <span className="rounded bg-[var(--surface-2)] px-1.5 text-[10px] font-medium text-[var(--ink-2)]">
+              <span className="bg-[var(--surface-2)] px-1.5 text-[10px] font-medium text-[var(--ink-2)]">
                 kurumsal satışta zorunlu
               </span>
             )}
@@ -61,7 +61,7 @@ function KontrolSatiri({ k }: { k: SecurityCheck }) {
 
           {/* NASIL AÇILIR — kapalıysa kullanıcı ne yapacağını bilir */}
           {k.nasil_acilir && (
-            <div className="mt-2 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">
+            <div className="mt-2 border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                 Nasıl açılır
               </p>
@@ -132,7 +132,7 @@ export default function SecurityPage() {
             <p className="text-xs text-[var(--ink-2)]">kontrol geçti</p>
           </div>
           {kritikAcik > 0 && (
-            <div className="rounded-md border border-[var(--status-critical)] px-3 py-2">
+            <div className="border border-[var(--status-critical)] px-3 py-2">
               <p className="text-sm font-semibold text-[var(--status-critical)]">
                 {kritikAcik} kritik madde kapalı
               </p>

@@ -1,0 +1,89 @@
+{
+  "id": "tuzak-01-kurum-adi-cumle-ortasinda",
+  "title": "Kurum adi cumlenin ORTASINDA geciyor",
+  "bucket": "tuzak",
+  "tags": [
+    "acilis",
+    "tuzak"
+  ],
+  "duration_sec": 31.5,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.0,
+      "text": "İyi günler, ben Mert; Netik İletişim müşteri hizmetlerinden arıyorsunuz, buyurun."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 5.35,
+      "end": 8.55,
+      "text": "Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 2,
+      "speaker": "temsilci",
+      "start": 8.9,
+      "end": 11.3,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 11.65,
+      "end": 12.85,
+      "text": "Sibel Kurt, 337720."
+    },
+    {
+      "idx": 4,
+      "speaker": "musteri",
+      "start": 13.2,
+      "end": 14.4,
+      "text": "Faturamı taksitlendirmek istiyorum."
+    },
+    {
+      "idx": 5,
+      "speaker": "temsilci",
+      "start": 14.75,
+      "end": 18.35,
+      "text": "Faturanızı 3 taksite bölebilirim, ek ücret yok. Onaylıyor musunuz?"
+    },
+    {
+      "idx": 6,
+      "speaker": "musteri",
+      "start": 18.7,
+      "end": 19.9,
+      "text": "Onaylıyorum."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 20.25,
+      "end": 22.65,
+      "text": "İşlemi tamamladım, detaylar SMS olarak gelecek."
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 23.0,
+      "end": 25.8,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 9,
+      "speaker": "musteri",
+      "start": 26.15,
+      "end": 27.35,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 10,
+      "speaker": "temsilci",
+      "start": 27.7,
+      "end": 30.5,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

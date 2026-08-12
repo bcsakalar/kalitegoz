@@ -1,0 +1,95 @@
+{
+  "id": "orta-06-acilis-yarim",
+  "title": "Acilis: kurum adi var, temsilci adi YOK",
+  "bucket": "orta",
+  "tags": [
+    "kismi_eksik"
+  ],
+  "duration_sec": 31.85,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 3.0,
+      "text": "Netik İletişim'e hoş geldiniz, buyurun."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 3.35,
+      "end": 6.55,
+      "text": "Görüşmemiz kayıt altına alınmaktadır, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 2,
+      "speaker": "temsilci",
+      "start": 6.9,
+      "end": 9.3,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 9.65,
+      "end": 10.85,
+      "text": "Derya Şahin, 660012."
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 11.2,
+      "end": 12.4,
+      "text": "Teşekkürler Derya Hanım."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 12.75,
+      "end": 14.35,
+      "text": "Paket değişikliği yapmak istiyorum."
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 14.7,
+      "end": 18.7,
+      "text": "Mevcut kullanımınıza baktım, size 60 GB'lık paketi öneririm, 279 TL."
+    },
+    {
+      "idx": 7,
+      "speaker": "musteri",
+      "start": 19.05,
+      "end": 20.25,
+      "text": "Uygun, geçelim."
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 20.6,
+      "end": 23.0,
+      "text": "Geçişi yaptım, gelecek dönemden geçerli olacak."
+    },
+    {
+      "idx": 9,
+      "speaker": "temsilci",
+      "start": 23.35,
+      "end": 26.15,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 10,
+      "speaker": "musteri",
+      "start": 26.5,
+      "end": 27.7,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 11,
+      "speaker": "temsilci",
+      "start": 28.05,
+      "end": 30.85,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

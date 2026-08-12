@@ -1,0 +1,74 @@
+{
+  "id": "dusuk-01-acilis-yok",
+  "title": "Acilis hic yapilmadi",
+  "bucket": "dusuk",
+  "tags": [
+    "agir_eksik"
+  ],
+  "duration_sec": 20.4,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 2.2,
+      "text": "Alo, buyurun."
+    },
+    {
+      "idx": 1,
+      "speaker": "musteri",
+      "start": 2.55,
+      "end": 4.55,
+      "text": "İyi günler, faturamla ilgili arıyorum."
+    },
+    {
+      "idx": 2,
+      "speaker": "temsilci",
+      "start": 4.9,
+      "end": 8.5,
+      "text": "Görüşmemiz kayıt altına alınmakta, verileriniz KVKK kapsamında işlenmektedir. Adınız?"
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 8.85,
+      "end": 10.05,
+      "text": "Cem Arslan, 220118."
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 10.4,
+      "end": 12.8,
+      "text": "Faturanız 340 TL, son ödeme 25'i."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 13.15,
+      "end": 14.75,
+      "text": "Neden bu kadar yüksek?"
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 15.1,
+      "end": 16.3,
+      "text": "Kullanımınız fazla olmuş."
+    },
+    {
+      "idx": 7,
+      "speaker": "musteri",
+      "start": 16.65,
+      "end": 17.85,
+      "text": "Detayını görebilir miyim?"
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 18.2,
+      "end": 19.4,
+      "text": "İnternet şubesinden bakın."
+    }
+  ]
+}

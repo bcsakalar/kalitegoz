@@ -15,7 +15,7 @@ JWT: kısa ömürlü **access** + uzun ömürlü **refresh** token.
 # Parola ile giriş
 curl -X POST http://localhost:8000/api/v1/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@demo.local","password":"demo1234","tenant_slug":"demo"}'
+  -d '{"email":"admin@demo.local","password":"<ADMIN_PASSWORD>","tenant_slug":"demo"}'
 # -> {"access_token":"...","refresh_token":"...","token_type":"bearer"}
 ```
 

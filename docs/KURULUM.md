@@ -60,7 +60,10 @@ docker compose up -d
 make demo
 ```
 
-Panel: <http://localhost:3000> · `admin@demo.local` / `demo1234`
+Panel: <http://localhost:3000>
+
+Giriş: `admin@demo.local` · parola `.env` dosyanızdaki **`ADMIN_PASSWORD`**
+(`./scripts/generate-secrets.sh` çalıştırıldığında ekrana bir kez basılır).
 
 ### Sesli çağrı işleme (opsiyonel)
 Gerçek ses dosyalarını uçtan uca işlemek için host worker'ı açın:
@@ -123,3 +126,60 @@ make eval        # puanlama doğruluğu (altın set)
 make perf        # kokpit performansı
 make tr-audit    # Türkçe karakter ve jargon denetimi
 ```
+
+---
+
+## 9. Windows (PowerShell) hızlı yol
+
+Depoyu klonlayan biri için tek akış:
+
+```powershell
+# 1) Sırları üret ve .env'i oluştur (tek komut, elle doldurulacak alan yok)
+bash scripts/generate-secrets.sh          # Git Bash
+#   veya WSL / Linux / macOS'ta: ./scripts/generate-secrets.sh
+
+# 2) Yapay zekâ modelleri — Ollama HOST'ta çalışır, Docker'da DEĞİL
+ollama pull qwen2.5:7b-instruct
+ollama pull nomic-embed-text
+
+# 3) Servisler
+docker compose up -d --build
+
+# 4) Doğrula
+curl http://localhost:8000/health      # {"status":"ok"}
+curl http://localhost:8000/ready       # {"status":"ready", checks: db+redis}
+```
+
+### Erişim adresleri
+
+| Ne | Adres |
+|---|---|
+| Panel | http://localhost:3000 |
+| API / Swagger | http://localhost:8000/docs |
+| Sağlık (liveness) | http://localhost:8000/health |
+| Hazırlık (readiness) | http://localhost:8000/ready |
+
+### Sık kullanılan komutlar
+
+```powershell
+docker compose logs -f api                       # API loglarini izle
+docker compose build api worker-fast             # kod degisince imajlari yeniden kur
+docker compose up -d --force-recreate api        # yeni imajla degistir
+docker compose down                              # durdur (VERI KORUNUR)
+docker compose down -v                           # durdur + veritabanini SIL
+make audit                                       # Turkce + arayuz denetimi
+make test                                        # backend testleri
+make eval                                        # altin set regresyonu
+```
+
+### Sorun giderme
+
+| Belirti | Sebep ve çözüm |
+|---|---|
+| `docker info` hata veriyor | Docker Desktop çalışmıyor; başlatıp birkaç saniye bekleyin |
+| Panelde giriş 401 dönüyor | `make eval` koşulmuşsa eskiden iç kiracı giriş hedefi oluyordu (B35). Güncel sürümde düzeltildi; eski sürümdeyseniz güncelleyin |
+| AI yanıtı gelmiyor, puanlama takılı | `ollama list` ile modelleri kontrol edin; Ollama **host'ta** çalışıyor olmalı |
+| Sesli çağrı işlenmiyor | Yönetim → İşleme ekranından işlemeyi başlatın; kuyruk duraklatılmış olabilir |
+| `No module named pytest` | `.venv\Scripts\python.exe -m pip install -r backend
+equirements-dev.txt` |
+| Üretime çıkış | `.env`'de `ENVIRONMENT=production`, `DEMO_MODE=false`, gerçek `CORS_ORIGINS`. Eksikse uygulama açık Türkçe hatayla durur |

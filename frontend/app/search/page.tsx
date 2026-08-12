@@ -67,7 +67,7 @@ export default function SearchPage() {
     return (
       <>
         {text.slice(0, i)}
-        <mark className="rounded bg-[rgba(250,178,25,0.35)] px-0.5 text-ink">
+        <mark className="bg-[rgba(250,178,25,0.35)] px-0.5 text-ink">
           {text.slice(i, i + term.length)}
         </mark>
         {text.slice(i + term.length)}

@@ -1,0 +1,75 @@
+{
+  "id": "reg-b5-sifirlama-gerekceli",
+  "title": "B5: Gercek sifirlayici ihlal — gerekce ve kanit ZORUNLU",
+  "bucket": "regresyon",
+  "tags": [
+    "sifirlayici",
+    "hakaret"
+  ],
+  "duration_sec": 27.6,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Onur. Görüşmemiz kayıt altına alınmaktadır, verileriniz KVKK kapsamında işlenmektedir."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 8.55,
+      "text": "Adınızı ve müşteri numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 8.9,
+      "end": 10.1,
+      "text": "Murat Aslan, 663102."
+    },
+    {
+      "idx": 3,
+      "speaker": "musteri",
+      "start": 10.45,
+      "end": 13.25,
+      "text": "Üç kere aradım, hâlâ çözülmedi bu iş."
+    },
+    {
+      "idx": 4,
+      "speaker": "temsilci",
+      "start": 13.6,
+      "end": 16.4,
+      "text": "Ya siz de anlamıyorsunuz ki, saçmalamayın artık."
+    },
+    {
+      "idx": 5,
+      "speaker": "musteri",
+      "start": 16.75,
+      "end": 18.35,
+      "text": "Nasıl konuşuyorsunuz siz öyle?"
+    },
+    {
+      "idx": 6,
+      "speaker": "temsilci",
+      "start": 18.7,
+      "end": 22.3,
+      "text": "Ne yapayım, ben de insanım. Kayıt açtım işte, bekleyeceksiniz."
+    },
+    {
+      "idx": 7,
+      "speaker": "musteri",
+      "start": 22.65,
+      "end": 24.25,
+      "text": "Bu kadar mı yani?"
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 24.6,
+      "end": 26.6,
+      "text": "Evet, başka bir şey yok."
+    }
+  ]
+}

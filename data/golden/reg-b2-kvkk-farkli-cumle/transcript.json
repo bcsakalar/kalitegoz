@@ -1,0 +1,118 @@
+{
+  "id": "reg-b2-kvkk-farkli-cumle",
+  "title": "B2: KVKK anonsu YAPILDI ama standart kalibin disinda bir cumleyle",
+  "bucket": "regresyon",
+  "tags": [
+    "kvkk",
+    "uyum",
+    "tuzak"
+  ],
+  "duration_sec": 45.7,
+  "segments": [
+    {
+      "idx": 0,
+      "speaker": "temsilci",
+      "start": 1.0,
+      "end": 5.8,
+      "text": "Netik İletişim, ben Selin. Bilginiz olsun, bu konuşma hizmet kalitesi için kaydediliyor."
+    },
+    {
+      "idx": 1,
+      "speaker": "temsilci",
+      "start": 6.15,
+      "end": 9.35,
+      "text": "Paylaşacağınız bilgiler kişisel verilerin korunması mevzuatı çerçevesinde saklanır."
+    },
+    {
+      "idx": 2,
+      "speaker": "musteri",
+      "start": 9.7,
+      "end": 10.9,
+      "text": "Tamam, anladım."
+    },
+    {
+      "idx": 3,
+      "speaker": "temsilci",
+      "start": 11.25,
+      "end": 13.65,
+      "text": "Adınızı ve hizmet numaranızı alabilir miyim?"
+    },
+    {
+      "idx": 4,
+      "speaker": "musteri",
+      "start": 14.0,
+      "end": 15.2,
+      "text": "Burak Şen, 552310."
+    },
+    {
+      "idx": 5,
+      "speaker": "temsilci",
+      "start": 15.55,
+      "end": 17.95,
+      "text": "Teşekkürler Burak Bey. Nasıl yardımcı olabilirim?"
+    },
+    {
+      "idx": 6,
+      "speaker": "musteri",
+      "start": 18.3,
+      "end": 20.7,
+      "text": "Faturam bu ay iki katına çıkmış."
+    },
+    {
+      "idx": 7,
+      "speaker": "temsilci",
+      "start": 21.05,
+      "end": 24.65,
+      "text": "Kontrol ediyorum. Geçen ay tarifeniz değişmiş, kampanya süreniz dolmuş."
+    },
+    {
+      "idx": 8,
+      "speaker": "temsilci",
+      "start": 25.0,
+      "end": 28.6,
+      "text": "İsterseniz size mevcut kullanımınıza uygun bir tarife seçeneği sunabilirim."
+    },
+    {
+      "idx": 9,
+      "speaker": "musteri",
+      "start": 28.95,
+      "end": 30.15,
+      "text": "Olur, bakalım."
+    },
+    {
+      "idx": 10,
+      "speaker": "temsilci",
+      "start": 30.5,
+      "end": 35.3,
+      "text": "Aylık 40 GB veren paket 289 TL. Onaylarsanız gelecek dönemden geçerli olur."
+    },
+    {
+      "idx": 11,
+      "speaker": "musteri",
+      "start": 35.65,
+      "end": 36.85,
+      "text": "Onaylıyorum."
+    },
+    {
+      "idx": 12,
+      "speaker": "temsilci",
+      "start": 37.2,
+      "end": 40.0,
+      "text": "Başka yardımcı olabileceğim bir konu var mı?"
+    },
+    {
+      "idx": 13,
+      "speaker": "musteri",
+      "start": 40.35,
+      "end": 41.55,
+      "text": "Yok, teşekkürler."
+    },
+    {
+      "idx": 14,
+      "speaker": "temsilci",
+      "start": 41.9,
+      "end": 44.7,
+      "text": "Aradığınız için teşekkür ederim, iyi günler dilerim."
+    }
+  ]
+}

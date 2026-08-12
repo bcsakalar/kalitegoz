@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     refresh_token_ttl_days: int = 14
     # Demo modunda landing'den tek tikla rol secilebilir (parolasiz demo giris)
     demo_mode: bool = True
+    # Seed edilen kullanicilarin parolasi. BOS BIRAKILAMAZ — scripts/generate-secrets.sh
+    # uretir. Varsayilan yok: zayif bir varsayilan, herkesin bildigi bir parola demektir.
+    admin_password: str = ""
+    # Oturum/CSRF imzalari icin ayri sir. JWT_SECRET'tan bagimsiz olmasi, birinin
+    # sizmasi halinde digerinin gecerli kalmasini saglar.
+    session_secret: str = ""
 
     # --- Veritabani / kuyruk ---
     database_url: str = "postgresql+psycopg://kalitegoz:kalitegoz@postgres:5432/kalitegoz"
@@ -187,4 +193,67 @@ class Settings(BaseSettings):
         return [r.strip() for r in self.report_recipients.split(",") if r.strip()]
 
 
+# =====================================================================
+# Zorunlu yapilandirma denetimi
+# =====================================================================
+
+class YapilandirmaHatasi(RuntimeError):
+    """Zorunlu bir ortam degiskeni eksik ya da bos."""
+
+
+# (alan adi, ortam degiskeni, ne ise yaradigi)
+_ZORUNLU: list[tuple[str, str, str]] = [
+    ("jwt_secret", "JWT_SECRET", "Oturum jetonlarini imzalar"),
+    ("session_secret", "SESSION_SECRET", "Oturum/CSRF imzasi"),
+    ("admin_password", "ADMIN_PASSWORD", "Baslangic kullanicilarinin parolasi"),
+    ("database_url", "DATABASE_URL", "Veritabani baglantisi"),
+    ("redis_url", "REDIS_URL", "Kuyruk ve onbellek baglantisi"),
+]
+
+
+def zorunlu_ayarlari_dogrula(s: Settings) -> None:
+    """Eksik/bos zorunlu ayarda ACIK TURKCE HATA ile dur.
+
+    Neden sessizce varsayilana kacilmiyor: varsayilan bir JWT sirri ya da
+    herkesin bildigi bir admin parolasi, CALISAN ama GUVENSIZ bir kurulum
+    uretir. Calismayan kurulum fark edilir; guvensiz calisan kurulum
+    edilmez — tehlikeli olan ikincisidir.
+    """
+    eksik = [
+        (env, aciklama)
+        for alan, env, aciklama in _ZORUNLU
+        if not str(getattr(s, alan, "") or "").strip()
+    ]
+    if eksik:
+        satirlar = "\n".join(f"  - {env:<18} {aciklama}" for env, aciklama in eksik)
+        raise YapilandirmaHatasi(
+            "\n\nKaliteGoz baslatilamadi: zorunlu yapilandirma eksik.\n\n"
+            + satirlar
+            + "\n\nCozum: proje kokunde su komutu calistirin — tum sirlari uretir\n"
+              "ve .env dosyasini olusturur:\n\n"
+              "    ./scripts/generate-secrets.sh\n\n"
+              "Ayrinti: docs/KURULUM.md\n"
+        )
+
+    if (s.environment or "").lower() != "production":
+        return
+
+    # Uretimde ek sartlar. Burada da UYARI degil HATA: uretime guvensiz
+    # ayarla cikmak, hic cikmamaktan kotudur.
+    sorunlar: list[str] = []
+    if len(s.jwt_secret) < 32 or "CHANGE-IN-PROD" in s.jwt_secret:
+        sorunlar.append("JWT_SECRET en az 32 karakterlik rastgele bir deger olmali.")
+    if s.demo_mode:
+        sorunlar.append("DEMO_MODE=false olmali — demo giris parolasiz erisim acar.")
+    if s.cors_origin_list == ["*"]:
+        sorunlar.append("CORS_ORIGINS yalnizca kendi frontend alan adiniz olmali.")
+    if sorunlar:
+        raise YapilandirmaHatasi(
+            "\n\nENVIRONMENT=production ama guvenlik ayarlari uretime uygun degil:\n\n"
+            + "\n".join(f"  - {x}" for x in sorunlar)
+            + "\n"
+        )
+
+
 settings = Settings()
+

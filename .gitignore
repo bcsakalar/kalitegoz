@@ -1,20 +1,113 @@
+# =====================================================================
+# SIRLAR — asla commit edilmez
+# =====================================================================
 .env
-__pycache__/
-*.pyc
-.venv/
-venv/
+.env.local
+.env.*.local
+# generate-secrets.sh mevcut .env'i yedekler — o yedek de SIR ICERIR
+.env.yedek
+.env.bak
+.env.backup
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+secrets/
+kg_master_key*
 
-node_modules/
-.next/
-next-env.d.ts
-
-data/
+# =====================================================================
+# VERİ — kuruma ait, depoya girmez
+# =====================================================================
+data/*
 !data/README.md
-# Altin set (regresyon referansi) SURUM KONTROLUNDE tutulur
+# Altın set (regresyon referansı) ve insan referans şablonu SÜRÜM
+# KONTROLÜNDE tutulur — ürünün doğruluk iddiasının kanıtı bunlar.
 !data/golden/
 !data/golden/**
+!data/human_ref/
+!data/human_ref/**
 
+# Ses ve medya
 *.wav
 *.mp3
+*.m4a
+*.ogg
+*.flac
+
+# Veritabanı dökümü / yedek
+*.sql
+*.dump
+*.sqlite
+*.sqlite3
+*.db
+
+# Model dosyaları (Ollama/Whisper host'ta durur, depoda değil)
 *.onnx
 *.onnx.json
+*.gguf
+*.bin
+*.safetensors
+
+# =====================================================================
+# PYTHON
+# =====================================================================
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# =====================================================================
+# NODE / NEXT.JS
+# =====================================================================
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+.npm/
+.eslintcache
+
+# =====================================================================
+# İÇ DOKÜMANLAR — geliştirme sürecinin kaydı, ürünün parçası değil
+# =====================================================================
+# Faz raporları, karar defteri, arayüz denetim raporu. Ara raporlar eski
+# ölçümler içerir ve ürünün bugünkü halini anlatan dokümanlarla çelişebilir.
+docs/internal/
+
+# =====================================================================
+# GELİŞTİRME ARACI ARTEFAKTLARI — ürünün parçası değil
+# =====================================================================
+.claude/
+skills-lock.json
+
+# =====================================================================
+# İŞLETİM SİSTEMİ / EDİTÖR
+# =====================================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+!.vscode/extensions.json
+
+# =====================================================================
+# GEÇİCİ
+# =====================================================================
+*.log
+*.tmp
+*.bak
+tmp/
+.cache/
