@@ -31,7 +31,21 @@ $data = Join-Path $proj "data"
 
 # --- Host-ozel override'lar (pydantic: gercek ortam degiskeni > .env dosyasi) ---
 # Docker servislerine host uzerinden localhost ile baglaniriz:
-$env:DATABASE_URL    = "postgresql+psycopg://kalitegoz:kalitegoz@localhost:5432/kalitegoz"
+# DATABASE_URL .env'den OKUNUR, sabit yazilmaz. Parola artik
+# scripts/generate-secrets.sh tarafindan rastgele uretiliyor; burada sabit
+# "kalitegoz" yazmak host worker'in DB'ye hic baglanamamasi demekti.
+# Tek fark: konteyner adi yerine localhost (worker Docker DISINDA calisiyor).
+$envFile = Join-Path $proj ".env"
+if (-not (Test-Path $envFile)) {
+  Write-Host "HATA: .env bulunamadi. Once calistirin: ./scripts/generate-secrets.sh" -ForegroundColor Red
+  exit 1
+}
+$dbLine = (Select-String -Path $envFile -Pattern '^DATABASE_URL=(.*)$').Matches.Groups[1].Value
+if ([string]::IsNullOrWhiteSpace($dbLine)) {
+  Write-Host "HATA: .env icinde DATABASE_URL bos. ./scripts/generate-secrets.sh --force" -ForegroundColor Red
+  exit 1
+}
+$env:DATABASE_URL    = $dbLine.Replace("@postgres:", "@localhost:").Trim()
 $env:REDIS_URL       = "redis://localhost:6379/0"
 $env:OLLAMA_BASE_URL = "http://127.0.0.1:11434"          # PC'deki native Ollama
 $env:STORAGE_DIR     = (Join-Path $data "storage")
