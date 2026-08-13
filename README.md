@@ -44,10 +44,10 @@ alıntı koyar**, ve güvenilir olmadığını bildiği kriteri insana yollar.
 |---|---|---|
 | Sıfırlayıcı ihlal yanlış-pozitif | %38.5 | **%0.0** |
 | Sıfırlayıcı ihlal yanlış-negatif | %18.2 | **%0.0** |
-| Kriter bazlı ortalama hata (MAE, 0-10) | 2.16 | **0.78** |
+| Kriter bazlı ortalama hata (MAE, 0-10) | 2.16 | **0.76–0.78** |
 | Kanıt doğrulanabilirlik | %56.1 | **%100** |
 | Tekrarlanabilirlik (3 koşum, std) | 1.95 | **0.46** |
-| Tam isabet oranı | %21.4 | **%64.9** |
+| Tam isabet oranı | %21.4 | **%64.5–65.2** |
 
 ### Kriter türüne göre — çünkü tek ortalama yanıltıyor
 
@@ -55,12 +55,19 @@ alıntı koyar**, ve güvenilir olmadığını bildiği kriteri insana yollar.
 |---|---|---|
 | Ne ölçer | Açılış, KVKK anonsu, kimlik doğrulama, kapanış, üslup | Aktif dinleme, ihtiyaç analizi, çözüm, bilgi doğruluğu |
 | Nasıl çözülür | **Kodla** — dil modeline sorulmaz | Kanıt zorunlu LLM |
-| Cohen's kappa | Çekirdek 4 kriter: **0.94–1.00** | **0.18** |
+| Cohen's kappa | Çekirdek 4 kriter: **0.94–1.00** | **0.09–0.18** |
 | Kapsam iddiası | %100, puan kesin | **Öneri** — geçerli puan insan onayıyla oluşur |
 
 > **Bu tablo ürünün en dürüst kısmıdır.** Öznel kriterlerde sistem güvenilir
 > değil ve **bunu biliyor**: kappa'sı 0.40'ın altındaki kriterlerde güven
 > skoru otomatik tavanlanır, çağrı garantili insan onayına düşer.
+>
+> Öznel kappa tek bir sayı değil **aralık** olarak yazılıyor: aynı kod ve
+> aynı yapılandırmayla art arda üç koşumda **0.16 → 0.11 → 0.09** ölçüldü.
+> Aradaki hiçbir değişiklik puanlama koduna dokunmadı, yani bu oynama
+> mekanizmasızdır — koşum-arası varyans daha önce varsayılan 0.05'lik
+> banttan **geniş**. En iyi koşumu seçip yazmak tabloyu güzelleştirir ve
+> yanıltır; nesnel kappa altı koşumdur kuruşu kuruşuna aynı (0.7639).
 >
 > Referans setinin nasıl üretildiği ve neyin *kanıtlanmadığı*:
 > [KALITE-METODOLOJISI.md §4](docs/KALITE-METODOLOJISI.md)
@@ -197,13 +204,16 @@ human reviewer.
 | Metric | v1 | v2 |
 |---|---|---|
 | Zeroing-violation false positives | 38.5% | **0.0%** |
-| Mean absolute error (0-10 scale) | 2.16 | **0.78** |
+| Mean absolute error (0-10 scale) | 2.16 | **0.76–0.78** |
 | Evidence verifiability | 56.1% | **100%** |
 | Repeatability (3 runs, std dev) | 1.95 | **0.46** |
 
 Cohen's kappa is **0.94–1.00** on the four core objective criteria and
-**0.18** on subjective ones. We publish both numbers: on subjective criteria
-the system produces a *suggestion*, and a valid score requires human approval.
+**0.09–0.18** on subjective ones. The subjective figure is given as a range
+because consecutive runs measured anywhere in it; picking the best run would
+look better and mislead, since per-criterion variance has not been measured
+yet. We publish both numbers: on subjective criteria the system produces a
+*suggestion*, and a valid score requires human approval.
 See [docs/KALITE-METODOLOJISI.md](docs/KALITE-METODOLOJISI.md) for how the
 reference set was produced and what is explicitly **not** proven.
 

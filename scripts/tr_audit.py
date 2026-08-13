@@ -203,6 +203,50 @@ def denetle_backend_metinleri() -> list[str]:
     return ihlaller
 
 
+_TR_HARF = re.compile(r"[ğüşıöçĞÜŞİÖÇ]")
+
+
+def denetle_istemci_sabitleri() -> list[str]:
+    """B41 — `frontend/lib/` icinde SABIT Turkce arayuz metni var mi?
+
+    ## Neden bu kontrol eklendi
+
+    `api.ts` alti etiket haritasi tutuyordu (kategori, durum, kanal, ihlal,
+    duygu, rol) ve degerleri **sabit Turkce metindi**. Arayuz onlari oldugu
+    gibi basiyordu; Ingilizce arayuzde cagri listesinde "Kuyrukta", arama
+    sayfasinda "Sesli" gorunuyordu — olculdu.
+
+    Roller icin ayni sorun daha once fark edilip `ROLE_LABEL_KEYS` ile
+    cozulmus, kalan bes harita oyle birakilmisti: kural biliniyordu, YARISI
+    uygulanmisti. Denetim bu yariyi hic gormuyordu cunku yalnizca `i18n.ts`
+    sozlugune ve JSX metin dugumlerine bakiyordu.
+
+    ## Kapsam
+
+    `frontend/lib/*.ts` icindeki dize sabitlerinde Turkce'ye ozgu harf
+    ararir. i18n sozlugunun KENDISI (`i18n.ts`) ve yorumlar muaftir —
+    sozlukte Turkce olmasi zaten beklenendir.
+    """
+    ihlaller = []
+    lib = ROOT / "frontend" / "lib"
+    if not lib.exists():
+        return ihlaller
+    dize = re.compile(r'"((?:[^"\\]|\\.){3,})"')
+    for p in sorted(lib.glob("*.ts")):
+        if p.name == "i18n.ts":
+            continue  # sozlugun kendisi
+        for i, satir in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+            k = satir.strip()
+            if k.startswith(("//", "*", "/*")):
+                continue
+            for deger in dize.findall(satir):
+                if _TR_HARF.search(deger):
+                    ihlaller.append(
+                        f"{p.relative_to(ROOT)}:{i} sabit Turkce metin: "
+                        f"{deger[:52]!r} — i18n anahtarina cevirin")
+    return ihlaller
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--json", action="store_true")
@@ -213,6 +257,7 @@ def main() -> int:
         "arayuz jargonu": denetle_jsx(),
         "rubrik kriter adlari": denetle_db_kriterleri(),
         "sunucu metinleri": denetle_backend_metinleri(),
+        "istemci sabitleri": denetle_istemci_sabitleri(),
     }
     toplam = sum(len(v) for v in gruplar.values())
 

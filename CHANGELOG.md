@@ -1,5 +1,43 @@
 # Değişiklik Günlüğü
 
+## v2.2 — Son denetim (2026-08-13)
+
+Kod yazmadan önce baştan sona tarama, sonra bulunanların düzeltilmesi.
+Tam rapor: [`docs/DENETIM-SONUC.md`](docs/DENETIM-SONUC.md).
+
+### Düzeltildi
+- **B41** — İngilizce arayüzde Türkçe metin kalıyordu. `api.ts` altı etiket
+  haritasını sabit Türkçe tutuyordu; ölçüldü: çağrı listesinde "Kuyrukta",
+  aramada "Sesli". Roller için aynı sorun daha önce çözülmüş, kalan beşi
+  bırakılmıştı. 34 anahtar TR+EN eklendi.
+  Yan fayda: `pending` etiketi "Kuyrukta" → **"Bekliyor"**; işleme
+  duraklatılmışken çağrı bir kuyrukta değil, kullanıcıyı bekliyor.
+- **B42** — "Zorunlu env eksikse dur" kuralı üç alan için hiç çalışamıyordu.
+  `jwt_secret`, `database_url`, `redis_url` **dolu varsayılan** taşıyordu ve
+  "boş mu?" kontrolü erişilemez kalıyordu. `JWT_SECRET` tanımsızsa uygulama
+  bilinen bir imza anahtarıyla ayağa kalkıyordu.
+- **B43** — o korumanın hiç testi yoktu; 18 regresyon vakası eklendi.
+- `.env.example`'da 6 anahtarın üstünde açıklama yoktu.
+
+### Geri çekildi
+- `FINAL-RAPOR` §8'deki "süpervizör `/admin/users` 403 alıyor" maddesi.
+  Ölçüldü: temiz tarayıcı bağlamında her sayfa doğru rolüyle sıfır 4xx
+  üretiyor. 403, ekran denetiminin kendi düzeneğinden geliyordu.
+
+### Denetim araçları
+- `scripts/ui_sweep.mjs` — 16 sayfa × 2 tema × 2 dil, sonra her etkileşimli
+  öğe tıklanır. İlk sürümü 5 yanlış pozitif üretti (zaten aktif olan
+  seçeneğe tıklıyordu); `data-active`/`aria-pressed` taşıyanlar atlanıyor.
+- `tr-audit` yeni kontrol: **istemci sabitleri** — `frontend/lib/` altındaki
+  sabit Türkçe metinleri yakalar. Eklenir eklenmez 5 sızıntı daha buldu.
+
+### Ölçüm
+`make eval` tüm eşikleri geçti (çıkış 0). Nesnel kappa **0.7639** — altıncı
+kez birebir aynı. Öznel kappa üç ardışık koşumda 0.1637 → 0.1078 → 0.0931;
+aradaki değişiklikler puanlama koduna dokunmadı, yani **koşum-arası varyans
+belgelerde yazan 0.05'lik bandan geniş**. Öznel kappa artık tek sayı değil
+**0.09–0.18 aralığı** olarak yazılıyor.
+
 ## v2.1 — Çoklu sağlayıcı gerçekten çalışır (2026-08-13)
 
 Soru şuydu: *"Gemini seçersem sistemdeki her şey Gemini ile mi çalışıyor?"*

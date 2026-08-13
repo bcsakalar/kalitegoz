@@ -87,6 +87,7 @@ import type {
   CSATCorrelation,
   CSATBand,
 } from "./types";
+import { translate, type Lang } from "./i18n";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const V1 = `${API_BASE}/api/v1`;
@@ -127,6 +128,23 @@ export class ApiError extends Error {
     super(message);
     this.status = status;
   }
+}
+
+/**
+ * Kancasız çeviri — `api.ts` bir React bileşeni değildir, `useT()` çağıramaz.
+ *
+ * B41: buradaki hata mesajları sabit Türkçeydi ve doğrudan kullanıcıya
+ * gösteriliyordu (sayfalar `e.message`'ı basıyor), yani İngilizce arayüzde
+ * de Türkçe çıkıyorlardı. Dil `kg_lang`'den okunur — `I18nProvider` da aynı
+ * anahtarı yazar, dolayısıyla iki taraf aynı kaynağa bakar.
+ */
+function tr(key: string): string {
+  let lang: Lang = "tr";
+  try {
+    const kayitli = localStorage.getItem("kg_lang");
+    if (kayitli === "en" || kayitli === "tr") lang = kayitli;
+  } catch { /* SSR ya da erisim yok: varsayilan dil */ }
+  return translate(lang, key);
 }
 
 async function request<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
@@ -207,7 +225,7 @@ export const api = {
   },
   demoLogin: async (role: string) => {
     const res = await fetch(`${V1}/auth/demo-login`, json({ role }));
-    if (!res.ok) throw new ApiError(res.status, "Demo giriş başarısız");
+    if (!res.ok) throw new ApiError(res.status, tr("err.demoLogin"));
     const data = await res.json();
     tokenStore.set(data.access_token, data.refresh_token);
   },
@@ -222,7 +240,7 @@ export const api = {
   },
   registerOrg: async (body: { org_name: string; admin_name: string; admin_email: string; password: string }) => {
     const res = await fetch(`${V1}/auth/register-org`, json(body));
-    if (!res.ok) throw new ApiError(res.status, ((await res.json().catch(() => ({}))) as { detail?: string }).detail ?? "Kurum oluşturulamadı");
+    if (!res.ok) throw new ApiError(res.status, ((await res.json().catch(() => ({}))) as { detail?: string }).detail ?? tr("err.orgCreate"));
     const data = await res.json();
     tokenStore.set(data.access_token, data.refresh_token);
   },
@@ -240,7 +258,7 @@ export const api = {
     fetch(`${V1}/auth/forgot-password`, json({ email, org_slug })).then((r) => r.json()),
   resetPassword: async (token: string, password: string) => {
     const res = await fetch(`${V1}/auth/reset-password`, json({ token, password }));
-    if (!res.ok) throw new ApiError(res.status, ((await res.json().catch(() => ({}))) as { detail?: string }).detail ?? "Parola sıfırlanamadı");
+    if (!res.ok) throw new ApiError(res.status, ((await res.json().catch(() => ({}))) as { detail?: string }).detail ?? tr("err.passwordReset"));
     const data = await res.json();
     tokenStore.set(data.access_token, data.refresh_token);
   },
@@ -511,7 +529,7 @@ export async function fetchAudioObjectUrl(id: number | string): Promise<string> 
   const res = await fetch(`${V1}/calls/${id}/audio`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
-  if (!res.ok) throw new ApiError(res.status, "Ses yüklenemedi");
+  if (!res.ok) throw new ApiError(res.status, tr("err.audioLoad"));
   const blob = await res.blob();
   return URL.createObjectURL(blob);
 }
@@ -528,7 +546,7 @@ export const reportUrls = {
 export async function authedDownload(url: string, filename: string) {
   const token = tokenStore.get();
   const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-  if (!res.ok) throw new ApiError(res.status, "İndirme başarısız");
+  if (!res.ok) throw new ApiError(res.status, tr("err.download"));
   const blob = await res.blob();
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -539,18 +557,41 @@ export async function authedDownload(url: string, filename: string) {
 
 // ---- Sunum yardımcıları ----
 
-export const CATEGORY_LABELS: Record<string, string> = {
-  fatura: "Fatura", iptal: "İptal", ariza: "Arıza",
-  sikayet: "Şikayet", bilgi: "Bilgi", diger: "Diğer",
+/**
+ * Etiket haritaları — metin DEĞİL, i18n ANAHTARI tutar.
+ *
+ * ## B41: neden değişti
+ *
+ * Önceki sürüm burada sabit Türkçe metin tutuyordu ve arayüz onları olduğu
+ * gibi basıyordu. Ölçüldü: İngilizce arayüzde çağrı listesinde **"Kuyrukta"**,
+ * arama sayfasında **"Sesli"** görünüyordu. Kokpit o an temiz görünüyordu
+ * ama yalnızca işlenmiş çağrı olmadığı için — kategori etiketleri de aynı
+ * şekilde sızacaktı.
+ *
+ * Roller için aynı sorun daha önce fark edilip `ROLE_LABEL_KEYS` ile
+ * çözülmüş, kalan beş harita öyle bırakılmıştı: kural biliniyordu, yarısı
+ * uygulanmıştı.
+ *
+ * ## Kullanım
+ *
+ * `t(CATEGORY_LABEL_KEYS[k] ?? "") || k`
+ *
+ * Sondaki `|| k` önemli: sözlükte olmayan bir anahtar gelirse boş hücre
+ * değil ham değer görünsün. Boş hücre, veri yok mu çeviri yok mu ayırt
+ * ettirmez.
+ */
+export const CATEGORY_LABEL_KEYS: Record<string, string> = {
+  fatura: "cat.fatura", iptal: "cat.iptal", ariza: "cat.ariza",
+  sikayet: "cat.sikayet", bilgi: "cat.bilgi", diger: "cat.diger",
 };
 
-export const STATUS_LABELS: Record<string, string> = {
-  pending: "Kuyrukta", transcribing: "Çözümleniyor", scoring: "Puanlanıyor",
-  done: "Tamamlandı", failed: "Hata",
-};
-
-export const ROLE_LABELS: Record<string, string> = {
-  admin: "Yönetici", supervisor: "Süpervizör", quality: "Kalite Uzmanı", agent: "Temsilci",
+// `pending` etiketi "Kuyrukta" idi ve yanıltıyordu: işleme DURAKLATILMIŞKEN
+// çağrı bir kuyrukta değil, kullanıcının başlatmasını bekliyor. `/admin/
+// processing` aynı anda `queued_now: 0` döndürüyordu.
+export const STATUS_LABEL_KEYS: Record<string, string> = {
+  pending: "callstatus.pending", transcribing: "callstatus.transcribing",
+  scoring: "callstatus.scoring", done: "callstatus.done",
+  failed: "callstatus.failed",
 };
 
 /** i18n anahtarlari — cevrilmis rol adi icin t(ROLE_LABEL_KEYS[role]) */
@@ -559,18 +600,22 @@ export const ROLE_LABEL_KEYS: Record<string, string> = {
   quality: "role.quality", agent: "role.agent",
 };
 
-export const CHANNEL_LABELS: Record<string, string> = { voice: "Sesli", chat: "Chat" };
-
-export const SENTIMENT_LABELS: Record<string, { label: string; cls: string }> = {
-  olumlu: { label: "Olumlu", cls: "badge-good" },
-  notr: { label: "Nötr", cls: "badge-neutral" },
-  olumsuz: { label: "Olumsuz", cls: "badge-critical" },
+export const CHANNEL_LABEL_KEYS: Record<string, string> = {
+  voice: "chan.voice", chat: "chan.chat",
 };
 
-export const VIOLATION_LABELS: Record<string, string> = {
-  hakaret: "Hakaret", kucumseme: "Küçümseme", rakip: "Rakip önerme",
-  yasak_vaat: "Yasak vaat", mevzuat: "Mevzuat", eskalasyon: "Eskalasyon",
-  kvkk: "KVKK uyum", pci: "PCI uyum", kayit_ifsa: "Kayıt bildirimi", hitap: "Hitap",
+/** Duygu: metin i18n'den, renk sınıfı sabit (sınıf çeviriye tabi değil). */
+export const SENTIMENT_LABEL_KEYS: Record<string, { key: string; cls: string }> = {
+  olumlu: { key: "sent.olumlu", cls: "badge-good" },
+  notr: { key: "sent.notr", cls: "badge-neutral" },
+  olumsuz: { key: "sent.olumsuz", cls: "badge-critical" },
+};
+
+export const VIOLATION_LABEL_KEYS: Record<string, string> = {
+  hakaret: "viol.hakaret", kucumseme: "viol.kucumseme", rakip: "viol.rakip",
+  yasak_vaat: "viol.yasak_vaat", mevzuat: "viol.mevzuat",
+  eskalasyon: "viol.eskalasyon", kvkk: "viol.kvkk", pci: "viol.pci",
+  kayit_ifsa: "viol.kayit_ifsa", hitap: "viol.hitap",
 };
 
 export function fmtTs(sec: number): string {

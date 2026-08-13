@@ -4,7 +4,7 @@ import { useT } from "@/components/I18nProvider";
 import { useCallback, useEffect, useRef, useState } from "react";
 import AITab from "@/components/AITab";
 import SSOTab from "@/components/SSOTab";
-import { api, fmtDate, ROLE_LABEL_KEYS, VIOLATION_LABELS } from "@/lib/api";
+import { api, fmtDate, ROLE_LABEL_KEYS, VIOLATION_LABEL_KEYS } from "@/lib/api";
 import type {
   BannedWord, Campaign, KnowledgeDoc, KnowledgeHit, ProcessingStatus, UserRow, CompliancePack, Challenge,
   AuditEntry, DraftCriterion, ScorecardDraft, Branding, Team, AgentAdmin, TenantSettings, SystemInfo,
@@ -311,7 +311,7 @@ function BannedTab() {
         <input className="input flex-1" placeholder={t("bw.term")} value={nw.term}
           onChange={(e) => setNw({ ...nw, term: e.target.value })} />
         <select className="input" value={nw.category} onChange={(e) => setNw({ ...nw, category: e.target.value })}>
-          {CATS.map((c) => <option key={c} value={c}>{VIOLATION_LABELS[c] ?? c}</option>)}
+          {CATS.map((c) => <option key={c} value={c}>{t(VIOLATION_LABEL_KEYS[c] ?? "") || c}</option>)}
         </select>
         <select className="input" value={nw.severity} onChange={(e) => setNw({ ...nw, severity: e.target.value })}>
           {SEVS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -331,7 +331,7 @@ function BannedTab() {
             {words.map((w) => (
               <tr key={w.id} className="border-b border-hairline last:border-0">
                 <td className="px-4 py-2 font-medium">{w.term}</td>
-                <td className="px-4 py-2">{VIOLATION_LABELS[w.category] ?? w.category}</td>
+                <td className="px-4 py-2">{t(VIOLATION_LABEL_KEYS[w.category] ?? "") || w.category}</td>
                 <td className="px-4 py-2">{w.severity}</td>
                 <td className="px-4 py-2">{w.match_type}</td>
                 <td className="px-4 py-2"><input type="checkbox" checked={w.is_active} onChange={() => toggle(w)} /></td>

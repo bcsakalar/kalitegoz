@@ -13,7 +13,14 @@ class Settings(BaseSettings):
     cors_origins: str = "*"  # virgul ile ayrilmis liste veya *
 
     # --- Guvenlik / Auth (JWT) ---
-    jwt_secret: str = "kalitegoz-dev-secret-CHANGE-IN-PROD"
+    # B42: bu alan once "kalitegoz-dev-secret-CHANGE-IN-PROD" varsayilanini
+    # tasiyordu. Sonuc: `zorunlu_ayarlari_dogrula` "eksik/bos" kontrolu bu
+    # alan icin HIC atesleyemiyordu — deger daima doluydu. JWT_SECRET
+    # tanimsizsa uygulama sessizce BILINEN bir imza anahtariyla calisiyordu
+    # ve bu, ENVIRONMENT=production disindaki her kurulumda gecerliydi
+    # (varsayilan "development"). Jeton uretmek isteyen biri icin yeterli.
+    # Bos varsayilan, kontrolu gercekten uygulanabilir yapar.
+    jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
     access_token_ttl_min: int = 30
     refresh_token_ttl_days: int = 14
@@ -27,8 +34,14 @@ class Settings(BaseSettings):
     session_secret: str = ""
 
     # --- Veritabani / kuyruk ---
-    database_url: str = "postgresql+psycopg://kalitegoz:kalitegoz@postgres:5432/kalitegoz"
-    redis_url: str = "redis://redis:6379/0"
+    # B42: ikisi de dolu varsayilan tasiyordu ve `_ZORUNLU` listesinde
+    # olmalarina ragmen kontrol asla atesleyemiyordu. `database_url`
+    # varsayilani ayrica SABIT bir parola iceriyordu (kalitegoz:kalitegoz);
+    # `.env` eksikse uygulama onu denerdi. Bos varsayilan, "eksikse acik
+    # Turkce hatayla dur" kuralini gercekten uygulanabilir kilar.
+    # Degerleri `generate-secrets.sh` uretir, compose `.env`'den gecirir.
+    database_url: str = ""
+    redis_url: str = ""
 
     # --- Depolama ---
     storage_dir: Path = Path("/data/storage")

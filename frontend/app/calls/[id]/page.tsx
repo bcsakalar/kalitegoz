@@ -8,7 +8,7 @@ import StatTile from "@/components/StatTile";
 import { useAuth } from "@/components/AuthProvider";
 import {
   api, fetchAudioObjectUrl, fmtDate, fmtDuration, fmtTs, scoreStatus10,
-  SENTIMENT_LABELS, VIOLATION_LABELS,
+  SENTIMENT_LABEL_KEYS, VIOLATION_LABEL_KEYS,
 } from "@/lib/api";
 import type { CallDetail, Score, SelfAssessment } from "@/lib/types";
 
@@ -240,12 +240,12 @@ export default function CallDetailPage() {
             {call.sentiment_start && call.sentiment_end && (
               <>
                 <span className="font-semibold text-ink2">{t("call.sentiment")}:</span>
-                <span className={`badge ${SENTIMENT_LABELS[call.sentiment_start]?.cls ?? "badge-neutral"}`}>
-                  <span className="dot" aria-hidden />{SENTIMENT_LABELS[call.sentiment_start]?.label}
+                <span className={`badge ${SENTIMENT_LABEL_KEYS[call.sentiment_start]?.cls ?? "badge-neutral"}`}>
+                  <span className="dot" aria-hidden />{t(SENTIMENT_LABEL_KEYS[call.sentiment_start]?.key ?? "") || call.sentiment_start}
                 </span>
                 <span aria-hidden className="text-muted">→</span>
-                <span className={`badge ${SENTIMENT_LABELS[call.sentiment_end]?.cls ?? "badge-neutral"}`}>
-                  <span className="dot" aria-hidden />{SENTIMENT_LABELS[call.sentiment_end]?.label}
+                <span className={`badge ${SENTIMENT_LABEL_KEYS[call.sentiment_end]?.cls ?? "badge-neutral"}`}>
+                  <span className="dot" aria-hidden />{t(SENTIMENT_LABEL_KEYS[call.sentiment_end]?.key ?? "") || call.sentiment_end}
                 </span>
               </>
             )}
@@ -346,7 +346,7 @@ export default function CallDetailPage() {
                     <button className="btn shrink-0 !px-2 !py-0.5 text-xs tabular-nums" onClick={() => seek(v.ts_sec!)}>▶ {fmtTs(v.ts_sec)}</button>
                   )}
                   <span className={`badge ${sev.cls} shrink-0`}><span className="dot" aria-hidden />{t(sev.key)}</span>
-                  <span className="badge badge-neutral">{VIOLATION_LABELS[v.category] ?? v.category}</span>
+                  <span className="badge badge-neutral">{t(VIOLATION_LABEL_KEYS[v.category] ?? "") || v.category}</span>
                   <span className="text-ink2">{t(v.speaker === "temsilci" ? "speaker.agent" : "speaker.customer")}:</span>
                   <span className="text-ink">&ldquo;{v.evidence}&rdquo;</span>
                   {v.term && <span className="text-xs text-muted">({v.term})</span>}

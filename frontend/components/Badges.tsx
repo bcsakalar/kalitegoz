@@ -1,4 +1,7 @@
-import { CATEGORY_LABELS, CHANNEL_LABELS, STATUS_LABELS, scoreStatus } from "@/lib/api";
+"use client";
+
+import { CATEGORY_LABEL_KEYS, CHANNEL_LABEL_KEYS, STATUS_LABEL_KEYS, scoreStatus } from "@/lib/api";
+import { useT } from "@/components/I18nProvider";
 
 /** Skor rozeti: renk + sayı birlikte (renk tek başına anlam taşımaz). */
 /**
@@ -15,16 +18,17 @@ export function ScoreBadge({
   zeroed?: boolean;
   zeroingReason?: string | null;
 }) {
+  const t = useT();
   if (score == null) return <span className="text-muted">—</span>;
   if (zeroed) {
     return (
       <span
         className="badge badge-critical whitespace-nowrap"
-        title={zeroingReason || "Kritik kriter eşiğin altında kaldığı için çağrı puanı sıfırlandı."}
+        title={zeroingReason || t("badge.zeroedHint")}
       >
         <span className="dot" aria-hidden />
         <span className="tabular-nums">0</span>
-        <span className="text-[10px] font-medium"> — sıfırlayıcı ihlal</span>
+        <span className="text-[10px] font-medium"> — {t("badge.zeroed")}</span>
       </span>
     );
   }
@@ -37,6 +41,7 @@ export function ScoreBadge({
 }
 
 export function StatusChip({ status }: { status: string }) {
+  const t = useT();
   const cls =
     status === "done" ? "badge-good"
       : status === "failed" ? "badge-critical"
@@ -44,14 +49,15 @@ export function StatusChip({ status }: { status: string }) {
   return (
     <span className={`badge ${cls}`}>
       <span className="dot" aria-hidden />
-      {STATUS_LABELS[status] ?? status}
+      {t(STATUS_LABEL_KEYS[status] ?? "") || status}
     </span>
   );
 }
 
 export function CategoryChip({ category }: { category: string | null }) {
+  const t = useT();
   if (!category) return <span className="text-muted">—</span>;
-  return <span className="badge badge-neutral">{CATEGORY_LABELS[category] ?? category}</span>;
+  return <span className="badge badge-neutral">{t(CATEGORY_LABEL_KEYS[category] ?? "") || category}</span>;
 }
 
 /**
@@ -62,7 +68,8 @@ export function CategoryChip({ category }: { category: string | null }) {
  * karışık kanallı listede farkı yine gösterir ama satırı şişirmez.
  */
 export function ChannelChip({ channel, compact = false }: { channel: string; compact?: boolean }) {
-  const label = CHANNEL_LABELS[channel] ?? channel;
+  const t = useT();
+  const label = t(CHANNEL_LABEL_KEYS[channel] ?? "") || channel;
   if (compact) {
     return (
       <span
@@ -83,9 +90,10 @@ export function ChannelChip({ channel, compact = false }: { channel: string; com
 }
 
 export function CrisisChip() {
+  const t = useT();
   return (
     <span className="badge badge-critical">
-      <span className="dot" aria-hidden /> Kriz
+      <span className="dot" aria-hidden /> {t("badge.crisis")}
     </span>
   );
 }

@@ -194,7 +194,9 @@ Yeni bir servis eklediğinde testi de yaz. Test yazmadan "çalışıyor" deme.
 
 ## 9. Bilinen sınırlar (uydurma, bunları tekrar keşfetme)
 
-- **Öznel kriterlerde kappa düşük** (0.18) ve bu bilinçli olarak raporlanıyor.
+- **Öznel kriterlerde kappa düşük** (koşumlara göre 0.09–0.18) ve bu bilinçli
+  olarak raporlanıyor. Tek sayı değil aralık yazılıyor: en iyi koşumu seçmek
+  tabloyu güzelleştirir, gerçeği değiştirmez.
   Üç iyileştirme denendi ve **ölçülerek başarısız oldu** (few-shot, skala
   kalibrasyonu, deterministik tavan). Dördüncüsü (14B model) üç kriterde
   işe yaradı, biri sonuçsuz.
@@ -202,6 +204,10 @@ Yeni bir servis eklediğinde testi de yaz. Test yazmadan "çalışıyor" deme.
   Hedef uydurulmuyor.
 - **Kriter bazlı varyans ölçülmedi.** Aynı yapılandırmanın iki koşumu arasında
   öznel kappa 0.05'e kadar oynayabiliyor; 0.05 altı farklar yorumlanmamalı.
+  Art arda **üç** koşumda 0.1637 → 0.1078 → 0.0931 ölçüldü; toplam oynama
+  0.07, yani varsayılan banttan geniş. Hiçbiri arasında puanlama koduna
+  dokunulmadı — bu oynamanın mekanizması yok. Varyans ölçülene kadar bu
+  aralıktaki hareketten sonuç çıkarma, ve tek koşumu "sonuç" diye yazma.
 - **Altın set sentetik.** Referans puanları sistemi geliştiren yapay zekâ
   yazdı; nesnel kriterlerde spesifikasyon, öznel kriterlerde **döngüsel**.
   `docs/KALITE-METODOLOJISI.md` §4.0 bunu açıkça söyler.

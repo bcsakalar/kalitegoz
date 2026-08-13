@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import DistBars from "@/components/DistBars";
 import StatTile from "@/components/StatTile";
 import CSATPanel from "@/components/CSATPanel";
-import { api, CATEGORY_LABELS, fmtDuration, VIOLATION_LABELS } from "@/lib/api";
+import { api, CATEGORY_LABEL_KEYS, fmtDuration, VIOLATION_LABEL_KEYS } from "@/lib/api";
 import type {
   SupervisorCockpit, TopicsResult, CoachingEffectiveness, ReviewStats, EmergingTopic,
   ExecSummary, CorrelationInsight, TargetProgress, ChurnSummary, AppealAnalytics,
@@ -72,7 +72,7 @@ export default function CockpitPage() {
 
       <div className="grid items-start gap-5 lg:grid-cols-2">
         <DistBars title={t("cockpit.violationDist")}
-          items={Object.entries(c.violation_dist).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: VIOLATION_LABELS[k] ?? k, value: v }))} />
+          items={Object.entries(c.violation_dist).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: t(VIOLATION_LABEL_KEYS[k] ?? "") || k, value: v }))} />
         <div className="card p-4">
           <h3 className="text-sm font-semibold text-ink2">{t("cockpit.teamBoard")}</h3>
           <div className="mt-2 space-y-1">
@@ -115,7 +115,7 @@ function ChurnPanel() {
             {d.retention_list.map((c) => (
               <Link key={c.id} href={`/calls/${c.id}`} className="flex items-center gap-2 px-2 py-1 text-xs hover:bg-grid/50">
                 <span className="h-2 w-2 shrink-0 bg-[var(--status-critical)]" />
-                <span className="flex-1 truncate">{c.agent_name ?? "—"} · {CATEGORY_LABELS[c.category ?? ""] ?? c.category}</span>
+                <span className="flex-1 truncate">{c.agent_name ?? "—"} · {t(CATEGORY_LABEL_KEYS[c.category ?? ""] ?? "") || c.category}</span>
                 <span className="tabular-nums text-muted">{c.total_score ?? "—"}</span>
               </Link>
             ))}
@@ -324,7 +324,7 @@ function EmergingPanel() {
           {rows.map((r, i) => (
             <div key={i} className="flex items-center gap-2 bg-grid/40 px-3 py-2">
               <span className="text-xs text-muted">{r.kind === "category" ? "🏷" : "🎯"}</span>
-              <span className="text-sm font-medium">{CATEGORY_LABELS[r.label] ?? r.label}</span>
+              <span className="text-sm font-medium">{t(CATEGORY_LABEL_KEYS[r.label] ?? "") || r.label}</span>
               <span className="text-xs tabular-nums text-muted">{r.prev_count}→{r.now_count}</span>
               <span className="badge badge-warn text-xs">▲ %{r.change_pct}</span>
             </div>
@@ -388,7 +388,7 @@ function TopicsPanel() {
                   )}
                   {Object.entries(tp.kategoriler).map(([k, n]) => (
                     <span key={k} className="badge badge-neutral text-xs">
-                      {CATEGORY_LABELS[k] ?? k} ×{n}
+                      {t(CATEGORY_LABEL_KEYS[k] ?? "") || k} ×{n}
                     </span>
                   ))}
                 </div>

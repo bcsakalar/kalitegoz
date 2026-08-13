@@ -599,10 +599,18 @@ Dürüst liste. Hiçbiri gizlenmedi.
     kuruluyor. Kanıtlanmayan: gerçek bir anahtarla dönen yanıtın JSON şemasının
     puanlayıcıyı memnun ettiği. Bir anahtar girildiğinde ilk kontrol panelin
     "bağlantıyı test et" düğmesi olmalı.
-10c. **Süpervizör rolünde `/admin/users` 403 alıyor** ve çağıran kod hatayı
-    `.catch(() => {})` ile yutuyor; kullanıcı listesi sessizce boş kalıyor.
-    Görünür bir kırılma yok, o yüzden bu turda düzeltilmedi — ama sessiz
-    başarısızlık sınıfında ve ekran denetimi artık adresi raporluyor.
+10c. ~~**Süpervizör rolünde `/admin/users` 403 alıyor**~~ — **bu madde geri
+    çekildi.** Son denetimde ölçüldü: her sayfa, doğru rolle ve **temiz bir
+    tarayıcı bağlamında** açıldığında sıfır 4xx üretiyor
+    (`scripts/probe_403.mjs`). 403, ekran denetiminin kendi düzeneğinden
+    geliyordu: tek tarayıcı bağlamı rolden role geçerken önceki sayfanın
+    geciken isteği bir sonraki sayfanın hata sayacına yazılıyordu.
+    Ürün tarafında böyle bir çağrı yok.
+
+    Bunu burada bırakmak yerine yazıyorum çünkü hatanın kendisi öğretici:
+    **ölçüm aracının ürettiği bir yan etkiyi ürün kusuru sandım** ve
+    doğrulamadan rapora geçirdim. Denetim aracının çıktısı da bir iddiadır
+    ve doğrulanması gerekir.
 
 ### İşletim tarafı
 

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { EmptyState, ErrorState, LoadingRegion } from "@/components/EmptyState";
 import { useAuth } from "@/components/AuthProvider";
 import { CategoryChip, ChannelChip, ScoreBadge } from "@/components/Badges";
-import { api, CHANNEL_LABELS, fmtDate, fmtTs } from "@/lib/api";
+import { api, CHANNEL_LABEL_KEYS, fmtDate, fmtTs } from "@/lib/api";
 import type { TranscriptSearchResult } from "@/lib/types";
 
 // Kalite ekibinin en sık aradıkları — tek tıkla çalışsın
@@ -101,8 +101,8 @@ export default function SearchPage() {
           </select>
           <select className="input" value={channel} onChange={(e) => setChannel(e.target.value)}>
             <option value="">{t("common.all")}</option>
-            <option value="voice">{CHANNEL_LABELS.voice}</option>
-            <option value="chat">{CHANNEL_LABELS.chat}</option>
+            <option value="voice">{t(CHANNEL_LABEL_KEYS.voice)}</option>
+            <option value="chat">{t(CHANNEL_LABEL_KEYS.chat)}</option>
           </select>
           <button className="btn btn-primary" disabled={busy} onClick={() => run()}>
             {busy ? `${t("common.search")}…` : `🔍 ${t("common.search")}`}

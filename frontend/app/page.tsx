@@ -10,7 +10,7 @@ import TrendChart from "@/components/TrendChart";
 import { useAuth } from "@/components/AuthProvider";
 import { useT } from "@/components/I18nProvider";
 import {
-  api, authedDownload, CATEGORY_LABELS, CHANNEL_LABELS, exportCsvUrl, STATUS_LABELS,
+  api, authedDownload, CATEGORY_LABEL_KEYS, CHANNEL_LABEL_KEYS, exportCsvUrl, STATUS_LABEL_KEYS,
 } from "@/lib/api";
 import type { AgentSummary, CallList, Overview, OnboardingStatus } from "@/lib/types";
 
@@ -151,7 +151,7 @@ export default function DashboardPage() {
           <DistBars
             title={t("chart.categoryDist")}
             items={Object.entries(overview.category_dist).sort((a, b) => b[1] - a[1])
-              .map(([k, v]) => ({ label: CATEGORY_LABELS[k] ?? k, value: v }))}
+              .map(([k, v]) => ({ label: t(CATEGORY_LABEL_KEYS[k] ?? "") || k, value: v }))}
           />
         </div>
       )}
@@ -176,7 +176,7 @@ export default function DashboardPage() {
           <label className="text-xs text-ink2">{t("calls.channel")}
             <select className="input mt-1 block" value={filters.channel} onChange={set("channel")}>
               <option value="">{t("common.all")}</option>
-              {Object.entries(CHANNEL_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              {Object.entries(CHANNEL_LABEL_KEYS).map(([k, v]) => <option key={k} value={k}>{t(v) || k}</option>)}
             </select>
           </label>
           {isStaff && (
@@ -190,13 +190,13 @@ export default function DashboardPage() {
           <label className="text-xs text-ink2">{t("calls.category")}
             <select className="input mt-1 block" value={filters.category} onChange={set("category")}>
               <option value="">{t("common.all")}</option>
-              {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              {Object.entries(CATEGORY_LABEL_KEYS).map(([k, v]) => <option key={k} value={k}>{t(v) || k}</option>)}
             </select>
           </label>
           <label className="text-xs text-ink2">{t("calls.status")}
             <select className="input mt-1 block" value={filters.status} onChange={set("status")}>
               <option value="">{t("common.all")}</option>
-              {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              {Object.entries(STATUS_LABEL_KEYS).map(([k, v]) => <option key={k} value={k}>{t(v) || k}</option>)}
             </select>
           </label>
           <label className="flex items-center gap-1.5 text-xs text-ink2">
