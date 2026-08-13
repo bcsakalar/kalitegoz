@@ -149,6 +149,19 @@ function ProcessingTab() {
           </div>
         </div>
 
+        {/* Sesli isci uyarisi.
+
+            Sesli cagrilar host'taki native worker'a gider. O calismiyorken
+            "baslat" gorevleri kuyruga atar, Celery basariyla doner ve
+            cagrilar sonsuza kadar bekler — hicbir hata gorunmeden. Uyari
+            burada, butonun HEMEN USTUNDE duruyor. */}
+        {st.voice_worker_active === false && st.pending_calls > 0 && (
+          <p className="card mt-4 border-l-4 p-3 text-sm"
+             style={{ borderLeftColor: "var(--status-warning)" }}>
+            ⚠ {st.voice_worker_hint || t("proc.voiceWorkerOff")}
+          </p>
+        )}
+
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <button className="btn btn-primary" disabled={busy || waiting === 0}
             onClick={() => act(api.startProcessing, t("proc.startedMsg"))}>

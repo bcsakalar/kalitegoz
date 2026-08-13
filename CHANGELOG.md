@@ -1,5 +1,34 @@
 # Değişiklik Günlüğü
 
+## v2.3 — Sesli işçi sessizliği kapatıldı (2026-08-13)
+
+### B44 — "İşlemeyi başlat" sessizce hiçbir şey yapabiliyordu
+
+Sesli çağrılar `voice` kuyruğuna gider ve o kuyruğu **yalnızca host'ta
+çalışan native worker** tüketir (Whisper konteynerin bellek tavanına
+sığmıyor). Worker çalışmıyorken "İşlemeyi başlat":
+
+1. 20 çağrıyı kuyruğa atar, 2. Celery **başarıyla** döner, 3. panel
+"kuyruğa alındı" der, 4. çağrılar **sonsuza kadar** bekler — hiçbir hata
+görünmeden. Ürünün ana akışı, hata vermeden çalışmıyordu.
+
+`/admin/processing` artık `voice_worker_active` + `voice_worker_hint`
+döndürüyor; yönetim ekranı başlat butonunun **hemen üstünde** uyarıyor ve
+çalıştırılacak komutu yazıyor. 7 regresyon vakası
+(`test_voice_worker_uyarisi.py`), biri arayüzün uyarıyı gerçekten bastığını
+kaynak düzeyinde kilitliyor.
+
+### Uçtan uca doğrulama
+
+Bir çağrı gerçek zincirle işlendi: host Whisper → 15 segment (zaman sırası
+doğru, konuşmacılar ayrışmış) → Ollama puanlama → 10 kriter → kanıt
+doğrulama **9 doğrulandı / 1 yetersiz kanıt / 0 doğrulanamayan** → 2 ihlal →
+toplam puan 82.6 (kodda hesaplandı).
+
+### Testler
+521 backend + 83 betik · tr/ui/api denetimi 0 · tsc 0 · 64 sayfa varyantı,
+0 çöken.
+
 ## v2.2 — Son denetim (2026-08-13)
 
 Kod yazmadan önce baştan sona tarama, sonra bulunanların düzeltilmesi.

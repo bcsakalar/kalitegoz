@@ -1290,6 +1290,18 @@ class ProcessingStatus(BaseModel):
     done_calls: int
     queued_now: int = 0     # "baslat" sonucu kuyruga atilan sayisi
 
+    # SESLI WORKER CANLI MI?
+    #
+    # Sesli cagrilar `voice` kuyruguna gider ve o kuyrugu YALNIZCA host'ta
+    # calisan native worker tuketir (scripts/run-host-worker.ps1) — Whisper
+    # konteynerin bellek tavanina sigmadigi icin. Worker calismiyorsa
+    # "Islemeyi baslat" 20 cagriyi kimsenin dinlemedigi bir kuyruga atar ve
+    # hicbir hata gorunmez: cagrilar sonsuza kadar "bekliyor" kalir.
+    #
+    # Bu alan o sessiz basarisizligi gorunur yapar.
+    voice_worker_active: bool = False
+    voice_worker_hint: str = ""
+
 
 # =============================================================
 # Gamification / kokpit

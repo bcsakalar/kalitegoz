@@ -403,6 +403,51 @@ ettirmez. `backend/tests/test_zorunlu_ayarlar.py` — **18 vaka**:
 
 ---
 
+## 11b. B44 — sesli işçi çalışmıyorken başlat sessizce boşa gidiyordu
+
+Bu, denetimin **en pahalı** bulgusu: ürünün ana akışı, hata vermeden
+çalışmıyordu.
+
+Sesli çağrılar `voice` kuyruğuna gider (`celery_app.task_routes`) ve o
+kuyruğu yalnızca host'taki native worker tüketir — Whisper konteynerin
+bellek tavanına sığmıyor (exit 137). Worker yokken "İşlemeyi başlat":
+
+| Adım | Ne oluyor |
+|---|---|
+| 1 | 20 çağrı `voice` kuyruğuna atılır |
+| 2 | Celery **başarıyla** döner — kuyruğa yazmak başarılıdır |
+| 3 | Panel "20 kuyruğa alındı" der |
+| 4 | Çağrılar **sonsuza kadar** `pending` kalır |
+
+Hiçbir yerde hata yok. Ölçüldü: denetim başında `active_queues()` yalnızca
+`fast@konteyner` döndürüyordu, `voice` dinleyicisi **yoktu**.
+
+**Düzeltme:** `/admin/processing` artık `voice_worker_active` ve
+`voice_worker_hint` döndürüyor; yönetim ekranı başlat butonunun hemen
+üstünde uyarıyor ve çalıştırılacak komutu yazıyor. Broker yanıt vermezse
+panel çökmüyor, "bilinmiyor" diyor.
+
+**Regresyon:** `backend/tests/test_voice_worker_uyarisi.py` (7 vaka) — biri
+arayüzün uyarıyı gerçekten bastığını, biri `process_call`'ın hâlâ `voice`
+kuyruğuna gittiğini kaynak düzeyinde kilitliyor.
+
+### Uçtan uca zincir kanıtlandı
+
+Bir çağrı gerçek hattan geçirildi:
+
+```
+host Whisper  → 15 segment · zaman sırası ARTAN · temsilci 10 / müşteri 5
+Ollama        → 10 kriter puanlandı
+kanıt doğrulama → 9 doğrulandı · 1 yetersiz kanıt · 0 doğrulanamayan
+ihlal motoru  → 2 ihlal
+toplam puan   → 82.6 (kodda hesaplandı, LLM'e sorulmadı)
+```
+
+"Yetersiz kanıt" alan 1 kriter puanlanmadı ve insana yönlendirildi —
+tasarlanan davranış tam olarak bu.
+
+---
+
 ## 12. Kalan açıklar
 
 Düzeltilmeyenler ve **neden**:

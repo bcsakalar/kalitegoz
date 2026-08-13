@@ -505,6 +505,16 @@ export interface ProcessingStatus {
   running_calls: number;
   done_calls: number;
   queued_now: number;
+  /**
+   * `voice` kuyrugunu dinleyen bir isci var mi?
+   *
+   * Sesli cagrilari YALNIZCA host'taki native worker isler. O calismiyorken
+   * "Islemeyi baslat"a basmak cagrilari kimsenin dinlemedigi bir kuyruga
+   * atar ve hicbir hata gorunmez — cagrilar sonsuza kadar bekler.
+   */
+  voice_worker_active?: boolean;
+  /** Calismiyorsa ne yapilacagini soyleyen metin */
+  voice_worker_hint?: string;
 }
 
 export interface KnowledgeDoc {

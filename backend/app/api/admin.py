@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+import logging
 import secrets
 
 from ..config import settings
@@ -39,6 +40,8 @@ from ..schemas import (
     UserOut,
 )
 from ..security import hash_password
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
 
@@ -359,6 +362,42 @@ def onboarding_status(db: Session = Depends(get_db), user: CurrentUser = Depends
 # baslatilir.
 
 
+def _sesli_worker_canli() -> tuple[bool, str]:
+    """`voice` kuyrugunu dinleyen bir worker var mi?
+
+    Celery'nin `inspect` cagrisi broker uzerinden canli worker'lara sorar.
+    Yanit vermeyen ya da hic worker olmayan durumda bos doner.
+
+    Neden onemli: sesli cagrilar `voice` kuyruguna gider ve o kuyrugu
+    yalnizca HOST'ta calisan native worker tuketir (Whisper konteynerin
+    bellek tavanina sigmiyor, exit 137). Worker yoksa "Islemeyi baslat"
+    gorevleri kuyruga atar, Celery basariyla doner, ve cagrilar sonsuza
+    kadar bekler — HICBIR HATA GORUNMEDEN.
+
+    Genis except bilincli: inspect ag/broker hatasi verirse panel yine
+    acilmali, yalnizca "bilinmiyor" demeli.
+    """
+    try:
+        from ..tasks.celery_app import celery_app
+
+        kuyruklar = celery_app.control.inspect(timeout=2.0).active_queues() or {}
+        for adlar in kuyruklar.values():
+            if any(q.get("name") == "voice" for q in adlar or []):
+                return True, ""
+        if kuyruklar:
+            return False, (
+                "Sesli çağrı işçisi çalışmıyor. Ses dosyaları çözümlenemez. "
+                "PowerShell'de başlatın: ./scripts/run-host-worker.ps1"
+            )
+        return False, (
+            "Hiçbir arka plan işçisine ulaşılamadı. Servisler ayakta mı? "
+            "Sesli çağrılar için ayrıca: ./scripts/run-host-worker.ps1"
+        )
+    except Exception as exc:  # noqa: BLE001 — panel calismaya devam etmeli
+        logger.warning("Worker durumu sorgulanamadi: %s", exc)
+        return False, "İşçi durumu sorgulanamadı (broker yanıt vermiyor)."
+
+
 def _processing_status(db: Session, tenant_id: int, queued_now: int = 0) -> ProcessingStatus:
     def count(*statuses):
         return db.query(func.count(Call.id)).filter(
@@ -366,6 +405,7 @@ def _processing_status(db: Session, tenant_id: int, queued_now: int = 0) -> Proc
         ).scalar() or 0
 
     tenant = db.get(Tenant, tenant_id)
+    canli, ipucu = _sesli_worker_canli()
     return ProcessingStatus(
         paused=bool(tenant and tenant.processing_paused),
         pending_calls=count(CallStatus.pending),
@@ -373,6 +413,8 @@ def _processing_status(db: Session, tenant_id: int, queued_now: int = 0) -> Proc
         running_calls=count(CallStatus.transcribing, CallStatus.scoring),
         done_calls=count(CallStatus.done),
         queued_now=queued_now,
+        voice_worker_active=canli,
+        voice_worker_hint=ipucu,
     )
 
 
