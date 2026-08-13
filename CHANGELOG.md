@@ -1,5 +1,51 @@
 # Değişiklik Günlüğü
 
+## v2.4 — Yanlış alarm kapatıldı (2026-08-13)
+
+### B45 — panel, sistem çalışırken "işçi çalışmıyor" diyordu
+
+v2.3'te eklenen sesli işçi uyarısı **yanlış alarm veriyordu**. Kullanıcı
+"İşlemeyi başlat"a bastı, 9 çağrı sorunsuz puanlandı, ama panel aynı anda
+hem *"1 çağrı işleniyor"* hem *"Sesli çağrı işçisi çalışmıyor"* diyordu —
+kendi kendini yalanlayan bir uyarı.
+
+**Kök neden:** işçi `--pool=solo` ile çalışır; bir görevi işlerken **ana
+döngüsü bloke olur** ve Celery'nin `inspect` yayınına cevap veremez. Kontrol
+bunu "işçi yok" diye okudu.
+
+Yanlış alarm veren bir uyarı, gerçek alarmı da değersizleştirir — B40'ta
+denetimler için öğrenilen ders, bu kez ürünün kendisinde tekrarlandı.
+
+**Düzeltme — kanıt sırası, kesinden zayıfa:**
+
+1. Bir çağrı işleniyorsa işçi **kesinlikle** canlıdır (DB sayımı, ağ
+   çağrısı gerektirmez).
+2. `inspect` cevap verip `voice` kuyruğunu listeliyorsa canlı.
+3. Son 15 dakikada görüldüyse canlı say — meşgul olabilir.
+4. Hiçbiri yoksa: `inspect` cevap verdi ama `voice` yoksa gerçekten yok;
+   hiç cevap vermediyse **"bilinmiyor"** de, "yok" deme.
+
+Ölçülerek doğrulandı: bir çağrı işlenirken panel 4 ardışık sorguda
+`voice_worker_active=true`, uyarı boş. 11 regresyon vakası.
+
+Testi yazarken **ikinci bir kusur** çıktı: sahte `celery_app` bir
+`MagicMock` olduğu için Redis `get` çağrısı truthy dönüyor ve "işçi hiç
+görülmedi" demek isteyen testler kazara "görüldü" kuruyordu. Test çifti
+gerçek Redis gibi `None` dönecek şekilde düzeltildi.
+
+### TZ=Europe/Istanbul
+
+Konteynerler UTC'de çalışıyordu, host UTC+3'te. İki sonucu vardı: Celery
+"clocks are out of sync" uyarısı basıyordu ve **rapor tarihleri gece
+yarısından sonra bir gün geri kayıyordu** (`datetime.now()` kullanan rapor
+adları). Kalıcı veri her zaman UTC saklanıyor; bu ayar yalnızca görünen
+saati hizalar. `.env` 76 → 77 anahtar.
+
+### Ölçüm
+Gerçek hız: **71 sn/çağrı** → 20 çağrı ≈ **24 dakika** (önceki mesajda
+"1-1.5 saat" demiştim, yanlıştı). 525 backend + 83 betik testi, tüm
+denetimler 0, 64 sayfa varyantı 0 çöken.
+
 ## v2.3 — Sesli işçi sessizliği kapatıldı (2026-08-13)
 
 ### B44 — "İşlemeyi başlat" sessizce hiçbir şey yapabiliyordu

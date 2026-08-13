@@ -42,19 +42,25 @@ def _hdr(seeded):
     return token_for(seeded["admin_a"], seeded["tenant_a"], "admin")
 
 
-def _inspect_dondur(kuyruklar):
-    """`celery_app.control.inspect(...).active_queues()` sonucunu taklit et."""
+def _inspect_dondur(kuyruklar, yakinda_gorundu=False):
+    """`celery_app`'i taklit et: inspect sonucu + Redis damgasi.
+
+    Damgayi ACIKCA kurmak sart: duz bir `MagicMock`'ta
+    `backend.client.get(...)` yine bir MagicMock doner ve o **truthy**dir.
+    Yani "isci hic gorulmedi" demek isteyen test, kazara "yakinda goruldu"
+    kurar ve yanlis gecerdi. Gercek Redis None doner.
+    """
     sahte = MagicMock()
     sahte.control.inspect.return_value.active_queues.return_value = kuyruklar
-    return patch.dict("sys.modules", {}) if False else patch(
-        "app.tasks.celery_app.celery_app", sahte)
+    sahte.backend.client.get.return_value = b"1" if yakinda_gorundu else None
+    return patch("app.tasks.celery_app.celery_app", sahte)
 
 
 # ------------------------------------------------------------------ tespit
 
 def test_sesli_isci_VARSA_aktif_bildirilir():
     with _inspect_dondur({"voice-host@PC": [{"name": "voice"}]}):
-        canli, ipucu = admin_api._sesli_worker_canli()
+        canli, ipucu = admin_api._sesli_worker_canli(0)
     assert canli is True
     assert ipucu == "", "Isci calisirken uyari gosterilmemeli"
 
@@ -62,7 +68,7 @@ def test_sesli_isci_VARSA_aktif_bildirilir():
 def test_sesli_isci_YOKSA_ne_yapilacagi_soylenir():
     """Sadece "calismiyor" demek yetmez; kullanici komutu bilmeli."""
     with _inspect_dondur({"fast@konteyner": [{"name": "fast"}]}):
-        canli, ipucu = admin_api._sesli_worker_canli()
+        canli, ipucu = admin_api._sesli_worker_canli(0)
     assert canli is False
     assert "run-host-worker" in ipucu, f"Cozum adimi yazilmamis: {ipucu}"
 
@@ -70,7 +76,7 @@ def test_sesli_isci_YOKSA_ne_yapilacagi_soylenir():
 def test_HIC_isci_yoksa_ayri_mesaj():
     """Broker bos donerse sorun yalnizca sesli isci degil, tum arka plan."""
     with _inspect_dondur({}):
-        canli, ipucu = admin_api._sesli_worker_canli()
+        canli, ipucu = admin_api._sesli_worker_canli(0)
     assert canli is False
     assert ipucu and "run-host-worker" in ipucu
 
@@ -79,8 +85,9 @@ def test_broker_COKERSE_panel_calismaya_devam_eder():
     """Isci durumu sorgulanamiyorsa yonetim ekrani acilmali — sadece bilmiyor."""
     sahte = MagicMock()
     sahte.control.inspect.side_effect = OSError("broker yok")
+    sahte.backend.client.get.return_value = None      # daha once hic gorulmedi
     with patch("app.tasks.celery_app.celery_app", sahte):
-        canli, ipucu = admin_api._sesli_worker_canli()
+        canli, ipucu = admin_api._sesli_worker_canli(0)
     assert canli is False
     assert ipucu, "Sebep yazilmamis"
 
@@ -123,3 +130,49 @@ def test_sesli_cagri_VOICE_kuyruguna_gidiyor():
     yollar = celery_app.conf.task_routes or {}
     assert yollar.get("kalitegoz.process_call", {}).get("queue") == "voice", (
         "process_call artik 'voice' kuyruguna gitmiyor — uyari yanlis yere bakiyor")
+
+# ------------------------------------------------------------------ B45
+
+def test_MESGUL_isci_calismiyor_sanilmaz():
+    """B45 — `--pool=solo` isci gorev islerken `inspect`'e CEVAP VEREMEZ.
+
+    Ilk surum bunu "isci yok" diye okudu ve panel ayni anda hem
+    "1 cagri isleniyor" hem "isci calismiyor" dedi — kendi kendini
+    yalanlayan bir uyari. Kullanici hakli olarak sistemin bozuk oldugunu
+    dusundu; oysa 9 cagri sorunsuz puanlanmisti.
+
+    Calisan cagri sayisi, iscinin canli oldugunun EN GUCLU kanitidir ve
+    hicbir ag cagrisi gerektirmez.
+    """
+    with _inspect_dondur({"fast@konteyner": [{"name": "fast"}]}):
+        canli, ipucu = admin_api._sesli_worker_canli(calisan_cagri=1)
+    assert canli is True, "Cagri islenirken isci 'yok' sayildi"
+    assert ipucu == "", f"Sistem calisirken uyari gosterildi: {ipucu}"
+
+
+def test_YAKINDA_gorulen_isci_mesgulken_suclanmaz():
+    """Isci bir kez goruldukten sonra, cevap vermedigi her an 'yok'
+    sayilmamali — Whisper modeli indirmek dakikalar surebiliyor."""
+    with _inspect_dondur({"voice-host@PC": [{"name": "voice"}]}):
+        admin_api._sesli_worker_canli(0)          # damga yazilir
+
+    with _inspect_dondur({"fast@konteyner": [{"name": "fast"}]}, yakinda_gorundu=True):
+        canli, ipucu = admin_api._sesli_worker_canli(0)
+    assert canli is True
+    assert ipucu == ""
+
+
+def test_HIC_gorulmemis_isci_icin_uyari_verilir():
+    """Yanlis alarmi kapatirken gercek alarmi da kapatmis olmayalim."""
+    with _inspect_dondur({"fast@konteyner": [{"name": "fast"}]}, yakinda_gorundu=False):
+        canli, ipucu = admin_api._sesli_worker_canli(0)
+    assert canli is False
+    assert "run-host-worker" in ipucu
+
+
+def test_calisan_cagri_ISCI_DAMGASINI_tazeler():
+    """Cagri islenirken damga yenilenmezse, uzun bir gorevin ardindan
+    isci yine 'yok' sanilirdi."""
+    with patch.object(admin_api, "_isci_gorundu") as damga:
+        admin_api._sesli_worker_canli(calisan_cagri=2)
+    damga.assert_called_once()

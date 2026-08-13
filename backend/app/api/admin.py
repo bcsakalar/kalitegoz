@@ -362,40 +362,97 @@ def onboarding_status(db: Session = Depends(get_db), user: CurrentUser = Depends
 # baslatilir.
 
 
-def _sesli_worker_canli() -> tuple[bool, str]:
-    """`voice` kuyrugunu dinleyen bir worker var mi?
+# Sesli isciyi EN SON ne zaman gorduk (Redis anahtari + omru).
+#
+# B45: `--pool=solo` ile calisan isci, bir gorevi islerken ANA DONGUSU
+# BLOKE olur ve `inspect` yayinina CEVAP VEREMEZ. Ilk surum bunu "isci
+# yok" diye okudu; panel ayni anda hem "1 cagri isleniyor" hem "isci
+# calismiyor" diyordu — kendi kendini yalanlayan bir uyari.
+#
+# Cozum: isciyi bir kez gordugumuzde bunu Redis'e yaziyoruz. Whisper
+# modelini indirmek dakikalar surebildigi icin omur comert tutuldu.
+_ISCI_ANAHTAR = "kg:voice_worker_seen"
+_ISCI_OMUR_SN = 900  # 15 dk — en uzun tek gorevden rahatca uzun
 
-    Celery'nin `inspect` cagrisi broker uzerinden canli worker'lara sorar.
-    Yanit vermeyen ya da hic worker olmayan durumda bos doner.
 
-    Neden onemli: sesli cagrilar `voice` kuyruguna gider ve o kuyrugu
-    yalnizca HOST'ta calisan native worker tuketir (Whisper konteynerin
-    bellek tavanina sigmiyor, exit 137). Worker yoksa "Islemeyi baslat"
-    gorevleri kuyruga atar, Celery basariyla doner, ve cagrilar sonsuza
-    kadar bekler — HICBIR HATA GORUNMEDEN.
+def _isci_gorundu() -> None:
+    try:
+        from ..tasks.celery_app import celery_app
 
-    Genis except bilincli: inspect ag/broker hatasi verirse panel yine
-    acilmali, yalnizca "bilinmiyor" demeli.
+        celery_app.backend.client.setex(_ISCI_ANAHTAR, _ISCI_OMUR_SN, b"1")
+    except Exception as exc:  # noqa: BLE001 — kayit tutulamazsa tespit yine calisir
+        logger.debug("Isci damgasi yazilamadi: %s", exc)
+
+
+def _yakinda_gorundu_mu() -> bool:
+    try:
+        from ..tasks.celery_app import celery_app
+
+        return bool(celery_app.backend.client.get(_ISCI_ANAHTAR))
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("Isci damgasi okunamadi: %s", exc)
+        return False
+
+
+def _sesli_worker_canli(calisan_cagri: int = 0) -> tuple[bool, str]:
+    """`voice` kuyrugunu dinleyen bir isci var mi?
+
+    ## Neden bu kadar katmanli
+
+    Sesli cagrilar `voice` kuyruguna gider ve o kuyrugu yalnizca HOST'ta
+    calisan native isci tuketir (Whisper konteynerin bellek tavanina
+    sigmiyor, exit 137). Isci yoksa "Islemeyi baslat" gorevleri kuyruga
+    atar, Celery BASARIYLA doner ve cagrilar sonsuza kadar bekler —
+    hicbir hata gorunmeden. Uyari bu yuzden var.
+
+    Ama uyarinin kendisi de yanlis olabilir ve **oldu**: `--pool=solo`
+    isci, gorev islerken `inspect` yayinina cevap veremez. Ilk surum bunu
+    "isci yok" diye okudu ve kullaniciya, tam da sistem calisirken,
+    "calismiyor" dedi. Yanlis alarm veren uyari, gercek alarmi da
+    degersizlestirir.
+
+    Kanit sirasi — ucuzdan pahaliya, kesinden zayifa:
+
+    1. **Bir cagri su an isleniyorsa** isci kesinlikle canlidir. Bu bilgi
+       zaten elimizde (DB sayimi), hicbir ag cagrisi gerektirmez.
+    2. `inspect` cevap verip `voice` kuyrugunu listeliyorsa canli.
+    3. Son 15 dakikada 1 veya 2 ile gorulduyse canli say — mesgul oldugu
+       icin cevap vermiyor olabilir.
+    4. Hicbiri yoksa: `inspect` CEVAP VERDI ama `voice` yoksa gercekten
+       yok; hic cevap vermediyse "bilinmiyor" de, "yok" deme.
     """
+    if calisan_cagri > 0:
+        _isci_gorundu()
+        return True, ""
+
     try:
         from ..tasks.celery_app import celery_app
 
         kuyruklar = celery_app.control.inspect(timeout=2.0).active_queues() or {}
-        for adlar in kuyruklar.values():
-            if any(q.get("name") == "voice" for q in adlar or []):
-                return True, ""
-        if kuyruklar:
-            return False, (
-                "Sesli çağrı işçisi çalışmıyor. Ses dosyaları çözümlenemez. "
-                "PowerShell'de başlatın: ./scripts/run-host-worker.ps1"
-            )
+    except Exception as exc:  # noqa: BLE001 — panel yine acilmali
+        logger.warning("Isci durumu sorgulanamadi: %s", exc)
+        if _yakinda_gorundu_mu():
+            return True, ""
+        return False, "İşçi durumu sorgulanamadı (mesaj kuyruğu yanıt vermiyor)."
+
+    for adlar in kuyruklar.values():
+        if any(q.get("name") == "voice" for q in adlar or []):
+            _isci_gorundu()
+            return True, ""
+
+    # Cevap vermedi ama yakinda gorulduyse: mesgul olabilir, suclama.
+    if _yakinda_gorundu_mu():
+        return True, ""
+
+    if kuyruklar:
         return False, (
-            "Hiçbir arka plan işçisine ulaşılamadı. Servisler ayakta mı? "
-            "Sesli çağrılar için ayrıca: ./scripts/run-host-worker.ps1"
+            "Sesli çağrı işçisi çalışmıyor. Ses dosyaları çözümlenemez. "
+            "PowerShell'de başlatın: ./scripts/run-host-worker.ps1"
         )
-    except Exception as exc:  # noqa: BLE001 — panel calismaya devam etmeli
-        logger.warning("Worker durumu sorgulanamadi: %s", exc)
-        return False, "İşçi durumu sorgulanamadı (broker yanıt vermiyor)."
+    return False, (
+        "Hiçbir arka plan işçisine ulaşılamadı. Servisler ayakta mı? "
+        "Sesli çağrılar için ayrıca: ./scripts/run-host-worker.ps1"
+    )
 
 
 def _processing_status(db: Session, tenant_id: int, queued_now: int = 0) -> ProcessingStatus:
@@ -405,12 +462,15 @@ def _processing_status(db: Session, tenant_id: int, queued_now: int = 0) -> Proc
         ).scalar() or 0
 
     tenant = db.get(Tenant, tenant_id)
-    canli, ipucu = _sesli_worker_canli()
+    # Calisan cagri sayisi ISCININ CANLI OLDUGUNUN en guclu kanitidir;
+    # once onu hesaplayip tespit fonksiyonuna veriyoruz (bkz. B45).
+    calisan = count(CallStatus.transcribing, CallStatus.scoring)
+    canli, ipucu = _sesli_worker_canli(calisan)
     return ProcessingStatus(
         paused=bool(tenant and tenant.processing_paused),
         pending_calls=count(CallStatus.pending),
         failed_calls=count(CallStatus.failed),
-        running_calls=count(CallStatus.transcribing, CallStatus.scoring),
+        running_calls=calisan,
         done_calls=count(CallStatus.done),
         queued_now=queued_now,
         voice_worker_active=canli,
