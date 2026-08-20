@@ -119,7 +119,7 @@ diskte şifreleme + anahtar rotasyonu + KMS yolu · PII maskeleme · denetim
 günlüğü · saklama süresi otomasyonu · webhook + açık API · TR/EN arayüz ·
 açık/koyu tema
 
-Rakiplerle karşılaştırma ve **neyimiz yok**: [PIYASA-ANALIZI.md](docs/PIYASA-ANALIZI.md)
+Bilerek yapılmayanlar ve gerekçeleri: [ROADMAP.md](docs/ROADMAP.md)
 
 ---
 
@@ -173,12 +173,19 @@ make eval      # altin set uzerinde puanlama dogrulugu (esik saglanmazsa CI kiri
 make audit     # Turkce karakter + arayuz (keskin kose, tanimli renk) denetimi
 ```
 
-Kod ve doküman rehberi: [CLAUDE.md](CLAUDE.md) · Tüm dokümanlar: [docs/](docs/README.md)
+Katkı rehberi: [CONTRIBUTING.md](CONTRIBUTING.md) · Tüm dokümanlar: [docs/](docs/README.md)
+
+---
+
+## Güvenlik
+
+Güvenlik açığı bildirimi ve sistemin güvenlik duruşu:
+[SECURITY.md](SECURITY.md)
 
 ---
 
 ## Lisans
 
-[AGPL-3.0](LICENSE) — Ayrıntı ve gerekçe: [docs/FINAL-RAPOR.md](docs/FINAL-RAPOR.md)
+[AGPL-3.0](LICENSE)
 
 ---

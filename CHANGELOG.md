@@ -78,7 +78,7 @@ toplam puan 82.6 (kodda hesaplandı).
 ## v2.2 — Son denetim (2026-08-13)
 
 Kod yazmadan önce baştan sona tarama, sonra bulunanların düzeltilmesi.
-Tam rapor: [`docs/DENETIM-SONUC.md`](docs/DENETIM-SONUC.md).
+Ölçüm çıktıları: [`docs/eval/`](docs/eval/).
 
 ### Düzeltildi
 - **B41** — İngilizce arayüzde Türkçe metin kalıyordu. `api.ts` altı etiket
@@ -95,7 +95,7 @@ Tam rapor: [`docs/DENETIM-SONUC.md`](docs/DENETIM-SONUC.md).
 - `.env.example`'da 6 anahtarın üstünde açıklama yoktu.
 
 ### Geri çekildi
-- `FINAL-RAPOR` §8'deki "süpervizör `/admin/users` 403 alıyor" maddesi.
+- Denetimde açılan "süpervizör `/admin/users` 403 alıyor" maddesi.
   Ölçüldü: temiz tarayıcı bağlamında her sayfa doğru rolüyle sıfır 4xx
   üretiyor. 403, ekran denetiminin kendi düzeneğinden geliyordu.
 
@@ -222,7 +222,7 @@ Ayrıntı: `docs/KALITE-METODOLOJISI.md` §4.
 - `docs/KALITE-METODOLOJISI.md` — satış dokümanı, ölçülmüş metriklerle
 - `docs/KVKK-UYUM.md` — veri yerleşimi, maskeleme, rol matrisi
 
-### FAZ 7 — Rio'nun kararları ve dürüstlük düzeltmeleri
+### FAZ 7 — ürün kararları ve dürüstlük düzeltmeleri
 - **Altın setin kaynağı açıkça yazıldı**: "uzman referansı" değil
   **sentetik referans**; nesnel kriterlerde *spesifikasyon*, öznel
   kriterlerde **döngüsel** ve bağımsız doğruluk kanıtı sayılmaz

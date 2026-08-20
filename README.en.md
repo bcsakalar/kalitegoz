@@ -95,7 +95,7 @@ Supervisor cockpit · topic discovery and root-cause clustering · trend and ano
 **Enterprise**
 Multi-tenant · 4 roles with team scoping · OIDC/SSO (configured from the panel) · encryption at rest with key rotation and a KMS path · PII masking · audit log · retention automation · webhooks and an open API · Turkish/English interface · light and dark themes
 
-Competitive comparison and **what we do not have**: [PIYASA-ANALIZI.md](docs/PIYASA-ANALIZI.md)
+What was deliberately left out, and why: [ROADMAP.md](docs/ROADMAP.md)
 
 ---
 
@@ -148,12 +148,19 @@ make eval      # scoring accuracy against the golden set (CI fails below thresho
 make audit     # Turkish character and UI audit (sharp corners, defined colours)
 ```
 
-Code and documentation guide: [CLAUDE.md](CLAUDE.md) · All documents: [docs/](docs/README.md)
+Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md) · All documents: [docs/](docs/README.md)
+
+---
+
+## Security
+
+Vulnerability reporting and the security posture of the system:
+[SECURITY.md](SECURITY.md)
 
 ---
 
 ## Licence
 
-[AGPL-3.0](LICENSE) — rationale and detail: [docs/FINAL-RAPOR.md](docs/FINAL-RAPOR.md)
+[AGPL-3.0](LICENSE)
 
 Interface language: Turkish and English. Documentation: primarily Turkish, with this English overview.

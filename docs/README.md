@@ -7,11 +7,9 @@
 | [KALITE-METODOLOJISI.md](KALITE-METODOLOJISI.md) | **Ürünün en önemli dokümanı.** Puanlamanın nasıl ölçüldüğü, hangi kriterde ne kadar güvenilir olduğu, neyin ölçülmediği. Satışta da bu kullanılır. |
 | [TEST-REHBERI.md](TEST-REHBERI.md) | Sistemi kendiniz denemek için. Numaralı adımlar, her adımda ne görmeniz gerektiği. |
 | [KVKK-UYUM.md](KVKK-UYUM.md) | Uyum ve güvenlik incelemesi için. Veri yerleşimi, maskeleme, saklama, şifreleme, anahtar rotasyonu, KMS. |
-| [PIYASA-ANALIZI.md](PIYASA-ANALIZI.md) | Rakiplerle karşılaştırma. Neyimiz var, neyimiz yok, neden yok. |
 | [API.md](API.md) | Entegrasyon yazacaksanız. |
 | [SOZLUK.md](SOZLUK.md) | Terim karşılıkları — aynı kavrama iki isim verilmemesi için. |
 | [ROADMAP.md](ROADMAP.md) | Ne bitti, ne bilerek yapılmadı. |
-| [FINAL-RAPOR.md](FINAL-RAPOR.md) | Son turda ne değişti, ne bulundu, ne karar bekliyor. |
 
 ## Ölçüm çıktıları
 
