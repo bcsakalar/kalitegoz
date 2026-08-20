@@ -4,7 +4,7 @@
 ve kendi sınırını bilen bir kalite yönetim platformu.** Tamamen yerel çalışır —
 ses, transkript ve puanlar kurumun donanımından hiç çıkmaz.
 
-<sub>Türkçe ana doküman · [English summary below](#english-summary)</sub>
+<sub>Türkçe · <a href="README.en.md">English</a></sub>
 
 ---
 
@@ -182,39 +182,3 @@ Kod ve doküman rehberi: [CLAUDE.md](CLAUDE.md) · Tüm dokümanlar: [docs/](doc
 [AGPL-3.0](LICENSE) — Ayrıntı ve gerekçe: [docs/FINAL-RAPOR.md](docs/FINAL-RAPOR.md)
 
 ---
-
-<a name="english-summary"></a>
-
-## English summary
-
-**KaliteGöz** is a call-center quality management platform that scores every
-conversation, **shows the verbatim transcript evidence behind each decision**,
-and knows where it is unreliable. It runs **fully on-premise** — audio,
-transcripts and scores never leave your hardware.
-
-**Three-layer scoring.** Layer A resolves objective compliance criteria
-(greeting, GDPR/KVKK notice, identity verification, closing, banned language)
-**in code** — the LLM is never asked. Layer B evaluates subjective criteria
-with an LLM that must quote the transcript. Layer C **verifies every quote
-server-side**; an unverifiable quote yields no score and routes the call to a
-human reviewer.
-
-**Measured, reproducible accuracy** (50-scenario golden set, `make eval`):
-
-| Metric | v1 | v2 |
-|---|---|---|
-| Zeroing-violation false positives | 38.5% | **0.0%** |
-| Mean absolute error (0-10 scale) | 2.16 | **0.76–0.78** |
-| Evidence verifiability | 56.1% | **100%** |
-| Repeatability (3 runs, std dev) | 1.95 | **0.46** |
-
-Cohen's kappa is **0.94–1.00** on the four core objective criteria and
-**0.09–0.18** on subjective ones. The subjective figure is given as a range
-because consecutive runs measured anywhere in it; picking the best run would
-look better and mislead, since per-criterion variance has not been measured
-yet. We publish both numbers: on subjective criteria the system produces a
-*suggestion*, and a valid score requires human approval.
-See [docs/KALITE-METODOLOJISI.md](docs/KALITE-METODOLOJISI.md) for how the
-reference set was produced and what is explicitly **not** proven.
-
-Interface language: Turkish and English. Documentation: Turkish.
